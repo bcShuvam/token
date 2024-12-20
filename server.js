@@ -24,6 +24,6 @@ app.use("/hello", require("./routes/testHello"));
 app.use("/auth", require("./routes/auth"));
 app.use("/users", require("./routes/users"));
 
-app.listen(PORT, "0.0.0.0", () =>
+app.listen(PORT, () =>
   console.log(`Server running on port http://0.0.0.0: ${PORT}`)
 );
