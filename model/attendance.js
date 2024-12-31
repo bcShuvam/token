@@ -1,26 +1,29 @@
 const mongoose = require("mongoose");
 
-const attendanceSchema = mongoose.Schema(
+const attendanceModel = new mongoose.Schema(
   {
-    _id: { type: String, required: true },
-    attendance: [
-      {
-        status: { type: String, default: "" },
-        checkIn: [
-          { deviceTime: { type: String, default: "" } },
-          { timestamps: true },
-        ],
-        checkOut: [
-          { deviceTime: { type: String, default: "" } },
-          { timestamps: true },
-        ],
-        latitude: { type: Number, default: 0 },
-        longitude: { type: Number, default: 0 },
-      },
-    ],
+    status: { type: String, default: "" },
+    checkIn: {
+      status: { type: String, default: "" },
+      deviceInTime: { type: String, default: "" },
+      latitude: { type: Number, default: 0 },
+      longitude: { type: Number, default: 0 },
+    },
+    checkOut: {
+      status: { type: String, default: "" },
+      deviceOutTime: { type: String, default: "" },
+      latitude: { type: Number, default: 0 },
+      longitude: { type: Number, default: 0 },
+    },
+    totalHours: { type: Number, default: 0 },
   },
-  { _id: false }
+  { timestamps: true }
 );
+
+const attendanceSchema = mongoose.Schema({
+  _id: { type: String, required: true },
+  attendance: [attendanceModel],
+});
 
 const Attendance = mongoose.model("Attendance", attendanceSchema);
 

@@ -18,12 +18,10 @@ const handleLogin = async (req, res) => {
         { username: username },
         { $set: { isFirstLogin: false, reset: false } }
       );
-      await updatedUser.save();
       return res
         .status(200)
         .json({ message: "Updated User Login successful", user: updatedUser });
     }
-    // If user is found
     res.status(200).json({ message: "Login successful", user: foundUser });
   } catch (error) {
     res.status(500).json({ message: error.message });
