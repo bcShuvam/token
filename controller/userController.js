@@ -10,17 +10,24 @@ const getUsers = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, role, department, designation } = req.body;
   console.log(req.body);
-  if (!username || !password)
-    return res
-      .status(400)
-      .json({ message: "username and password are required" });
+  if (!username || !password || !role || !department || !designation)
+    return res.status(400).json({
+      message:
+        "username, password, role, department and designation are required",
+    });
   try {
     const newUser = await User.create({
       username: req.body.username,
       password: req.body.password,
+      role: req.body.role,
+      department: req.body.department,
+      designation: req.body.designation,
+      email: req.body?.email,
       number: req.body?.number,
+      address: req.body?.address,
+      dob: req.body?.dob,
       isFirstLogin: req.body?.isFirstLogin,
       reset: req.body?.reset,
     });

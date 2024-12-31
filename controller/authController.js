@@ -6,7 +6,7 @@ const handleLogin = async (req, res) => {
       return res
         .status(400)
         .json({ message: "username and password are required" });
-    const foundUser = await Users.findOne({ username: username });
+    let foundUser = await Users.findOne({ username: username });
     if (!foundUser)
       return res
         .status(404)
@@ -18,9 +18,10 @@ const handleLogin = async (req, res) => {
         { username: username },
         { $set: { isFirstLogin: false, reset: false } }
       );
+      foundUser = await Users.findOne({ username: username });
       return res
         .status(200)
-        .json({ message: "Updated User Login successful", user: updatedUser });
+        .json({ message: "Updated User Login successful", user: foundUser });
     }
     res.status(200).json({ message: "Login successful", user: foundUser });
   } catch (error) {
