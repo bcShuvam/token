@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const getAttendanceById = require("../controller/attendanceController");
+const {
+  getAttendanceById,
+  postAttendanceByID,
+} = require("../controller/attendanceController");
 
-router.route("/:id").get(getAttendanceById);
+router.route("/:id").get(getAttendanceById).post(postAttendanceByID);
 
 module.exports = router;
