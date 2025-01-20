@@ -1,12 +1,27 @@
 const User = require("../model/users");
 const Attendance = require("../model/attendance");
+const VisitLog = require("../model/visitLog");
+const Referral = require("../model/referral");
 
 const getUsers = async (req, res) => {
-  updateField();
+  // updateField();
   const foundUsers = await User.find();
+  const formattedUser = foundUsers.map((user) => ({
+    _id: user._id,
+    username: user.username,
+    role: user.role,
+    department: user.department,
+    designation: user.designation,
+    email: user.email,
+    number: user.number,
+    address: user.address,
+    dob: user.dob,
+    isFirstLogin: user.isFirstLogin,
+    reset: user.reset,
+  }));
   // res.status(200).json(userModel);
   console.log(foundUsers);
-  res.status(200).json({ users: foundUsers });
+  res.status(200).json({ users: formattedUser });
 };
 
 const createUser = async (req, res) => {
@@ -32,13 +47,47 @@ const createUser = async (req, res) => {
       reset: req.body?.reset,
     });
     newUser.save();
-    console.log(newUser);
+    // console.log(newUser);
+
+    // Format the new user
+    const formattedNewUser = {
+      _id: newUser._id,
+      username: newUser.username,
+      role: newUser.role,
+      department: newUser.department,
+      designation: newUser.designation,
+      email: newUser.email,
+      number: newUser.number,
+      address: newUser.address,
+      dob: newUser.dob,
+      isFirstLogin: newUser.isFirstLogin,
+      reset: newUser.reset,
+    };
+
     // Creating attendance id as userId after the user has been created successfully
     const createAttendanceId = await Attendance.create({
       _id: newUser._id,
     });
     createAttendanceId.save();
-    res.status(200).json({ user: newUser, attendance: createAttendanceId });
+
+    // Creating visitLog id as userId after the user has been created successfully
+    const createVisitLogId = await VisitLog.create({
+      _id: newUser._id,
+    });
+    createVisitLogId.save();
+
+    // Creating visitLog id as userId after the user has been created successfully
+    const createReferralLogId = await Referral.create({
+      _id: newUser._id,
+    });
+    createReferralLogId.save();
+
+    res.status(200).json({
+      user: formattedNewUser,
+      attendance: createAttendanceId,
+      visitLog: createVisitLogId,
+      referral: createReferralLogId,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

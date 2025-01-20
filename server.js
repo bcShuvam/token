@@ -24,10 +24,12 @@ app.use(express.json());
 // app.use(cookieParser());
 
 // routes
-app.use("/hello", require("./routes/testHello"));
-app.use("/auth", require("./routes/auth"));
-app.use("/users", require("./routes/users"));
-app.use("/attendance", require("./routes/attendance"));
+app.use("/api/hello", require("./routes/testHello"));
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/users", require("./routes/users"));
+app.use("/api/attendance", require("./routes/attendance"));
+app.use("/api/poc", require("./routes/poc"));
+app.use("/api/referral", require("./routes/referral"));
 
 mongoose.connection.once("open", () => {
   console.log("Connected to MongoDB...");
