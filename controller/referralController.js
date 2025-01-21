@@ -4,8 +4,17 @@ const Referral = require("../model/referral");
 
 const createReferral = async (req, res) => {
   const {
-    patientId,
-    patientName,
+    fullName,
+    age,
+    gender,
+    weight,
+    bloodGroup,
+    number,
+    email,
+    country,
+    region,
+    city,
+    address,
     createdById,
     createdByName,
     pocId,
@@ -13,12 +22,29 @@ const createReferral = async (req, res) => {
     ambId,
     ambDriverName,
     ambNumber,
+    latitude,
+    longitude,
+    mobileTime,
   } = req.body;
-  //   if (!patientId || !patientName || !createdById || !createdByName)
-  //     return res.status(400).json({
-  //       message:
-  //         "patientId, patientName, createdById, createdByName are required",
-  //     });
+  if (
+    !fullName ||
+    !age ||
+    !gender ||
+    !number ||
+    !country ||
+    !region ||
+    !city ||
+    !address ||
+    !createdById ||
+    !createdByName ||
+    !mobileTime ||
+    !latitude ||
+    !longitude
+  )
+    return res.status(400).json({
+      message:
+        "fullName, age, gender, number, country, region, city, address, createdById, createdByName, mobileTime, latitude, longitude createdById, createdByName are required",
+    });
   const createPatient = await Patient.create({
     fullName: fullName,
     age: age,
@@ -27,7 +53,7 @@ const createReferral = async (req, res) => {
     bloodGroup: bloodGroup,
     number: number,
     email: email,
-    county: country,
+    country: country,
     region: region,
     city: city,
     address: address,
