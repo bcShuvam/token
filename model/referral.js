@@ -11,6 +11,9 @@ const referralLogModel = new mongoose.Schema(
     ambId: { type: String, default: "" },
     ambDriverName: { type: String, default: "" },
     ambNumber: { type: String, default: "" },
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
+    mobileTime: { type: String, required: true },
   },
   { timestamps: true }
 );
