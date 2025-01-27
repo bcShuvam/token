@@ -47,7 +47,7 @@ const createUser = async (req, res) => {
       isFirstLogin: req.body?.isFirstLogin,
       reset: req.body?.reset,
     });
-    // newUser.save();
+    newUser.save();
     // console.log(newUser);
 
     // Format the new user
@@ -69,25 +69,25 @@ const createUser = async (req, res) => {
     const createAttendanceId = await Attendance.create({
       _id: newUser._id,
     });
-    // createAttendanceId.save();
+    createAttendanceId.save();
 
     // Creating attendance id as userId after the user has been created successfully
     const createPlanId = await Plan.create({
       _id: newUser._id,
     });
-    // createPlanId.save();
+    createPlanId.save();
 
     // Creating visitLog id as userId after the user has been created successfully
     const createVisitLogId = await VisitLog.create({
       _id: newUser._id,
     });
-    // createVisitLogId.save();
+    createVisitLogId.save();
 
     // Creating visitLog id as userId after the user has been created successfully
     const createReferralLogId = await Referral.create({
       _id: newUser._id,
     });
-    // createReferralLogId.save();
+    createReferralLogId.save();
 
     res.status(200).json({
       user: formattedNewUser,
