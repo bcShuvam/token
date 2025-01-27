@@ -1,6 +1,7 @@
 const Patient = require("../model/patient");
 const POC = require("../model/poc");
 const Referral = require("../model/referral");
+const mongoose = require("mongoose");
 
 const createReferral = async (req, res) => {
   try {
@@ -101,23 +102,17 @@ const createReferral = async (req, res) => {
       longitude: longitude,
       mobileTime: mobileTime,
     };
-    const updatedReferralById = await Referral.updateOne(
-      {
-        _id: createdById,
-      },
-      {
-        $inc: { referralLogCounter: 1 },
-        $push: { referralLogs: referralLogDetail },
-      }
-    );
-    // const pocReferralDetail = {};
-    // const updatedPocReferralById = await POC.updateOne(
-    //   { _id: pocId },
-    //   { $inc: { referralCounter: 1 }, $push: { visitLogs: pocReferralDetail } }
-    // );
+    const updatedReferral = await Referral.findByIdAndUpdate(createdById, {
+      $inc: { referralLogCounter: 1 },
+      $push: { referralLogs: referralLogDetail },
+    });
+    const latestReferral =
+      updatedReferral.referralLogs.length == 0
+        ? {}
+        : updatedReferral.referralLogs[updatedReferral.referralLogs.length - 1];
     res.status(200).json({
       message: "success",
-      updatedReferralById,
+      latestReferral,
       createPatient,
       foundReferralId,
       foundPOCId,
