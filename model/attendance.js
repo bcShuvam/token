@@ -32,10 +32,13 @@ const attendanceModel = new mongoose.Schema(
   { timestamps: true }
 );
 
-const attendanceSchema = mongoose.Schema({
-  _id: { type: String, required: true },
-  attendance: [attendanceModel],
-});
+const attendanceSchema = mongoose.Schema(
+  {
+    _id: { type: String, required: true },
+    attendance: [attendanceModel],
+  },
+  { timestamps: true }
+);
 
 const Attendance = mongoose.model("Attendance", attendanceSchema);
 
