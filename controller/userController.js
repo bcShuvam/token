@@ -45,8 +45,6 @@ const createUser = async (req, res) => {
     const exists = ROLES_LIST.some(
       (r) => r.role === role.role && r.roleValue === role.roleValue
     );
-    console.log(ROLES_LIST);
-    console.log(`exists = ${exists}`);
     if (!exists)
       return res.status(400).json({
         message: `Role '${role.role}' with value '${role.roleValue}' does not exist`,
