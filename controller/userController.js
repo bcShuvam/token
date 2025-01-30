@@ -27,12 +27,20 @@ const getUsers = async (req, res) => {
 
 const createUser = async (req, res) => {
   try {
-    const { username, password, role, department, designation } = req.body;
+    const { username, password, role, email, department, designation } =
+      req.body;
     console.log(req.body);
-    if (!username || !password || !role || !department || !designation)
+    if (
+      !username ||
+      !password ||
+      !role ||
+      !email ||
+      !department ||
+      !designation
+    )
       return res.status(400).json({
         message:
-          "username, password, role, department and designation are required",
+          "username, password, role, email, department and designation are required",
       });
     const exists = ROLES_LIST.some(
       (r) => r.role === role.role && r.roleValue === role.roleValue
@@ -43,14 +51,6 @@ const createUser = async (req, res) => {
       return res.status(400).json({
         message: `Role '${role.role}' with value '${role.roleValue}' does not exist`,
       });
-    // return res.status(400).json({
-    //   message: "Success",
-    //   username,
-    //   password,
-    //   role,
-    //   department,
-    //   designation,
-    // });
     const hashedPwd = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       username: username,
@@ -58,7 +58,7 @@ const createUser = async (req, res) => {
       role: role,
       department: department,
       designation: designation,
-      email: req.body?.email,
+      email: email,
       number: req.body?.number,
       address: req.body?.address,
       dob: req.body?.dob,
@@ -102,6 +102,7 @@ const createUser = async (req, res) => {
     });
     // createReferralLogId.save();
     res.status(200).json({
+      message: "User created successfully",
       user: formattedNewUser,
       attendance: createAttendanceId,
       // plan: createPlanId,
