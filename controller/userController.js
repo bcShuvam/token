@@ -26,21 +26,38 @@ const getUsers = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-  const { username, password, role, department, designation } = req.body;
-  console.log(req.body);
-  if (!username || !password || !role || !department || !designation)
-    return res.status(400).json({
-      message:
-        "username, password, role, department and designation are required",
-    });
-  const hashedPwd = await bcrypt.hash(password, 10);
   try {
+    const { username, password, role, department, designation } = req.body;
+    console.log(req.body);
+    if (!username || !password || !role || !department || !designation)
+      return res.status(400).json({
+        message:
+          "username, password, role, department and designation are required",
+      });
+    const exists = ROLES_LIST.some(
+      (r) => r.role === role.role && r.roleValue === role.roleValue
+    );
+    console.log(ROLES_LIST);
+    console.log(`exists = ${exists}`);
+    if (!exists)
+      return res.status(400).json({
+        message: `Role '${role.role}' with value '${role.roleValue}' does not exist`,
+      });
+    // return res.status(400).json({
+    //   message: "Success",
+    //   username,
+    //   password,
+    //   role,
+    //   department,
+    //   designation,
+    // });
+    const hashedPwd = await bcrypt.hash(password, 10);
     const newUser = await User.create({
-      username: req.body.username,
+      username: username,
       password: hashedPwd,
-      role: req.body.role,
-      department: req.body.department,
-      designation: req.body.designation,
+      role: role,
+      department: department,
+      designation: designation,
       email: req.body?.email,
       number: req.body?.number,
       address: req.body?.address,
@@ -50,7 +67,6 @@ const createUser = async (req, res) => {
     });
     // newUser.save();
     // console.log(newUser);
-
     // Format the new user
     const formattedNewUser = {
       _id: newUser._id,
@@ -65,31 +81,26 @@ const createUser = async (req, res) => {
       isFirstLogin: newUser.isFirstLogin,
       reset: newUser.reset,
     };
-
     // Creating attendance id as userId after the user has been created successfully
     const createAttendanceId = await Attendance.create({
       _id: newUser._id,
     });
     // createAttendanceId.save();
-
     // Creating attendance id as userId after the user has been created successfully
     // const createPlanId = await Plan.create({
     //   _id: newUser._id,
     // });
     // createPlanId.save();
-
     // Creating visitLog id as userId after the user has been created successfully
     const createVisitLogId = await VisitLog.create({
       _id: newUser._id,
     });
     // createVisitLogId.save();
-
     // Creating visitLog id as userId after the user has been created successfully
     const createReferralLogId = await Referral.create({
       _id: newUser._id,
     });
     // createReferralLogId.save();
-
     res.status(200).json({
       user: formattedNewUser,
       attendance: createAttendanceId,
@@ -106,7 +117,7 @@ const getRolesList = (req, res) => {
   try {
     res
       .status(200)
-      .json({ message: "Roles list sent successfully", ROLES_LIST });
+      .json({ message: "Roles list sent successfully", roles: ROLES_LIST });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

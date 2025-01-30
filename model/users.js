@@ -4,10 +4,7 @@ const userSchema = mongoose.Schema(
   {
     username: { type: String, required: true },
     password: { type: String, required: true },
-    role: {
-      type: Object,
-      default: { User: 3030 },
-    },
+    role: { type: Object, required: true },
     department: { type: String, required: true },
     designation: { type: String, required: true },
     email: { type: String, default: "" },
