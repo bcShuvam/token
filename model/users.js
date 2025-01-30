@@ -7,7 +7,7 @@ const userSchema = mongoose.Schema(
     role: { type: Object, required: true },
     department: { type: String, required: true },
     designation: { type: String, required: true },
-    email: { type: String, default: "" },
+    email: { type: String, required: true },
     number: { type: Number, default: "" },
     address: { type: String, default: "" },
     dob: { type: String, default: "" },

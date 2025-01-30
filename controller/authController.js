@@ -4,27 +4,39 @@ const jwt = require("jsonwebtoken");
 
 const handleLogin = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password)
+    const { email, password } = req.body;
+    if (!email || !password)
       return res
         .status(400)
-        .json({ message: "username and password are required" });
-    let foundUser = await Users.findOne({ username: username });
+        .json({ message: "email and password are required" });
+    let foundUser = await Users.findOne({ email });
     if (!foundUser)
-      return res
-        .status(404)
-        .json({ message: "Incorrect username or password" });
+      return res.status(404).json({ message: "Incorrect email or password" });
     const match = await bcrypt.compare(password, foundUser.password);
     if (!match) return res.status(401).json({ message: "Incorrect password" });
     if (foundUser.isFirstLogin || foundUser.reset) {
       const updatedUser = await Users.updateOne(
-        { username: username },
+        { email },
         { $set: { isFirstLogin: false, reset: false } }
       );
-      foundUser = await Users.findOne({ username: username });
-      return res
-        .status(200)
-        .json({ message: "Updated User Login successful", user: foundUser });
+      foundUser = await Users.findOne({ email });
+      const formattedUserDetail = {
+        _id: foundUser._id,
+        username: foundUser.username,
+        role: foundUser.role,
+        department: foundUser.department,
+        designation: foundUser.designation,
+        email: foundUser.email,
+        number: foundUser.number,
+        address: foundUser.address,
+        dob: foundUser.dob,
+        isFirstLogin: foundUser.isFirstLogin,
+        reset: foundUser.reset,
+      };
+      return res.status(200).json({
+        message: "Updated User Login successful",
+        user: formattedUserDetail,
+      });
     }
     const formattedUserDetail = {
       _id: foundUser._id,
