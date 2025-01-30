@@ -1,18 +1,43 @@
 const Plan = require("../model/plan");
 
-const getTodaysPlans = async (req, res) => {
+const getTodaysPlan = async (req, res) => {
   try {
     const userId = req.query.userId;
-    let date = new Date();
-    let localDate = date.toUTCString();
-    localDate = Date(localDate + " UTC");
-    const ymd = `${date.getFullYear()}-${
-      date.getMonth() + 1
-    }-${date.getDate()}`;
-    console.log(localDate);
-    const planDate = req.query.planDate;
+    const date = new Date();
+    const offset = 5 * 60 + 45; // 5 hours 45 minutes in minutes
+    const adjustedDate = new Date(date.getTime() + offset * 60000);
+    const planDate = adjustedDate.toISOString().split("T")[0];
+
     if (!userId) return res.status(400).json({ message: "userId is required" });
-    const todaysPlan = await Plan.find({ userId, planDate });
+    const todaysPlan = await Plan.find({
+      userId,
+      planDate,
+    });
+
+    if (!todaysPlan)
+      return res
+        .status(404)
+        .json({ message: `no plan found for today ${planDate}` });
+
+    res.status(200).json({ message: "Success", todaysPlan });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getPlans = async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    const date = new Date();
+    const from = new Date(req.query.from);
+    const to = new Date(req.query.to);
+    console.log(req.query.from);
+    console.log(`From = ${from.toISOString()}`);
+    if (!userId) return res.status(400).json({ message: "userId is required" });
+    const todaysPlan = await Plan.find({
+      userId,
+      planDate: { $gte: from, $lte: to }, // Find plans within the range
+    });
     res.status(200).json({ message: "Success", todaysPlan });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -52,4 +77,4 @@ const createPlan = async (req, res) => {
   }
 };
 
-module.exports = { getTodaysPlans, createPlan };
+module.exports = { getTodaysPlan, getPlans, createPlan };

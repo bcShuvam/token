@@ -43,3 +43,7 @@ const attendanceSchema = mongoose.Schema(
 const Attendance = mongoose.model("Attendance", attendanceSchema);
 
 module.exports = Attendance;
+
+// status in out o-in o-out
+// employee id
+// timestamp

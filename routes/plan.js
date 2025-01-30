@@ -1,8 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { getTodaysPlans, createPlan } = require("../controller/planController");
+const {
+  getTodaysPlan,
+  getPlans,
+  createPlan,
+} = require("../controller/planController");
 
-router.route("/getTodaysPlan").get(getTodaysPlans);
-router.route("/").post(createPlan).post();
+router.route("/today").get(getTodaysPlan);
+router.route("/").get(getPlans).post(createPlan);
 
 module.exports = router;

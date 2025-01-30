@@ -20,13 +20,6 @@ const getAttendanceById = async (req, res) => {
     const attendance = await Attendance.findOne({ _id: id });
     if (!attendance)
       return res.status(404).json({ message: `No user with ID ${id} found` });
-    // const latestAttendance = {
-    //   _id: attendance._id,
-    //   latestAttendance:
-    //     attendance.attendance.length == 0
-    //       ? []
-    //       : attendance.attendance[attendance.attendance.length - 1],
-    // };
     const filteredAttendance = attendance.attendance.filter((entry) => {
       const currentDate = new Date(entry.createdAt);
       console.log(currentDate);

@@ -5,6 +5,7 @@ const patientModel = new mongoose.Schema(
     fullName: { type: String, required: true },
     age: { type: Number, required: true },
     gender: { type: String, required: true },
+    provisionalDiagnosis: { type: String, required: "" },
     weight: { type: Number, default: 0 },
     bloodGroup: { type: String, default: "" },
     number: { type: String, default: "" },
