@@ -1,4 +1,7 @@
 const Users = require("../model/users");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
 const handleLogin = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -11,7 +14,7 @@ const handleLogin = async (req, res) => {
       return res
         .status(404)
         .json({ message: "Incorrect username or password" });
-    const match = foundUser.password === password;
+    const match = await bcrypt.compare(password, foundUser.password);
     if (!match) return res.status(401).json({ message: "Incorrect password" });
     if (foundUser.isFirstLogin || foundUser.reset) {
       const updatedUser = await Users.updateOne(
@@ -23,7 +26,37 @@ const handleLogin = async (req, res) => {
         .status(200)
         .json({ message: "Updated User Login successful", user: foundUser });
     }
-    res.status(200).json({ message: "Login successful", user: foundUser });
+    const formattedUserDetail = {
+      _id: foundUser._id,
+      username: foundUser.username,
+      role: foundUser.role,
+      department: foundUser.department,
+      designation: foundUser.designation,
+      email: foundUser.email,
+      number: foundUser.number,
+      address: foundUser.address,
+      dob: foundUser.dob,
+      isFirstLogin: foundUser.isFirstLogin,
+      reset: foundUser.reset,
+    };
+    const accessToken = jwt.sign(
+      { formattedUserDetail },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "30m" }
+    );
+    const refreshToken = jwt.sign(
+      { formattedUserDetail },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "7d" }
+    );
+    foundUser.accessToken = accessToken;
+    foundUser.refreshToken = refreshToken;
+    foundUser.save();
+    res.status(200).json({
+      message: "Login successful",
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -3,6 +3,8 @@ const Attendance = require("../model/attendance");
 const VisitLog = require("../model/visitLog");
 const Referral = require("../model/referral");
 const Plan = require("../model/plan");
+const bcrypt = require("bcrypt");
+const ROLES_LIST = require("../config/roles_list");
 
 const getUsers = async (req, res) => {
   // updateField();
@@ -20,8 +22,6 @@ const getUsers = async (req, res) => {
     isFirstLogin: user.isFirstLogin,
     reset: user.reset,
   }));
-  // res.status(200).json(userModel);
-  console.log(foundUsers);
   res.status(200).json({ users: formattedUser });
 };
 
@@ -33,10 +33,11 @@ const createUser = async (req, res) => {
       message:
         "username, password, role, department and designation are required",
     });
+  const hashedPwd = await bcrypt.hash(password, 10);
   try {
     const newUser = await User.create({
       username: req.body.username,
-      password: req.body.password,
+      password: hashedPwd,
       role: req.body.role,
       department: req.body.department,
       designation: req.body.designation,
@@ -47,7 +48,7 @@ const createUser = async (req, res) => {
       isFirstLogin: req.body?.isFirstLogin,
       reset: req.body?.reset,
     });
-    newUser.save();
+    // newUser.save();
     // console.log(newUser);
 
     // Format the new user
@@ -69,30 +70,30 @@ const createUser = async (req, res) => {
     const createAttendanceId = await Attendance.create({
       _id: newUser._id,
     });
-    createAttendanceId.save();
+    // createAttendanceId.save();
 
     // Creating attendance id as userId after the user has been created successfully
-    const createPlanId = await Plan.create({
-      _id: newUser._id,
-    });
-    createPlanId.save();
+    // const createPlanId = await Plan.create({
+    //   _id: newUser._id,
+    // });
+    // createPlanId.save();
 
     // Creating visitLog id as userId after the user has been created successfully
     const createVisitLogId = await VisitLog.create({
       _id: newUser._id,
     });
-    createVisitLogId.save();
+    // createVisitLogId.save();
 
     // Creating visitLog id as userId after the user has been created successfully
     const createReferralLogId = await Referral.create({
       _id: newUser._id,
     });
-    createReferralLogId.save();
+    // createReferralLogId.save();
 
     res.status(200).json({
       user: formattedNewUser,
       attendance: createAttendanceId,
-      plan: createPlanId,
+      // plan: createPlanId,
       visitLog: createVisitLogId,
       referral: createReferralLogId,
     });
@@ -101,11 +102,21 @@ const createUser = async (req, res) => {
   }
 };
 
+const getRolesList = (req, res) => {
+  try {
+    res
+      .status(200)
+      .json({ message: "Roles list sent successfully", ROLES_LIST });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 async function updateField() {
-  const user = await User.find({ age: { $exists: false } });
-  for (let age in user) {
-    await User.updateMany({ $set: { age: 0 } });
+  const user = await User.find({ accessToken: { $exists: false } });
+  for (let accessToken in user) {
+    await User.updateMany({ $set: { accessToken: "" } });
   }
 }
 
-module.exports = { getUsers, createUser };
+module.exports = { getUsers, createUser, getRolesList };

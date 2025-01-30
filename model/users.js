@@ -4,7 +4,10 @@ const userSchema = mongoose.Schema(
   {
     username: { type: String, required: true },
     password: { type: String, required: true },
-    role: { type: String, required: true },
+    role: {
+      type: Object,
+      default: { User: 3030 },
+    },
     department: { type: String, required: true },
     designation: { type: String, required: true },
     email: { type: String, default: "" },
@@ -13,6 +16,8 @@ const userSchema = mongoose.Schema(
     dob: { type: String, default: "" },
     isFirstLogin: { type: Boolean, default: true },
     reset: { type: Boolean, default: true },
+    accessToken: { type: String, default: "" },
+    refreshToken: { type: String, default: "" },
   },
   { timestamps: true }
 );
