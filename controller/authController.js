@@ -68,6 +68,7 @@ const handleLogin = async (req, res) => {
       message: "Login successful",
       accessToken: accessToken,
       refreshToken: refreshToken,
+      user: formattedUserDetail,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
