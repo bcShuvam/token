@@ -6,7 +6,6 @@ const connectDB = require("./config/dbConnect");
 const PORT = process.env.PORT || 3001;
 const cors = require("cors");
 const { verifyJWT, verifyRefreshToken } = require("./middleware/verifyJWT");
-
 // connect the mongodb
 connectDB();
 

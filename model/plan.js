@@ -13,13 +13,11 @@ const visitPlanModel = new mongoose.Schema(
 
 const planModel = new mongoose.Schema(
   {
-    // _id: { type: String, required: true },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    // visitPlans: [visitPlanModel],
     activity: { type: String, required: true },
     area: { type: String, required: true },
     remark: { type: String, required: true },

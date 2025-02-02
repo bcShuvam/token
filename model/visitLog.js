@@ -6,6 +6,7 @@ const visitLogModel = new mongoose.Schema(
     pocName: { type: String, required: true },
     remarks: { type: String, required: true },
     mobileTime: { type: String, required: true },
+    visitDate: { type: Date, required: true },
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
   },
@@ -15,6 +16,7 @@ const visitLogModel = new mongoose.Schema(
 const visitModel = new mongoose.Schema(
   {
     _id: { type: String, required: true },
+    userName: { type: String, required: true },
     visitLogCounter: { type: Number, default: 0 },
     visitLogs: [visitLogModel],
   },
