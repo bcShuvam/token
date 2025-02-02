@@ -11,6 +11,22 @@ const getPOCs = async (req, res) => {
   }
 };
 
+const getPocCreatedById = async (req, res) => {
+  try {
+    const createdById = req.query.createdById;
+    console.log(createdById);
+    if (!createdById)
+      return res.status(400).json({ message: "createdById is required" });
+    const foundPOC = await POC.find({ createdById });
+    console.log("foundPOC = " + foundPOC);
+    if (!foundPOC)
+      return res.status(404).json({ message: `no poc createdBy id ${_id}` });
+    res.status(200).json({ message: "Success", poc: foundPOC });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching POCs" });
+  }
+};
+
 const createPOC = async (req, res) => {
   try {
     const {
@@ -157,4 +173,9 @@ const pocFollowUp = async (req, res) => {
   }
 };
 
-module.exports = { getPOCs, createPOC, pocFollowUp };
+module.exports = {
+  getPOCs,
+  getPocCreatedById,
+  createPOC,
+  pocFollowUp,
+};

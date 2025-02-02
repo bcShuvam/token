@@ -1,12 +1,10 @@
 const Plan = require("../model/plan");
+const todayDate = require("../config/todayDate");
 
 const getTodaysPlan = async (req, res) => {
   try {
     const userId = req.query.userId;
-    const date = new Date();
-    const offset = 5 * 60 + 45; // 5 hours 45 minutes in minutes
-    const adjustedDate = new Date(date.getTime() + offset * 60000);
-    const planDate = adjustedDate.toISOString().split("T")[0];
+    const planDate = todayDate;
 
     if (!userId) return res.status(400).json({ message: "userId is required" });
     const todaysPlan = await Plan.find({
