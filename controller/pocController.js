@@ -21,7 +21,18 @@ const getPocCreatedById = async (req, res) => {
     console.log("foundPOC = " + foundPOC);
     if (!foundPOC)
       return res.status(404).json({ message: `no poc createdBy id ${_id}` });
-    res.status(200).json({ message: "Success", poc: foundPOC });
+    const formattedPOC = foundPOC.map((poc) => ({
+      _id: poc._id,
+      pocName: poc.pocName,
+      age: poc.age,
+      category: poc.category,
+      specialization: poc.specialization,
+      organization: poc.organization,
+      ambNumber: poc.ambNumber,
+      number: poc.number,
+      address: `${poc.country}, ${poc.region}, ${poc.city}, ${poc.address}`,
+    }));
+    res.status(200).json({ message: "Success", poc: formattedPOC });
   } catch (error) {
     res.status(500).json({ message: "Error fetching POCs" });
   }
