@@ -179,14 +179,14 @@ const pocFollowUp = async (req, res) => {
       longitude: longitude,
     };
 
-    const updatePOCVisitCounter = await POC.updateOne(
+    const updatePOCVisitCounter = await POC.findByIdAndUpdate(
       {
         _id: pocId,
       },
       { $inc: { visitCounter: 1 } }
     );
 
-    const updatedVisitLog = await VisitLog.updateOne(
+    const updatedVisitLog = await VisitLog.findByIdAndUpdate(
       { _id: createdById },
       { $inc: { visitLogCounter: 1 }, $push: { visitLogs: followUpDetails } }
     );
