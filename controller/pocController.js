@@ -11,6 +11,20 @@ const getPOCs = async (req, res) => {
   }
 };
 
+const getPOCById = async (req, res) => {
+  try {
+    const createdById = req.query.createdById;
+    console.log(createdById);
+    if (!createdById)
+      return res.status(400).json({ message: "createdById is required" });
+    const foundPOC = await POC.find({ createdById });
+    const foundPOCs = await POC.find();
+    res.status(200).json({ message: "Success", poc: foundPOCs });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching POCs" });
+  }
+};
+
 const getPocCreatedById = async (req, res) => {
   try {
     const createdById = req.query.createdById;
@@ -18,7 +32,6 @@ const getPocCreatedById = async (req, res) => {
     if (!createdById)
       return res.status(400).json({ message: "createdById is required" });
     const foundPOC = await POC.find({ createdById });
-    console.log("foundPOC = " + foundPOC);
     if (!foundPOC)
       return res.status(404).json({ message: `no poc createdBy id ${_id}` });
     const formattedPOC = foundPOC.map((poc) => ({
