@@ -4,8 +4,12 @@ const todayDate = require("../config/todayDate");
 const getTodaysPlan = async (req, res) => {
   try {
     const userId = req.query.userId;
-    const planDate = todayDate;
-    console.log(planDate);
+    let planDate = req.query.planDate;
+    if (!planDate) {
+      planDate = todayDate;
+    } else {
+      planDate = new Date(req.query.planDate);
+    }
 
     if (!userId) return res.status(400).json({ message: "userId is required" });
     const todaysPlan = await Plan.findOne({
@@ -15,13 +19,11 @@ const getTodaysPlan = async (req, res) => {
     console.log(todaysPlan);
 
     if (!todaysPlan)
-      return res
-        .status(404)
-        .json({
-          message: `no plan found for today ${
-            planDate.toISOString().split("T")[0]
-          }`,
-        });
+      return res.status(404).json({
+        message: `no plan found for today ${
+          planDate.toISOString().split("T")[0]
+        }`,
+      });
 
     res.status(200).json({ message: "Success", todaysPlan });
   } catch (err) {
