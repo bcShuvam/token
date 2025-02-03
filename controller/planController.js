@@ -5,12 +5,14 @@ const getTodaysPlan = async (req, res) => {
   try {
     const userId = req.query.userId;
     const planDate = todayDate;
+    console.log(planDate);
 
     if (!userId) return res.status(400).json({ message: "userId is required" });
-    const todaysPlan = await Plan.find({
+    const todaysPlan = await Plan.findOneAndDelete({
       userId,
       planDate,
     });
+    console.log(todaysPlan);
 
     if (!todaysPlan)
       return res
@@ -26,10 +28,10 @@ const getTodaysPlan = async (req, res) => {
 const getPlans = async (req, res) => {
   try {
     const userId = req.query.userId;
-    const date = new Date();
     const from = new Date(req.query.from);
     const to = new Date(req.query.to);
-    console.log(req.query.from);
+    console.log(from);
+    console.log(to);
     console.log(`From = ${from.toISOString()}`);
     if (!userId) return res.status(400).json({ message: "userId is required" });
     const todaysPlan = await Plan.find({
@@ -55,7 +57,6 @@ const createPlan = async (req, res) => {
       planDate: planDate,
       userId: userId,
     });
-    console.log(foundPlan);
     if (foundPlan)
       return res
         .status(200)
