@@ -8,7 +8,7 @@ const getTodaysPlan = async (req, res) => {
     console.log(planDate);
 
     if (!userId) return res.status(400).json({ message: "userId is required" });
-    const todaysPlan = await Plan.findOneAndDelete({
+    const todaysPlan = await Plan.findOne({
       userId,
       planDate,
     });
@@ -17,7 +17,11 @@ const getTodaysPlan = async (req, res) => {
     if (!todaysPlan)
       return res
         .status(404)
-        .json({ message: `no plan found for today ${planDate}` });
+        .json({
+          message: `no plan found for today ${
+            planDate.toISOString().split("T")[0]
+          }`,
+        });
 
     res.status(200).json({ message: "Success", todaysPlan });
   } catch (err) {
