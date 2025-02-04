@@ -69,6 +69,7 @@ const createPOC = async (req, res) => {
       createdByName,
       remarks,
       mobileTime,
+      visitDate,
       latitude,
       longitude,
     } = req.body;
@@ -84,12 +85,13 @@ const createPOC = async (req, res) => {
       !createdByName ||
       !remarks ||
       !mobileTime ||
+      !visitDate ||
       !latitude ||
       !longitude
     )
       return res.status(400).json({
         message:
-          "pocName, age, number, country, region, city, address, category, createdById, createdByName remarks, mobileTime, latitude, longitude are required",
+          "pocName, age, number, country, region, city, address, category, createdById, createdByName remarks, mobileTime, visitDate, latitude, longitude are required",
       });
     const foundVisitLog = await VisitLog.findOne({ _id: createdById });
     if (!foundVisitLog)
@@ -122,10 +124,11 @@ const createPOC = async (req, res) => {
       pocName: newPOC.pocName,
       remarks: remarks,
       mobileTime: mobileTime,
+      visitDate: visitDate,
       latitude: latitude,
       longitude: longitude,
     };
-    const updatedVisitLog = await VisitLog.updateOne(
+    const updatedVisitLog = await VisitLog.findOneAndUpdate(
       { _id: createdById },
       { $inc: { visitLogCounter: 1 }, $push: { visitLogs: visitLogDetails } }
     );
@@ -143,6 +146,7 @@ const pocFollowUp = async (req, res) => {
       createdById,
       remarks,
       mobileTime,
+      visitDate,
       latitude,
       longitude,
     } = req.body;
@@ -152,6 +156,7 @@ const pocFollowUp = async (req, res) => {
       !createdById ||
       !remarks ||
       !mobileTime ||
+      !visitDate ||
       !latitude ||
       !longitude
     )
@@ -175,6 +180,7 @@ const pocFollowUp = async (req, res) => {
       pocName: pocName,
       remarks: remarks,
       mobileTime: mobileTime,
+      visitDate: visitDate,
       latitude: latitude,
       longitude: longitude,
     };
