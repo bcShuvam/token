@@ -15,7 +15,7 @@ const handleLogin = async (req, res) => {
     const match = await bcrypt.compare(password, foundUser.password);
     if (!match) return res.status(401).json({ message: "Incorrect password" });
     if (foundUser.isFirstLogin || foundUser.reset) {
-      const updatedUser = await Users.updateOne(
+      const updatedUser = await Users.findOneAndUpdate(
         { email },
         { $set: { isFirstLogin: false, reset: false } }
       );
