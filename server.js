@@ -32,6 +32,7 @@ app.use("/api/users", require("./routes/users"));
 app.use(verifyJWT);
 app.use("/api/attendance", require("./routes/attendance"));
 app.use("/api/poc", require("./routes/poc"));
+app.use("/api/visitLogs", require("./routes/visitLog"));
 app.use("/api/referral", require("./routes/referral"));
 app.use("/api/plan", require("./routes/plan"));
 
