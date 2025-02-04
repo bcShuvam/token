@@ -1,5 +1,4 @@
 const VisitLog = require("../model/visitLog");
-const todayDate = require("../config/todayDate");
 
 const visitLogsById = async (req, res) => {
   try {
