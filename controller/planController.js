@@ -25,7 +25,7 @@ const getTodaysPlan = async (req, res) => {
         }`,
       });
 
-    res.status(200).json({ message: "Success", todaysPlan });
+    return res.status(200).json({ message: "Success", todaysPlan });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
