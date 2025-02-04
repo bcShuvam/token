@@ -18,9 +18,9 @@ const visitLogsById = async (req, res) => {
       },
     });
     if (!foundVisitLog)
-      return res
-        .status(404)
-        .json({ message: `No visitLog with userId ${_id} found.` });
+      return res.status(404).json({
+        message: `No visitLog found from ${from.toISOString()} to ${to.toISOString()}.`,
+      });
     const visitLogs = foundVisitLog;
     console.log(visitLogs);
     res.status(200).json({ message: "success", visitLogs });
