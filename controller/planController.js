@@ -6,17 +6,17 @@ const getTodaysPlan = async (req, res) => {
     const userId = req.query.userId;
     let planDate = req.query.planDate;
     if (!planDate) {
-      planDate = todayDate;
+      planDate = todayDate();
     } else {
       planDate = new Date(req.query.planDate);
     }
+    console.log(planDate);
 
     if (!userId) return res.status(400).json({ message: "userId is required" });
     const todaysPlan = await Plan.findOne({
       userId,
       planDate,
     });
-    console.log(todaysPlan);
 
     if (!todaysPlan)
       return res.status(404).json({
