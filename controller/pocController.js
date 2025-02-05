@@ -25,6 +25,27 @@ const getPOCById = async (req, res) => {
   }
 };
 
+const getPOCByCreatedByIdAndCategory = async (req, res) => {
+  try {
+    const { createdById, category } = req.query;
+    if (!createdById)
+      return res.status(400).json({ message: "createdById is required" });
+    console.log(createdById, category);
+    let foundPOC;
+    if (!category) {
+      foundPOC = await POC.find({
+        createdById,
+        category: { $not: { $eq: category } },
+      });
+    } else {
+      foundPOC = await POC.find({ createdById, category });
+    }
+    res.status(200).json({ message: "Success", poc: foundPOC });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const getPocCreatedById = async (req, res) => {
   try {
     const createdById = req.query.createdById;
@@ -205,6 +226,7 @@ const pocFollowUp = async (req, res) => {
 
 module.exports = {
   getPOCs,
+  getPOCByCreatedByIdAndCategory,
   getPocCreatedById,
   createPOC,
   pocFollowUp,
