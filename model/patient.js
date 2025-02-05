@@ -18,6 +18,7 @@ const patientModel = new mongoose.Schema(
     createById: { type: String, required: true },
     pocId: { type: String, default: "" },
     pocName: { type: String, default: "" },
+    pocNumber: { type: String, default: "" },
     ambId: { type: String, default: "" },
     ambDriverName: { type: String, default: "" },
     ambDriverNumber: { type: String, default: "" },
