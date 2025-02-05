@@ -35,7 +35,7 @@ const getPOCByCreatedByIdAndCategory = async (req, res) => {
     if (!category) {
       foundPOC = await POC.find({
         createdById,
-        category: { $not: { $eq: category } },
+        category: { $not: { $eq: "Ambulance" } },
       });
     } else {
       foundPOC = await POC.find({ createdById, category });
