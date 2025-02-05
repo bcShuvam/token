@@ -20,6 +20,7 @@ const patientModel = new mongoose.Schema(
     pocName: { type: String, default: "" },
     ambId: { type: String, default: "" },
     ambDriverName: { type: String, default: "" },
+    ambDriverNumber: { type: String, default: "" },
     ambNumber: { type: String, default: "" },
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
