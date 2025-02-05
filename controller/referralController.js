@@ -27,6 +27,7 @@ const createReferral = async (req, res) => {
       latitude,
       longitude,
       mobileTime,
+      dateTime,
     } = req.body;
     if (
       !fullName ||
@@ -40,11 +41,12 @@ const createReferral = async (req, res) => {
       !createdByName ||
       !mobileTime ||
       !latitude ||
-      !longitude
+      !longitude ||
+      !dateTime
     )
       return res.status(400).json({
         message:
-          "fullName, age, gender, number, country, region, city, address, createdById, createdByName, mobileTime, latitude, longitude createdById, createdByName are required",
+          "fullName, age, gender, number, country, region, city, address, createdById, createdByName, mobileTime, dateTime, latitude, longitude createdById, createdByName are required",
       });
     const foundReferralId = await Referral.findById(createdById);
     if (!foundReferralId)
@@ -87,6 +89,7 @@ const createReferral = async (req, res) => {
       latitude: latitude,
       longitude: longitude,
       mobileTime: mobileTime,
+      dateTime: dateTime,
     });
     const referralLogDetail = {
       patientId: createPatient._id,
@@ -101,6 +104,7 @@ const createReferral = async (req, res) => {
       latitude: latitude,
       longitude: longitude,
       mobileTime: mobileTime,
+      referralDate: dateTime,
     };
     const updatedReferral = await Referral.findByIdAndUpdate(createdById, {
       $inc: { referralLogCounter: 1 },
@@ -117,6 +121,7 @@ const createReferral = async (req, res) => {
       foundReferralId,
       foundPOCId,
       foundAmbId,
+      updatedReferral,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

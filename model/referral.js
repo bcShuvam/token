@@ -14,6 +14,7 @@ const referralLogModel = new mongoose.Schema(
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
     mobileTime: { type: String, required: true },
+    referralDate: { type: Date, required: true },
   },
   { timestamps: true }
 );
