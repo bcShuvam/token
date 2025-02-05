@@ -2,7 +2,8 @@ const Attendance = require("../model/attendance");
 
 const getAttendanceById = async (req, res) => {
   try {
-    const id = req.params?.id;
+    const id = req.query?.userId;
+    if (!id) return res.status(400).json({ message: "userId is required" });
     const now = new Date();
 
     // Set the start of the day (00:00:00.000 UTC)
@@ -34,7 +35,7 @@ const getAttendanceById = async (req, res) => {
 
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
-    const id = req.params?.id;
+    const id = req.query.userId;
     const { from, to } = req.query;
     console.log(from, to);
     if (!id) return res.status(400).json({ message: "ID is required" });
@@ -71,13 +72,19 @@ const getAttendanceByIdAndDate = async (req, res) => {
 
 const postAttendanceByID = async (req, res) => {
   try {
-    const id = req.params?.id;
-    if (!id) return res.status(400).json({ message: "ID is required" });
+    const id = req.query?.userId;
+    if (!id) return res.status(400).json({ message: "userId is required" });
 
-    const { deviceTime, latitude, longitude } = req.body;
-    if (!deviceTime || latitude === undefined || longitude === undefined) {
+    const { deviceTime, attendanceTime, latitude, longitude } = req.body;
+    if (
+      !deviceTime ||
+      !attendanceTime ||
+      latitude === undefined ||
+      longitude === undefined
+    ) {
       return res.status(400).json({
-        message: "deviceTime, latitude, and longitude are required",
+        message:
+          "deviceTime, attendanceTime, latitude, and longitude are required",
       });
     }
 
@@ -96,12 +103,14 @@ const postAttendanceByID = async (req, res) => {
         checkIn: {
           status: "check-in",
           deviceInTime: deviceTime,
+          inTime: attendanceTime,
           latitude: latitude,
           longitude: longitude,
         },
         checkOut: {
           status: "",
           deviceOutTime: "",
+          outTime: "",
           latitude: 0,
           longitude: 0,
         },
@@ -109,13 +118,14 @@ const postAttendanceByID = async (req, res) => {
     } else if (lastAttendance.status === "check-in") {
       // Update the last "check-in" entry with "check-out" details
       const startTime = lastAttendance.createdAt;
-      const endTime = Date.now();
+      const endTime = new Date(attendanceTime);
       const startTimeStamp = new Date(startTime).getTime();
       const differenceInMs = endTime - startTimeStamp;
       lastAttendance.status = "check-out";
       lastAttendance.checkOut = {
         status: "check-out",
         deviceOutTime: deviceTime,
+        outTime: attendanceTime,
         latitude: latitude,
         longitude: longitude,
       };

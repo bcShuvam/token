@@ -6,12 +6,14 @@ const attendanceModel = new mongoose.Schema(
     checkIn: {
       status: { type: String, default: "" },
       deviceInTime: { type: String, default: "" },
+      inTime: { type: Date },
       latitude: { type: Number, default: 0 },
       longitude: { type: Number, default: 0 },
     },
     checkOut: {
       status: { type: String, default: "" },
       deviceOutTime: { type: String, default: "" },
+      outTime: { type: Date },
       latitude: { type: Number, default: 0 },
       longitude: { type: Number, default: 0 },
     },
