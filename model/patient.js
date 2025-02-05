@@ -24,6 +24,7 @@ const patientModel = new mongoose.Schema(
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
     mobileTime: { type: String, required: true },
+    dateTime: { type: Date, required: true },
   },
   { timestamps: true }
 );
