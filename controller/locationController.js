@@ -1,10 +1,11 @@
 const Location = require("../models/locationModel");
+const todayDate = require("../config/todayDate");
 
 async function getNextSequenceValue() {
   const counterDoc = await Location.findOneAndUpdate(
-    { _id: 'location_id' }, 
+    { _id: "location_id" },
     { $inc: { location_id: 1 } },
-    { new: true, upsert: true } 
+    { new: true, upsert: true }
   );
 
   return counterDoc.location_id;
@@ -16,7 +17,9 @@ const postLocation = async (req, res) => {
     const userId = req.body.userId;
 
     if (!userId) {
-      return res.status(400).json({ message: "Missing required field: userId" });
+      return res
+        .status(400)
+        .json({ message: "Missing required field: userId" });
     }
 
     // Find the location document where _id is userId
@@ -32,7 +35,7 @@ const postLocation = async (req, res) => {
       longitude,
       batteryPercentage,
       accuracy,
-      deviceTime,
+      mobileTime,
       connectivityType,
       connectivityStatus,
       distance,
@@ -48,8 +51,8 @@ const postLocation = async (req, res) => {
       longitude,
       batteryPercentage,
       accuracy,
-      deviceTime,
-      serverTime: new Date().toISOString(),
+      mobileTime,
+      localTime: new Date().toISOString(),
       connectivityType,
       connectivityStatus,
       distance,
@@ -72,134 +75,137 @@ const postLocation = async (req, res) => {
   }
 };
 
-
-//location by mobile_id
+// Get location by _id or fetch all latest locations
 const getLocationByID = async (req, res) => {
   try {
     const { _id } = req.query;
+    const todayDate = new Date().toDateString(); // Get today's date as string
 
     if (_id) {
-      // Find a specific device by mobile_id
-      const device = await Location.findOne({
-        _id: Number(_id),
-      });
+      // Find a specific device by _id
+      const device = await Device.findOne({ _id }).select(
+        "fullName mobileIdentifier locations distanceByDate totalDistance"
+      );
 
       if (!device) {
         return res.status(404).json({ message: "Location not found" });
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Today's date at 00:00:00
-
-      // Filter only today's distances from the `locations`
-      const todayDistances = device.locations?.filter(
-        (location) => new Date(location.deviceTime) >= today
-      );
-
-      const totalDistanceToday =
-        todayDistances?.reduce((sum, loc) => sum + loc.distance, 0) || 0;
-
       return res.status(200).json({
-        message: `Location data for employee:${device.fullName} fetched successfully`,
+        message: `Location data for employee: ${device.fullName} fetched successfully`,
         latestData: {
-          mobile_id: device.mobile_id,
+          _id: device._id,
           employee_name: device.fullName,
           mobileIdentifier: device.mobileIdentifier,
-          latestLocation: device.locations.slice(-1)[0],
-          totalDistanceToday,
+          latestLocation: device.locations.slice(-1)[0] || null, // Avoid error if empty
+          totalDistanceToday:
+            device.distanceByDate.find(
+              (date) => new Date(date.date).toDateString() === todayDate
+            )?.tDistance || 0,
           totalDistance: device.totalDistance,
         },
       });
     }
+
+    // Fetch all devices with latest location
+    const devices = await Device.find().select(
+      "fullName mobileIdentifier locations distanceByDate totalDistance"
+    );
+
+    const latestData = devices.map((device) => {
+      const latestLocation = device.locations.slice(-1)[0] || null;
+      return {
+        message: `Location data for employee: ${device.fullName} fetched successfully`,
+        _id: device._id,
+        employee_name: device.fullName,
+        latestLocation: latestLocation,
+        totalDistanceToday:
+          device.distanceByDate.find(
+            (date) => new Date(date.date).toDateString() === todayDate
+          )?.tDistance || 0,
+        totalDistance: device.totalDistance,
+      };
+    });
+
+    return res.status(200).json(latestData); // Missing return fixed
   } catch (error) {
     console.error("Error fetching device:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
+// // Route to fetch device locations
+// const getAllLocation = async (req, res) => {
+//   try {
+//     // fetch all devices
+//     const devices = await Location.find({});
 
-// Route to fetch device locations
-const getAllLocation = async (req, res) => {
+//     const latestData = devices.map((device) => {
+//       return {
+//         _id: device._id,
+//         employee_name: device.fullName,
+//         // mobileIdentifier: device.mobileIdentifier,
+//         latestLocation: device.locations,
+//         totalDistanceToday,
+//         totalDistance: device.totalDistance,
+//       };
+//     });
+
+//     return res.status(200).json({
+//       message: "All devices data fetched successfully",
+//       latestData,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching device data:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+const getLocationFromDate = async (req, res) => {
   try {
-    // fetch all devices
-    const devices = await Location.find({});
+    const { _id, from, to } = req.query;
+    if (!_id) return res.status(404).json({ message: "Id is required " });
 
-    const latestData = devices.map((device) => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const todayDistances = device.locations?.filter(
-        (location) => new Date(location.deviceTime) >= today
-      );
-
-      const totalDistanceToday =
-        todayDistances?.reduce((sum, loc) => sum + loc.distance, 0) || 0;
-
-      return {
-        mobile_id: device.mobile_id,
-        employee_name: device.fullName,
-        mobileIdentifier: device.mobileIdentifier,
-        latestLocation: device.locations.slice(-1)[0],
-        totalDistanceToday,
-        totalDistance: device.totalDistance,
-      };
+    // Find the device by _id
+    const device = await Location.findOne({
+      _id: Number(_id),
     });
+    if (!device) {
+      return res.status(404).json({ message: "Location Location not found" });
+    }
+
+    let locations = device.locations;
+
+    // Filter locations based on date range if provided
+    if (from && to) {
+      const startDate = new Date(from);
+      const endDate = new Date(to);
+
+      // Check for valid date ranges
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return res.status(400).json({ message: "Invalid date format" });
+      }
+
+      // Filter locations based on the provided time frame
+      locations = locations.filter((location) => {
+        const locationDate = new Date(location.mobileTime);
+        return locationDate >= startDate && locationDate <= endDate;
+      });
+    }
 
     return res.status(200).json({
-      message: "All devices data fetched successfully",
-      latestData,
+      data: {
+        message: "Locations fetched successfully",
+        _id: device._id,
+        employee_name: device.fullName, // Use fullName
+        locations,
+        totalDistance: device.totalDistance,
+      },
     });
   } catch (error) {
-    console.error("Error fetching device data:", error);
+    console.error("Error fetching locations:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
-
-// const.get("/location/:mobile_id", async (req, res) => {
-//   try {
-//     const { mobile_id } = req.params;
-//     const { start, end } = req.query;
-
-//     // Find the device by mobile_id
-//     const device = await Location.findOne({
-//       mobile_id: Number(mobile_id),
-//     });
-//     if (!device) {
-//       return res.status(404).json({ message: "Location Location not found" });
-//     }
-
-//     let locations = device.locations;
-
-//     // Filter locations based on date range if provided
-//     if (start && end) {
-//       const startDate = new Date(start);
-//       const endDate = new Date(end);
-
-//       // Check for valid date ranges
-//       if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-//         return res.status(400).json({ message: "Invalid date format" });
-//       }
-
-//       // Filter locations based on the provided time frame
-//       locations = locations.filter((location) => {
-//         const locationDate = new Date(location.deviceTime);
-//         return locationDate >= startDate && locationDate <= endDate;
-//       });
-//     }
-
-//     return res.status(200).json({
-//       data: {
-//         message: "Locations fetched successfully",
-//         mobile_id: device.mobile_id,
-//         employee_name: device.fullName, // Use fullName
-//         locations,
-//         totalDistance: device.totalDistance,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error fetching locations:", error);
-//     return res.status(500).json({ message: "Server error" });
-//   }
-// });
 
 //deleete al locations
 const deleteAllLocation = async (req, res) => {
@@ -214,6 +220,7 @@ const deleteAllLocation = async (req, res) => {
 module.exports = {
   postLocation,
   getLocationByID,
-  getAllLocation,
+  // getAllLocation,
   deleteAllLocation,
+  getLocationFromDate,
 };
