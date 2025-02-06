@@ -36,6 +36,7 @@ const createReferral = async (req, res) => {
       !fullName ||
       !age ||
       !gender ||
+      !provisionalDiagnosis ||
       !country ||
       !region ||
       !city ||
@@ -49,7 +50,7 @@ const createReferral = async (req, res) => {
     )
       return res.status(400).json({
         message:
-          "fullName, age, gender, number, country, region, city, address, createdById, createdByName, mobileTime, dateTime, latitude, longitude createdById, createdByName are required",
+          "fullName, age, gender, provisionalDiagnosis, number, country, region, city, address, createdById, createdByName, mobileTime, dateTime, latitude, longitude createdById, createdByName are required",
       });
     const foundReferralId = await Referral.findById(createdById);
     if (!foundReferralId)
