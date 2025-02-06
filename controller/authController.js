@@ -33,43 +33,59 @@ const handleLogin = async (req, res) => {
         isFirstLogin: foundUser.isFirstLogin,
         reset: foundUser.reset,
       };
-      return res.status(200).json({
-        message: "Updated User Login successful",
+      const accessToken = jwt.sign(
+        { formattedUserDetail },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "30m" }
+      );
+      const refreshToken = jwt.sign(
+        { formattedUserDetail },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+      foundUser.accessToken = accessToken;
+      foundUser.refreshToken = refreshToken;
+      foundUser.save();
+      res.status(200).json({
+        message: "Login successful",
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        user: formattedUserDetail,
+      });
+    } else {
+      const formattedUserDetail = {
+        _id: foundUser._id,
+        username: foundUser.username,
+        role: foundUser.role,
+        department: foundUser.department,
+        designation: foundUser.designation,
+        email: foundUser.email,
+        number: foundUser.number,
+        address: foundUser.address,
+        dob: foundUser.dob,
+        isFirstLogin: foundUser.isFirstLogin,
+        reset: foundUser.reset,
+      };
+      const accessToken = jwt.sign(
+        { formattedUserDetail },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "30m" }
+      );
+      const refreshToken = jwt.sign(
+        { formattedUserDetail },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+      foundUser.accessToken = accessToken;
+      foundUser.refreshToken = refreshToken;
+      foundUser.save();
+      res.status(200).json({
+        message: "Login successful",
+        accessToken: accessToken,
+        refreshToken: refreshToken,
         user: formattedUserDetail,
       });
     }
-    const formattedUserDetail = {
-      _id: foundUser._id,
-      username: foundUser.username,
-      role: foundUser.role,
-      department: foundUser.department,
-      designation: foundUser.designation,
-      email: foundUser.email,
-      number: foundUser.number,
-      address: foundUser.address,
-      dob: foundUser.dob,
-      isFirstLogin: foundUser.isFirstLogin,
-      reset: foundUser.reset,
-    };
-    const accessToken = jwt.sign(
-      { formattedUserDetail },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "30m" }
-    );
-    const refreshToken = jwt.sign(
-      { formattedUserDetail },
-      process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: "7d" }
-    );
-    foundUser.accessToken = accessToken;
-    foundUser.refreshToken = refreshToken;
-    foundUser.save();
-    res.status(200).json({
-      message: "Login successful",
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      user: formattedUserDetail,
-    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
