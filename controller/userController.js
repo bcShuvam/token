@@ -9,7 +9,9 @@ const ROLES_LIST = require("../config/roles_list");
 
 const getUsers = async (req, res) => {
   // updateField();
-  const foundUsers = await User.find();
+  const foundUsers = await User.find({
+    "role.role": { $not: { $eq: "Admin" } },
+  });
   const formattedUser = foundUsers.map((user) => ({
     _id: user._id,
     username: user.username,
