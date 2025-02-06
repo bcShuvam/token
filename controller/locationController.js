@@ -14,16 +14,14 @@ async function getNextSequenceValue() {
 // Route to handle location updates
 const postLocation = async (req, res) => {
   try {
-    const userId = req.body.userId;
+    const _id = req.query._id;
 
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ message: "Missing required field: userId" });
+    if (!_id) {
+      return res.status(400).json({ message: "Missing required field: _id" });
     }
 
-    // Find the location document where _id is userId
-    const locationDoc = await Location.findById(userId);
+    // Find the location document where _id is _id
+    const locationDoc = await Location.findById(_id);
 
     if (!locationDoc) {
       return res.status(404).json({ message: "User not found" });
