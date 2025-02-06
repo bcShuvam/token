@@ -1,14 +1,14 @@
-const Location = require("../models/locationModel");
+const Location = require("../model/location");
 const todayDate = require("../config/todayDate");
 
 async function getNextSequenceValue() {
   const counterDoc = await Location.findOneAndUpdate(
-    { _id: "location_id" },
-    { $inc: { location_id: 1 } },
+    { _id: "locationCounter" },
+    { $inc: { locationCounter: 1 } },
     { new: true, upsert: true }
   );
 
-  return counterDoc.location_id;
+  return counterDoc.locationCounter;
 }
 
 // Route to handle location updates
@@ -40,11 +40,11 @@ const postLocation = async (req, res) => {
     } = req.body;
 
     // Generate a unique location_id
-    const location_id = await getNextSequenceValue();
+    const locationCounter = await getNextSequenceValue();
 
     // Create a new location object
     const newLocation = {
-      location_id,
+      locationCounter,
       latitude,
       longitude,
       batteryPercentage,
@@ -81,8 +81,8 @@ const getLocationByID = async (req, res) => {
 
     if (_id) {
       // Find a specific device by _id
-      const device = await Device.findOne({ _id }).select(
-        "fullName mobileIdentifier locations distanceByDate totalDistance"
+      const device = await Location.findOne({ _id }).select(
+        "fullName locations distanceByDate totalDistance"
       );
 
       if (!device) {
@@ -94,7 +94,6 @@ const getLocationByID = async (req, res) => {
         latestData: {
           _id: device._id,
           employee_name: device.fullName,
-          mobileIdentifier: device.mobileIdentifier,
           latestLocation: device.locations.slice(-1)[0] || null, // Avoid error if empty
           totalDistanceToday:
             device.distanceByDate.find(
@@ -106,8 +105,8 @@ const getLocationByID = async (req, res) => {
     }
 
     // Fetch all devices with latest location
-    const devices = await Device.find().select(
-      "fullName mobileIdentifier locations distanceByDate totalDistance"
+    const devices = await Location.find().select(
+      "fullName, locations, distanceByDate, totalDistance"
     );
 
     const latestData = devices.map((device) => {
