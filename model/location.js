@@ -25,7 +25,7 @@ function calculateDistanceTravelledOnDate(locations) {
 }
 
 const LocationSchema = new Schema({
-  location_id: {
+  locationCounter: {
     type: Number,
   },
   latitude: {
@@ -68,9 +68,10 @@ const LocationSchema = new Schema({
 
 const DeviceSchema = new Schema(
   {
-    mobileIdentifier: {
-      type: String,
-    },
+    // mobileIdentifier: {
+    //   type: String,
+    // },
+    _id: { type: String, required: true },
     fullName: {
       type: String,
       required: true,
@@ -100,6 +101,6 @@ DeviceSchema.pre("save", function (next) {
   next();
 });
 
-const Device = mongoose.model("Device", DeviceSchema);
+const Location = mongoose.model("Device", DeviceSchema);
 
-module.exports = Device;
+module.exports = Location;

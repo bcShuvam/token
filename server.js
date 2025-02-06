@@ -35,7 +35,7 @@ app.use("/api/poc", require("./routes/poc"));
 app.use("/api/visitLogs", require("./routes/visitLog"));
 app.use("/api/referral", require("./routes/referral"));
 app.use("/api/plan", require("./routes/plan"));
-// app.use("/api/location", require("./routes/"))
+app.use("/api/location", require("./routes/location"));
 
 mongoose.connection.once("open", () => {
   console.log("Connected to MongoDB...");

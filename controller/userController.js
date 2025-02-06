@@ -2,6 +2,7 @@ const User = require("../model/users");
 const Attendance = require("../model/attendance");
 const VisitLog = require("../model/visitLog");
 const Referral = require("../model/referral");
+const Location = require("../model/location");
 const Plan = require("../model/plan");
 const bcrypt = require("bcrypt");
 const ROLES_LIST = require("../config/roles_list");
@@ -98,6 +99,11 @@ const createUser = async (req, res) => {
     const createReferralLogId = await Referral.create({
       _id: newUser._id,
     });
+
+    const createLocationId = await Location.create({
+      _id: newUser._id,
+    });
+
     // createReferralLogId.save();
     res.status(200).json({
       message: "User created successfully",
