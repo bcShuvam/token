@@ -30,6 +30,10 @@ const handleLogin = async (req, res) => {
         number: foundUser.number,
         address: foundUser.address,
         dob: foundUser.dob,
+        gender: foundUser.gender,
+        maritalStatus: foundUser.maritalStatus,
+        nationality: foundUser.nationality,
+        doj: foundUser.doj,
         isFirstLogin: foundUser.isFirstLogin,
         reset: foundUser.reset,
       };
