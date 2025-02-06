@@ -10,8 +10,10 @@ const ROLES_LIST = require("../config/roles_list");
 const getUsers = async (req, res) => {
   try {
     const foundUsers = await User.find({
-      "role.role": { $ne: "Admin" }, // ✅ Use $ne instead of $not with $eq
+      "role.role": { $ne: "Admin" }, // Ensure no Admin users are returned
     });
+
+    console.log(foundUsers); // Debug to check if Admin is excluded
 
     const formattedUsers = foundUsers.map((user) => ({
       _id: user._id,
