@@ -25,6 +25,10 @@ const getUsers = async (req, res) => {
       number: user.number,
       address: user.address,
       dob: user.dob,
+      gender: user.gender,
+      maritalStatus: user.maritalStatus,
+      nationality: user.nationality,
+      doj: user.doj,
       isFirstLogin: user.isFirstLogin,
       reset: user.reset,
     }));
@@ -37,8 +41,21 @@ const getUsers = async (req, res) => {
 
 const createUser = async (req, res) => {
   try {
-    const { username, password, role, email, department, designation } =
-      req.body;
+    const {
+      username,
+      password,
+      role,
+      email,
+      number,
+      address,
+      dob,
+      gender,
+      maritalStatus,
+      nationality,
+      doj,
+      department,
+      designation,
+    } = req.body;
     console.log(req.body);
     if (
       !username ||
@@ -46,11 +63,18 @@ const createUser = async (req, res) => {
       !role ||
       !email ||
       !department ||
-      !designation
+      !designation ||
+      !address ||
+      !dob ||
+      !number ||
+      !gender ||
+      !maritalStatus ||
+      !nationality ||
+      !doj
     )
       return res.status(400).json({
         message:
-          "username, password, role, email, department and designation are required",
+          "username, password, role, email, number, address, dob, gender, maritalStatus, nationality, doj, department and designation are required",
       });
     const exists = ROLES_LIST.some(
       (r) => r.role === role.role && r.roleValue === role.roleValue
@@ -67,9 +91,13 @@ const createUser = async (req, res) => {
       department: department,
       designation: designation,
       email: email,
-      number: req.body?.number,
-      address: req.body?.address,
-      dob: req.body?.dob,
+      number: number,
+      address: address,
+      dob: dob,
+      gender: gender,
+      maritalStatus: maritalStatus,
+      nationality: nationality,
+      doj: doj,
       isFirstLogin: req.body?.isFirstLogin,
       reset: req.body?.reset,
     });
@@ -86,12 +114,22 @@ const createUser = async (req, res) => {
       number: newUser.number,
       address: newUser.address,
       dob: newUser.dob,
+      gender: newUser.gender,
+      maritalStatus: newUser.maritalStatus,
+      nationality: newUser.nationality,
+      doj: newUser.doj,
       isFirstLogin: newUser.isFirstLogin,
       reset: newUser.reset,
     };
+
+    if (role.roleValue === 1011)
+      return res
+        .status(200)
+        .json({ message: "User created successfully", user: formattedNewUser });
     // Creating attendance id as userId after the user has been created successfully
     const createAttendanceId = await Attendance.create({
       _id: newUser._id,
+      username: newUser.username,
     });
     // createAttendanceId.save();
     // Creating attendance id as userId after the user has been created successfully
@@ -102,17 +140,18 @@ const createUser = async (req, res) => {
     // Creating visitLog id as userId after the user has been created successfully
     const createVisitLogId = await VisitLog.create({
       _id: newUser._id,
-      userName: newUser.username,
+      username: newUser.username,
     });
     // createVisitLogId.save();
     // Creating visitLog id as userId after the user has been created successfully
     const createReferralLogId = await Referral.create({
       _id: newUser._id,
+      username: newUser.username,
     });
 
     const createLocationId = await Location.create({
       _id: newUser._id,
-      fullName: newUser.username,
+      username: newUser.username,
     });
 
     // createReferralLogId.save();
