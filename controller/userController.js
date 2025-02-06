@@ -8,24 +8,29 @@ const bcrypt = require("bcrypt");
 const ROLES_LIST = require("../config/roles_list");
 
 const getUsers = async (req, res) => {
-  // updateField();
-  const foundUsers = await User.find({
-    "role.role": { $not: { $eq: "Admin" } },
-  });
-  const formattedUser = foundUsers.map((user) => ({
-    _id: user._id,
-    username: user.username,
-    role: user.role,
-    department: user.department,
-    designation: user.designation,
-    email: user.email,
-    number: user.number,
-    address: user.address,
-    dob: user.dob,
-    isFirstLogin: user.isFirstLogin,
-    reset: user.reset,
-  }));
-  res.status(200).json({ users: formattedUser });
+  try {
+    const foundUsers = await User.find({
+      "role.role": { $ne: "Admin" }, // ✅ Use $ne instead of $not with $eq
+    });
+
+    const formattedUsers = foundUsers.map((user) => ({
+      _id: user._id,
+      username: user.username,
+      role: user.role,
+      department: user.department,
+      designation: user.designation,
+      email: user.email,
+      number: user.number,
+      address: user.address,
+      dob: user.dob,
+      isFirstLogin: user.isFirstLogin,
+      reset: user.reset,
+    }));
+
+    res.status(200).json({ users: formattedUsers });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 const createUser = async (req, res) => {
