@@ -8,7 +8,7 @@ const bcrypt = require("bcrypt");
 const ROLES_LIST = require("../config/roles_list");
 
 const getUsers = async (req, res) => {
-  updateField();
+  // updateField();
   try {
     const foundUsers = await User.find({
       "role.role": { $ne: "Admin" }, // Ensure no Admin users are returned
