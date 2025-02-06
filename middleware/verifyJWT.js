@@ -8,16 +8,16 @@ const verifyJWT = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   const foundUser = await Users.findById(_id);
   if (!foundUser)
-    return res
-      .status(404)
-      .json({ message: `_id ${_id} not found`, customStatusCode: 11 });
+    return res.status(404).json({ message: `_id ${_id} not found` });
   if (foundUser.accessToken !== token)
-    return res.status(403).json({ message: "accessToken not matched" });
+    return res
+      .status(403)
+      .json({ message: "accessToken not matched", customCode: 11 });
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err)
       return res
         .status(403)
-        .json({ message: "Access token expired", customStatusCode: 10 }); // invalid token
+        .json({ message: "Access token expired", customCode: 10 }); // invalid token
     req.user = decoded.formattedUserDetail;
     next();
   });
@@ -37,7 +37,7 @@ const verifyRefreshToken = async (req, res, next) => {
     if (foundUser.refreshToken !== refreshToken)
       return res
         .status(400)
-        .json({ message: `refreshToken not matched`, customStatusCode: 21 });
+        .json({ message: `refreshToken not matched`, customCode: 21 });
 
     jwt.verify(
       refreshToken,
@@ -48,7 +48,7 @@ const verifyRefreshToken = async (req, res, next) => {
           foundUser.save();
           return res
             .status(403)
-            .json({ message: "Refresh token expired", customStatusCode: 20 });
+            .json({ message: "Refresh token expired", customCode: 20 });
         }
 
         const formattedUserDetail = {
