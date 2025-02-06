@@ -93,6 +93,7 @@ const createUser = async (req, res) => {
     // Creating visitLog id as userId after the user has been created successfully
     const createVisitLogId = await VisitLog.create({
       _id: newUser._id,
+      userName: newUser.username,
     });
     // createVisitLogId.save();
     // Creating visitLog id as userId after the user has been created successfully
@@ -102,6 +103,7 @@ const createUser = async (req, res) => {
 
     const createLocationId = await Location.create({
       _id: newUser._id,
+      fullName: newUser.username,
     });
 
     // createReferralLogId.save();
@@ -112,6 +114,7 @@ const createUser = async (req, res) => {
       // plan: createPlanId,
       visitLog: createVisitLogId,
       referral: createReferralLogId,
+      location: createLocationId,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
