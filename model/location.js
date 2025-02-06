@@ -72,7 +72,7 @@ const DeviceSchema = new Schema(
     //   type: String,
     // },
     _id: { type: String, required: true },
-    fullName: {
+    username: {
       type: String,
       required: true,
     },

@@ -16,7 +16,7 @@ const visitLogModel = new mongoose.Schema(
 const visitModel = new mongoose.Schema(
   {
     _id: { type: String, required: true },
-    userName: { type: String, required: true },
+    username: { type: String, required: true },
     visitLogCounter: { type: Number, default: 0 },
     visitLogs: [visitLogModel],
   },

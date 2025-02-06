@@ -37,6 +37,7 @@ const attendanceModel = new mongoose.Schema(
 const attendanceSchema = mongoose.Schema(
   {
     _id: { type: String, required: true },
+    username: { type: String, required: true },
     attendance: [attendanceModel],
   },
   { timestamps: true }

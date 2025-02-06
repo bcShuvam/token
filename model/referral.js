@@ -24,6 +24,7 @@ const referralLogModel = new mongoose.Schema(
 const referralModel = new mongoose.Schema(
   {
     _id: { type: String, required: true },
+    username: { type: String, required: true },
     referralLogCounter: { type: Number, default: 0 },
     referralLogs: [referralLogModel],
   },
