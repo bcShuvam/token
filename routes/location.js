@@ -2,14 +2,15 @@ const express = require("express");
 const router = express.Router();
 const {
   deleteAllLocation,
-  getAllLocation,
+  //   getAllLocation,
   getLocationByID,
   postLocation,
+  getLocationFromDate,
 } = require("../controllers/locationController");
 
 router
   .route("/location")
-  .get(getAllLocation)
+  .get(getLocationFromDate)
   .post(postLocation)
   .delete(deleteAllLocation);
 router.route("/location/:id").get(getLocationByID);

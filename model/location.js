@@ -6,10 +6,27 @@ function calculateTotalDistance(locations) {
   return locations.reduce((total, loc) => total + loc.distance, 0);
 }
 
+// Function to calculate distance traveled on a particular date
+function calculateDistanceTravelledOnDate(locations) {
+  const distanceMap = {};
+
+  locations.forEach((loc) => {
+    const dateKey = loc.localTime;
+    if (!distanceMap[dateKey]) {
+      distanceMap[dateKey] = 0;
+    }
+    distanceMap[dateKey] += loc.distance;
+  });
+
+  return Object.entries(distanceMap).map(([date, tDistance]) => ({
+    date: new Date(date),
+    tDistance,
+  }));
+}
+
 const LocationSchema = new Schema({
   location_id: {
     type: Number,
-    // unique: true,
   },
   latitude: {
     type: Number,
@@ -19,13 +36,13 @@ const LocationSchema = new Schema({
     type: Number,
     required: true,
   },
-  deviceTime: {
+  mobileTime: {
     type: String,
     required: true,
   },
-  serverTime: {
+  localTime: {
     type: Date,
-    default: Date.now,
+    required: true,
   },
   connectivityType: {
     type: String,
@@ -53,31 +70,36 @@ const DeviceSchema = new Schema(
   {
     mobileIdentifier: {
       type: String,
-      // required: true,
-      // unique: true,
     },
     fullName: {
       type: String,
       required: true,
     },
-    locations: [{ LocationSchema }],
+    locations: [LocationSchema],
     totalDistance: {
       type: Number,
       default: 0,
     },
+    distanceByDate: [
+      {
+        date: { type: Date, required: true },
+        tDistance: { type: Number, default: 0 },
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
 
+// Middleware to update total distance and distance by date
 DeviceSchema.pre("save", function (next) {
   const device = this;
   device.totalDistance = calculateTotalDistance(device.locations);
-
+  device.distanceByDate = calculateDistanceTravelledOnDate(device.locations);
   next();
 });
 
-const Device = mongoose.model("Location", DeviceSchema);
+const Device = mongoose.model("Device", DeviceSchema);
 
-module.exports = Location;
+module.exports = Device;
