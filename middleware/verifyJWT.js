@@ -68,7 +68,7 @@ const verifyRefreshToken = async (req, res, next) => {
         const accessToken = jwt.sign(
           { formattedUserDetail },
           process.env.ACCESS_TOKEN_SECRET,
-          { expiresIn: "30m" }
+          { expiresIn: "2m" }
         );
 
         foundUser.accessToken = accessToken;
