@@ -1,16 +1,6 @@
 const Location = require("../model/location");
 const todayDate = require("../config/todayDate");
 
-async function getNextSequenceValue() {
-  const counterDoc = await Location.findOneAndUpdate(
-    { _id: "locationCounter" },
-    { $inc: { locationCounter: 1 } },
-    { new: true, upsert: true }
-  );
-
-  return counterDoc.locationCounter;
-}
-
 // Route to handle location updates
 const postLocation = async (req, res) => {
   try {
@@ -40,11 +30,8 @@ const postLocation = async (req, res) => {
     } = req.body;
 
     // Generate a unique location_id
-    const locationCounter = await getNextSequenceValue();
-
     // Create a new location object
     const newLocation = {
-      locationCounter,
       latitude,
       longitude,
       batteryPercentage,
@@ -81,19 +68,17 @@ const getLocationByID = async (req, res) => {
 
     if (_id) {
       // Find a specific device by _id
-      const device = await Location.findOne({ _id }).select(
-        "fullName locations distanceByDate totalDistance"
-      );
+      const device = await Location.findOne({ _id });
 
       if (!device) {
         return res.status(404).json({ message: "Location not found" });
       }
 
       return res.status(200).json({
-        message: `Location data for employee: ${device.fullName} fetched successfully`,
+        message: `Location data for employee: ${device.username} fetched successfully`,
         latestData: {
           _id: device._id,
-          employee_name: device.fullName,
+          employee_name: device.username,
           latestLocation: device.locations.slice(-1)[0] || null, // Avoid error if empty
           totalDistanceToday:
             device.distanceByDate.find(
@@ -105,16 +90,14 @@ const getLocationByID = async (req, res) => {
     }
 
     // Fetch all devices with latest location
-    const devices = await Location.find().select(
-      "fullName, locations, distanceByDate, totalDistance"
-    );
+    const devices = await Location.find();
 
     const latestData = devices.map((device) => {
       const latestLocation = device.locations.slice(-1)[0] || null;
       return {
-        message: `Location data for employee: ${device.fullName} fetched successfully`,
+        message: `Location data for employee: ${device.username} fetched successfully`,
         _id: device._id,
-        employee_name: device.fullName,
+        username: device.username,
         latestLocation: latestLocation,
         totalDistanceToday:
           device.distanceByDate.find(
@@ -139,7 +122,7 @@ const getLocationByID = async (req, res) => {
 //     const latestData = devices.map((device) => {
 //       return {
 //         _id: device._id,
-//         employee_name: device.fullName,
+//         employee_name: device.username,
 //         // mobileIdentifier: device.mobileIdentifier,
 //         latestLocation: device.locations,
 //         totalDistanceToday,
@@ -160,31 +143,33 @@ const getLocationByID = async (req, res) => {
 const getLocationFromDate = async (req, res) => {
   try {
     const { _id, from, to } = req.query;
-    if (!_id) return res.status(404).json({ message: "Id is required " });
+    if (!_id) return res.status(404).json({ message: "Id is required" });
 
     // Find the device by _id
-    const device = await Location.findOne({
-      _id: Number(_id),
-    });
+    const device = await Location.findOne({ _id });
     if (!device) {
-      return res.status(404).json({ message: "Location Location not found" });
+      return res.status(404).json({ message: "Location not found" });
     }
 
     let locations = device.locations;
 
     // Filter locations based on date range if provided
     if (from && to) {
-      const startDate = new Date(from);
-      const endDate = new Date(to);
+      const startDate = new Date(from).toISOString(); // Convert to UTC
+      const endDate = new Date(to).toISOString(); // Convert to UTC
 
       // Check for valid date ranges
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      if (
+        isNaN(new Date(startDate).getTime()) ||
+        isNaN(new Date(endDate).getTime())
+      ) {
         return res.status(400).json({ message: "Invalid date format" });
       }
 
       // Filter locations based on the provided time frame
       locations = locations.filter((location) => {
-        const locationDate = new Date(location.mobileTime);
+        const locationDate = new Date(location.localTime).toISOString(); // Convert to UTC
+
         return locationDate >= startDate && locationDate <= endDate;
       });
     }
@@ -193,7 +178,7 @@ const getLocationFromDate = async (req, res) => {
       data: {
         message: "Locations fetched successfully",
         _id: device._id,
-        employee_name: device.fullName, // Use fullName
+        employee_name: device.username, // Use username
         locations,
         totalDistance: device.totalDistance,
       },

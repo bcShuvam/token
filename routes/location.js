@@ -9,10 +9,7 @@ const {
 } = require("../controller/locationController");
 
 router.route("/delete").delete(deleteAllLocation);
-router
-  .route("/latest")
-  .get(getLocationByID)
-  .get(getLocationFromDate)
-  .post(postLocation);
+router.route("/latest").get(getLocationByID).post(postLocation);
+router.route("/latestByDate").get(getLocationFromDate);
 
 module.exports = router;
