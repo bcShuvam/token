@@ -79,7 +79,7 @@ const getLocationByID = async (req, res) => {
         latestData: {
           _id: device._id,
           username: device.username,
-          latestLocation: device.locations.slice(-1)[0] || null, // Avoid error if empty
+          latestLocation: device.locations.slice(-1)[0] || {}, // Avoid error if empty
           totalDistanceToday:
             device.distanceByDate.find(
               (date) => new Date(date.date).toDateString() === todayDate
