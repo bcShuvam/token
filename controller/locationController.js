@@ -95,9 +95,9 @@ const getLocationByID = async (req, res) => {
     const latestData = devices.map((device) => {
       const latestLocation = device.locations.slice(-1)[0] || {};
 
-      if (Object.keys(latestLocation).length === 0) {
-        latestLocation = {};
-      }
+      // if (Object.keys(latestLocation).length === 0) {
+      //   latestLocation = {};
+      // }
       return {
         message: `Location data for employee: ${device.username} fetched successfully`,
         _id: device._id,
