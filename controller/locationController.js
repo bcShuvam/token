@@ -78,7 +78,7 @@ const getLocationByID = async (req, res) => {
         message: `Location data for employee: ${device.username} fetched successfully`,
         latestData: {
           _id: device._id,
-          employee_name: device.username,
+          username: device.username,
           latestLocation: device.locations.slice(-1)[0] || null, // Avoid error if empty
           totalDistanceToday:
             device.distanceByDate.find(
@@ -94,6 +94,10 @@ const getLocationByID = async (req, res) => {
 
     const latestData = devices.map((device) => {
       const latestLocation = device.locations.slice(-1)[0] || null;
+
+      if (Object.keys(latestLocation).length === 0) {
+        latestLocation = {};
+      }
       return {
         message: `Location data for employee: ${device.username} fetched successfully`,
         _id: device._id,
@@ -178,7 +182,7 @@ const getLocationFromDate = async (req, res) => {
       data: {
         message: "Locations fetched successfully",
         _id: device._id,
-        employee_name: device.username, // Use username
+        username: device.username, // Use username
         locations,
         totalDistance: device.totalDistance,
       },
