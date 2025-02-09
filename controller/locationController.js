@@ -41,7 +41,7 @@ const postLocation = async (req, res) => {
       localTime: localTime,
       connectivityType,
       connectivityStatus,
-      distance,
+      parseFloat(distance),
     };
 
     // Push the new location to the locations array
