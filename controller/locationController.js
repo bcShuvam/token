@@ -180,13 +180,11 @@ const getLocationFromDate = async (req, res) => {
     }
 
     return res.status(200).json({
-      data: {
-        message: "Locations fetched successfully",
-        _id: device._id,
-        username: device.username, // Use username
-        locations,
-        totalDistance: device.totalDistance,
-      },
+      message: "Locations fetched successfully",
+      _id: device._id,
+      username: device.username, // Use username
+      totalDistance: device.totalDistance,
+      locations,
     });
   } catch (error) {
     console.error("Error fetching locations:", error);
