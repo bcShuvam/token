@@ -1,20 +1,12 @@
 const Location = require("../model/location");
 const todayDate = require("../config/todayDate");
 
-// Route to handle location updates
 const postLocation = async (req, res) => {
   try {
     const _id = req.query._id;
 
     if (!_id) {
       return res.status(400).json({ message: "Missing required field: _id" });
-    }
-
-    // Find the location document where _id is _id
-    const locationDoc = await Location.findById(_id);
-
-    if (!locationDoc) {
-      return res.status(404).json({ message: "User not found" });
     }
 
     // Extract location data from the request body
@@ -30,30 +22,33 @@ const postLocation = async (req, res) => {
       distance,
     } = req.body;
 
-    // Generate a unique location_id
-    // Create a new location object
     const newLocation = {
       latitude,
       longitude,
       batteryPercentage,
       accuracy,
       mobileTime,
-      localTime: localTime,
+      localTime,
       connectivityType,
       connectivityStatus,
       distance,
     };
 
-    // Push the new location to the locations array
-    locationDoc.locations.push(newLocation);
+    // Use `findByIdAndUpdate` to update directly
+    const updatedLocationDoc = await Location.findByIdAndUpdate(
+      _id,
+      { $push: { locations: newLocation } },
+      { new: true, useFindAndModify: false }
+    );
 
-    // Save the updated document
-    await locationDoc.save();
+    if (!updatedLocationDoc) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     return res.status(200).json({
       message: "Location data appended successfully.",
       latestLocation: newLocation,
-      totalLocations: locationDoc.locations.length,
+      totalLocations: updatedLocationDoc.locations.length,
     });
   } catch (error) {
     console.error("Error appending location data:", error);
