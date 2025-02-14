@@ -19,6 +19,7 @@ const visitLogsById = async (req, res) => {
     const filteredVisitLogs = foundVisitLog.visitLogs.filter((logs) => {
       const visitDate = new Date(logs.visitDate).toISOString();
       console.log(visitDate);
+      console.log(`${visitDate} >= ${from} && ${visitDate} <= ${to}`);
       console.log(visitDate >= from && visitDate <= to);
       return visitDate >= from && visitDate <= to;
     });
