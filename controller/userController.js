@@ -181,11 +181,24 @@ const getRolesList = (req, res) => {
 };
 
 async function updateField() {
-  const user = await VisitLog.find({
+  // Find users with visitLogs that have missing visitDate
+  const users = await VisitLog.find({
     "visitLogs.visitDate": { $exists: false },
   });
-  for (let visitDate in user) {
-    await User.updateMany({ $set: { "visitLogs.visitDate": Date.now() } });
+
+  // Iterate over each user
+  for (const user of users) {
+    // Iterate over each visitLog in the user's visitLogs array
+    for (const visitLog of user.visitLogs) {
+      // Check if visitDate is missing
+      if (!visitLog.visitDate) {
+        // Update the specific visitLog entry with the current date
+        await User.updateOne(
+          { _id: user._id, "visitLogs._id": visitLog._id },
+          { $set: { "visitLogs.$.visitDate": new Date() } }
+        );
+      }
+    }
   }
 }
 
