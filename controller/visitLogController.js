@@ -6,7 +6,9 @@ const visitLogsById = async (req, res) => {
     if (!_id)
       return res.status(400).json({ message: "visitLogId is required" });
     const from = new Date(req.query?.from);
+    from.setUTCHours(0, 0, 0, 0);
     const to = new Date(req.query?.to);
+    to.setUTCHours(23, 59, 59, 999);
     console.log(req.query?.from);
     console.log(from);
     console.log(req.query?.to);
@@ -22,7 +24,7 @@ const visitLogsById = async (req, res) => {
     if (!foundVisitLog)
       return res.status(404).json({
         message: `No visitLog found from ${from.toISOString()} to ${to.toISOString()}.`,
-        visitLogs: [],
+        visitLogs: {},
       });
     const visitLogs = foundVisitLog;
     console.log(visitLogs);
