@@ -8,7 +8,7 @@ const bcrypt = require("bcrypt");
 const ROLES_LIST = require("../config/roles_list");
 
 const getUsers = async (req, res) => {
-  // updateField();
+  updateField();
   try {
     const foundUsers = await User.find({
       "role.role": { $ne: "Admin" }, // Ensure no Admin users are returned
@@ -181,9 +181,11 @@ const getRolesList = (req, res) => {
 };
 
 async function updateField() {
-  const user = await User.find({ doj: { $exists: false } });
-  for (let doj in user) {
-    await User.updateMany({ $set: { doj: Date.now() } });
+  const user = await VisitLog.find({
+    "visitLogs.visitDate": { $exists: false },
+  });
+  for (let visitDate in user) {
+    await User.updateMany({ $set: { "visitLogs.visitDate": Date.now() } });
   }
 }
 
