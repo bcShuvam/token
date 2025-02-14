@@ -7,7 +7,9 @@ const visitLogsById = async (req, res) => {
       return res.status(400).json({ message: "visitLogId is required" });
     const from = new Date(req.query?.from);
     const to = new Date(req.query?.to);
+    console.log(req.query?.from);
     console.log(from);
+    console.log(req.query?.to);
     console.log(to);
     const foundVisitLog = await VisitLog.findOne({
       _id,
