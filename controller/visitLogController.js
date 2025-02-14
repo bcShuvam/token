@@ -13,7 +13,7 @@ const visitLogsById = async (req, res) => {
       _id,
       visitLogs: {
         $elemMatch: {
-          createdAt: { $gte: from, $lte: to },
+          visitDate: { $gte: from, $lte: to },
         },
       },
     });
