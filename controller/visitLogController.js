@@ -18,9 +18,6 @@ const visitLogsById = async (req, res) => {
       return res.status(404).json("message: visitLog not found for given id");
     const filteredVisitLogs = foundVisitLog.visitLogs.filter((logs) => {
       const visitDate = new Date(logs.visitDate); // Convert visitDate to Date object
-      console.log(visitDate);
-      console.log(`${visitDate} >= ${from} && ${visitDate} <= ${to}`);
-      console.log(visitDate >= from && visitDate <= to);
       return visitDate >= from && visitDate <= to;
     });
     if (filteredVisitLogs.length === 0)
