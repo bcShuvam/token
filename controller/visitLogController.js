@@ -13,20 +13,25 @@ const visitLogsById = async (req, res) => {
     console.log(from);
     console.log(req.query?.to);
     console.log(to);
-    const foundVisitLog = await VisitLog.findOne({
-      _id,
-      visitLogs: {
-        $elemMatch: {
-          visitDate: { $gte: from, $lte: to },
-        },
-      },
-    });
+    const foundVisitLog = await VisitLog.findById(_id);
     if (!foundVisitLog)
+      return res.status(404).json("message: visitLog not found for given id");
+    const filteredVisitLogs = foundVisitLog.filter((logs) => {
+      const visitDate = new Date(logs.visitDate).toISOString();
+
+      return visitDate >= from && visitDate <= to;
+    });
+    if (filteredVisitLogs.length === 0)
       return res.status(404).json({
         message: `No visitLog found from ${from.toISOString()} to ${to.toISOString()}.`,
         visitLogs: {},
       });
-    const visitLogs = foundVisitLog;
+    const visitLogs = {
+      _id: foundVisitLog._id,
+      visitLogCounter: foundVisitLog.visitLogCounter,
+      visitLogs: filteredVisitLogs,
+    };
+    // const visitLogs = foundVisitLog;
     console.log(visitLogs);
     res.status(200).json({ message: "success", visitLogs });
   } catch (err) {
