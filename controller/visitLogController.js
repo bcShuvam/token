@@ -11,9 +11,9 @@ const visitLogsList = async (req, res) => {
 
     const formattedVisitLogs = foundPOC.map((logs) => ({
       _id: logs._id,
-      pocName: logs.pocName,
+      username: logs.username,
     }));
-    console.log(foundVisitLog);
+    console.log(formattedVisitLogs);
     res.status(200).json({ message: "success", logs: formattedVisitLogs });
   } catch (err) {
     res.status(500).json({ message: err.message });
