@@ -1,5 +1,21 @@
 const VisitLog = require("../model/visitLog");
 
+const visitLogsList = async (req, res) => {
+  try {
+    const _id = req.query;
+    if (!_id) return res.status(400).json({ message: "_id is required" });
+
+    const foundVisitLog = await VisitLog.find();
+    if (!foundVisitLog)
+      return res.status(404).json({ message: "No visit log found" });
+
+    console.log(foundVisitLog);
+    res.status(200).json({ message: "success", foundVisitLog });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const visitLogsById = async (req, res) => {
   try {
     const _id = req.query?.visitLogId;
