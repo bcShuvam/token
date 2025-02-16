@@ -9,7 +9,7 @@ const visitLogsList = async (req, res) => {
     if (!foundVisitLog)
       return res.status(404).json({ message: "No visit log found", logs: [] });
 
-    const formattedVisitLogs = foundPOC.map((logs) => ({
+    const formattedVisitLogs = foundVisitLog.map((logs) => ({
       _id: logs?._id,
       username: logs?.username,
     }));
