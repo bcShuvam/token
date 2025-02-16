@@ -17,18 +17,18 @@ const attendanceModel = new mongoose.Schema(
       latitude: { type: Number, default: 0 },
       longitude: { type: Number, default: 0 },
     },
-    overTimeIn: {
-      status: { type: String, default: "" },
-      deviceInTime: { type: String, default: "" },
-      latitude: { type: Number, default: 0 },
-      longitude: { type: Number, default: 0 },
-    },
-    overTimeOut: {
-      status: { type: String, default: "" },
-      deviceOutTime: { type: String, default: "" },
-      latitude: { type: Number, default: 0 },
-      longitude: { type: Number, default: 0 },
-    },
+    // overTimeIn: {
+    //   status: { type: String, default: "" },
+    //   deviceInTime: { type: String, default: "" },
+    //   latitude: { type: Number, default: 0 },
+    //   longitude: { type: Number, default: 0 },
+    // },
+    // overTimeOut: {
+    //   status: { type: String, default: "" },
+    //   deviceOutTime: { type: String, default: "" },
+    //   latitude: { type: Number, default: 0 },
+    //   longitude: { type: Number, default: 0 },
+    // },
     totalHours: { type: Number, default: 0 },
   },
   { timestamps: true }
