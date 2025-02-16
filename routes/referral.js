@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const createReferral = require("../controller/referralController");
+const {
+  getReferralById,
+  createReferral,
+} = require("../controller/referralController");
 
-router.route("/").post(createReferral);
+router.route("/").get(getReferralById).post(createReferral);
 
 module.exports = router;

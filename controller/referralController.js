@@ -3,6 +3,28 @@ const POC = require("../model/poc");
 const Referral = require("../model/referral");
 const mongoose = require("mongoose");
 
+const getReferralById = async (req, res) => {
+  const { _id, from, to } = req.query;
+  if (!_id) return res.status(400).json({ message: "_id is required" });
+  if (!from || !to)
+    return res.status(400).json({ message: "from and to are required" });
+  const referralDateFrom = new Date(from);
+  referralDateFrom.setUTCHours(0, 0, 0, 0);
+  const referralDateTo = new Date(to);
+  referralDateTo.setUTCHours(23, 59, 59, 999);
+  const foundReferral = await Referral.findById(_id);
+  if (!foundReferral)
+    return res
+      .status(404)
+      .json({ message: "no referral found", referralLogs: {} });
+  const filteredReferrals = foundReferral.referralLogs.filter((logs) => {
+    const date = new Date(logs.referralDate);
+    return date >= referralDateFrom && date <= referralDateTo;
+  });
+  console.log(referralLogs);
+  res.status(200).json({ message: "success", visitLogs });
+};
+
 const createReferral = async (req, res) => {
   try {
     const {
@@ -137,4 +159,4 @@ const createReferral = async (req, res) => {
   }
 };
 
-module.exports = createReferral;
+module.exports = { getReferralById, createReferral };
