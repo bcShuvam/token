@@ -21,8 +21,8 @@ const getReferralById = async (req, res) => {
     const date = new Date(logs.referralDate);
     return date >= referralDateFrom && date <= referralDateTo;
   });
-  console.log(referralLogs);
-  res.status(200).json({ message: "success", visitLogs });
+  console.log(filteredReferrals);
+  res.status(200).json({ message: "success", referralLogs: filteredReferrals });
 };
 
 const createReferral = async (req, res) => {
