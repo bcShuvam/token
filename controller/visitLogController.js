@@ -54,4 +54,4 @@ const visitLogsById = async (req, res) => {
   }
 };
 
-module.exports = visitLogsById;
+module.exports = { visitLogsList, visitLogsById };
