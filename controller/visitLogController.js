@@ -7,10 +7,14 @@ const visitLogsList = async (req, res) => {
 
     const foundVisitLog = await VisitLog.find();
     if (!foundVisitLog)
-      return res.status(404).json({ message: "No visit log found" });
+      return res.status(404).json({ message: "No visit log found", logs: [] });
 
+    const formattedVisitLogs = foundPOC.map((logs) => ({
+      _id: logs._id,
+      pocName: logs.pocName,
+    }));
     console.log(foundVisitLog);
-    res.status(200).json({ message: "success", foundVisitLog });
+    res.status(200).json({ message: "success", logs: formattedVisitLogs });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
