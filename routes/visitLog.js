@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const visitLogsById = require("../controller/visitLogController");
+const {
+  visitLogsList,
+  visitLogsById,
+} = require("../controller/visitLogController");
 
+router.route("/users").get(visitLogsList);
 router.route("").get(visitLogsById);
 
 module.exports = router;
