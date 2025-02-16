@@ -10,10 +10,10 @@ const visitLogsList = async (req, res) => {
       return res.status(404).json({ message: "No visit log found", logs: [] });
 
     const formattedVisitLogs = foundPOC.map((logs) => ({
-      _id: logs._id,
-      pocName: logs.pocName,
+      _id: logs?._id,
+      username: logs?.username,
     }));
-    console.log(foundVisitLog);
+    console.log(formattedVisitLogs);
     res.status(200).json({ message: "success", logs: formattedVisitLogs });
   } catch (err) {
     res.status(500).json({ message: err.message });
