@@ -168,7 +168,7 @@ const getLocationFromDate = async (req, res) => {
 
       // Filter locations based on the provided time frame
       locations = locations.filter((location) => {
-        const locationDate = new Date(location.localTime); // Convert to UTC
+        const locationDate = new Date(location.localTime).toISOString(); // Convert to UTC
 
         return locationDate >= startDate && locationDate <= endDate;
       });
