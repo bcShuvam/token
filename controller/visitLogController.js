@@ -47,6 +47,7 @@ const visitLogsById = async (req, res) => {
       });
     const visitLogs = {
       _id: foundVisitLog._id,
+      username: foundVisitLog.username,
       visitLogCounter: foundVisitLog.visitLogCounter,
       visitLogs: filteredVisitLogs,
     };
