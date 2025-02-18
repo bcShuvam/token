@@ -74,7 +74,7 @@ const postAttendanceByID = async (req, res) => {
   try {
     const id = req.query?.userId;
     if (!id) return res.status(400).json({ message: "userId is required" });
-
+    console.log("id received");
     const { deviceTime, attendanceTime, latitude, longitude } = req.body;
     if (
       !deviceTime ||
@@ -87,26 +87,17 @@ const postAttendanceByID = async (req, res) => {
           "deviceTime, attendanceTime, latitude, and longitude are required",
       });
     }
+    console.log("all field received");
 
-    // Fetch user details to get the username
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: `No user with id ${id} found` });
-    }
-
-    let attendanceRecord = await Attendance.findById(id);
-
-    // If attendance record does not exist, create a new one
+    const attendanceRecord = await Attendance.findById(id);
+    console.log("attendanceRecord passed");
     if (!attendanceRecord) {
-      attendanceRecord = new Attendance({
-        _id: id,
-        username: user.username, // Ensure username is assigned
-        attendance: [],
-      });
+      return res.status(404).json({ message: `No user with id ${id} found` });
     }
 
     const lastAttendance =
       attendanceRecord.attendance[attendanceRecord.attendance.length - 1];
+    console.log("last attendanceRecord passed");
 
     if (!lastAttendance || lastAttendance.status === "check-out") {
       // Add a new "check-in" entry
@@ -131,7 +122,8 @@ const postAttendanceByID = async (req, res) => {
       // Update the last "check-in" entry with "check-out" details
       const startTime = new Date(lastAttendance.checkIn.inTime);
       const endTime = new Date(attendanceTime);
-      const differenceInMs = endTime - startTime;
+      const startTimeStamp = new Date(startTime).getTime();
+      const differenceInMs = endTime - startTimeStamp;
       lastAttendance.status = "check-out";
       lastAttendance.checkOut = {
         status: "check-out",
