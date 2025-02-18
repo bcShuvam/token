@@ -38,7 +38,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
     const id = req.query.userId;
     const { from, to } = req.query;
     console.log(from, to);
-    if (!id) return res.status(400).json({ message: "ID is required" });
+    if (!id) return res.status(400).json({ message: "id is required" });
     const attendance = await Attendance.findOne({ _id: id });
     if (!attendance)
       return res.status(404).json({ message: `No user with ID ${id} found` });
@@ -88,9 +88,21 @@ const postAttendanceByID = async (req, res) => {
       });
     }
 
-    const attendanceRecord = await Attendance.findById(id);
+    // Fetch user details to get the username
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: `No user with id ${id} found` });
+    }
+
+    let attendanceRecord = await Attendance.findById(id);
+
+    // If attendance record does not exist, create a new one
     if (!attendanceRecord) {
-      return res.status(404).json({ message: `No user with ID ${id} found` });
+      attendanceRecord = new Attendance({
+        _id: id,
+        username: user.username, // Ensure username is assigned
+        attendance: [],
+      });
     }
 
     const lastAttendance =
@@ -117,10 +129,9 @@ const postAttendanceByID = async (req, res) => {
       });
     } else if (lastAttendance.status === "check-in") {
       // Update the last "check-in" entry with "check-out" details
-      const startTime = lastAttendance.createdAt;
+      const startTime = new Date(lastAttendance.checkIn.inTime);
       const endTime = new Date(attendanceTime);
-      const startTimeStamp = new Date(startTime).getTime();
-      const differenceInMs = endTime - startTimeStamp;
+      const differenceInMs = endTime - startTime;
       lastAttendance.status = "check-out";
       lastAttendance.checkOut = {
         status: "check-out",
@@ -140,6 +151,7 @@ const postAttendanceByID = async (req, res) => {
         attendanceRecord.attendance[attendanceRecord.attendance.length - 1],
     });
   } catch (err) {
+    console.log(err.message);
     res.status(500).json({ message: err.message });
   }
 };
