@@ -7,6 +7,7 @@ const visitLogModel = new mongoose.Schema(
     remarks: { type: String, required: true },
     mobileTime: { type: String, required: true },
     visitDate: { type: Date, required: true },
+    visitType: { type: String, required: true },
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
   },
