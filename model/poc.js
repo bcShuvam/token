@@ -16,6 +16,7 @@ const pocModel = new mongoose.Schema(
   {
     pocName: { type: String, required: true },
     age: { type: Number, default: 0 },
+    gender: { type: String, required: true },
     number: { type: String, required: true, unique: true },
     country: { type: String, required: true },
     region: { type: String, required: true },

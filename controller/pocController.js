@@ -77,6 +77,7 @@ const createPOC = async (req, res) => {
     const {
       pocName,
       age,
+      gender,
       number,
       country,
       region,
@@ -97,6 +98,7 @@ const createPOC = async (req, res) => {
     if (
       !pocName ||
       !number ||
+      !gender ||
       !country ||
       !region ||
       !city ||
@@ -112,7 +114,7 @@ const createPOC = async (req, res) => {
     )
       return res.status(400).json({
         message:
-          "pocName, age, number, country, region, city, address, category, createdById, createdByName remarks, mobileTime, visitDate, latitude, longitude are required",
+          "pocName, age, gender, number, country, region, city, address, category, createdById, createdByName remarks, mobileTime, visitDate, latitude, longitude are required",
       });
     const foundVisitLog = await VisitLog.findOne({ _id: createdById });
     if (!foundVisitLog)
