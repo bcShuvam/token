@@ -59,6 +59,7 @@ const getPocCreatedById = async (req, res) => {
       _id: poc._id,
       pocName: poc.pocName,
       age: poc.age,
+      gender: poc.gender,
       category: poc.category,
       specialization: poc.specialization,
       organization: poc.organization,
