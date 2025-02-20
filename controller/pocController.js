@@ -129,6 +129,7 @@ const createPOC = async (req, res) => {
     const newPOC = await POC.create({
       pocName,
       age,
+      gender,
       number,
       country,
       region,
