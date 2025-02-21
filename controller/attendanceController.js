@@ -21,7 +21,7 @@ const getAttendanceById = async (req, res) => {
     const foundAttendance = await Attendance.findOne({ _id: id });
     if (!foundAttendance)
       return res.status(404).json({ message: `No user with ID ${id} found` });
-    let lastAttendance = [];
+    let lastAttendance = {};
     if (foundAttendance.attendance.length !== 0) {
       lastAttendance =
         foundAttendance.attendance[foundAttendance.attendance.length - 1];
