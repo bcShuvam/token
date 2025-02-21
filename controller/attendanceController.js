@@ -61,8 +61,8 @@ const getAttendanceByIdAndDate = async (req, res) => {
         totalHours += entry.totalHours;
         console.log(totalHours);
         const data = {
-          checkIn: entry.createdAt,
-          checkOut: entry.updatedAt,
+          checkIn: entry.checkIn.deviceInTime,
+          checkOut: entry.checkOut.deviceOutTime,
         };
         filteredData.push(data);
       }
