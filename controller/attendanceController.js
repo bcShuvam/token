@@ -61,8 +61,8 @@ const getAttendanceByIdAndDate = async (req, res) => {
         totalHours += entry.totalHours;
         console.log(totalHours);
         const data = {
-          totalHours: totalHours,
           checkIn: entry.createdAt,
+          checkIn: entry.updatedAt,
         };
         filteredData.push(data);
       }
@@ -72,7 +72,9 @@ const getAttendanceByIdAndDate = async (req, res) => {
       _id: attendance._id,
       filteredData,
     };
-    res.status(200).json({ message: "successful", latestAttendance });
+    res
+      .status(200)
+      .json({ message: "successful", totalHours, latestAttendance });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
