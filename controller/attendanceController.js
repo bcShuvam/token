@@ -63,6 +63,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
         const data = {
           checkIn: entry.checkIn.deviceInTime,
           checkOut: entry.checkOut.deviceOutTime,
+          totalHour: entry.totalHours,
         };
         filteredData.push(data);
       }
