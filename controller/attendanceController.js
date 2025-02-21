@@ -9,6 +9,7 @@ const getAttendanceById = async (req, res) => {
     // Set the start of the day (00:00:00.000 UTC)
     now.setUTCHours(0, 0, 0, 0);
     const startDateTime = now;
+    startDateTime.setUTCHours(0, 0, 0, 0);
 
     // Set the end of the day (23:59:59.999 UTC)
     const endDateTime = new Date(now);
@@ -31,7 +32,7 @@ const getAttendanceById = async (req, res) => {
     //   console.log(currentDate);
     //   return currentDate >= startDateTime && currentDate <= endDateTime;
     // });
-    console.log(lastAttendance);
+    // console.log(lastAttendance);
     res.status(200).json(lastAttendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -48,11 +49,13 @@ const getAttendanceByIdAndDate = async (req, res) => {
     if (!attendance)
       return res.status(404).json({ message: `No user with ID ${id} found` });
     const startTime = new Date(from);
+    startTime.setUTCHours(0, 0, 0, 0);
     const endTime = new Date(to);
+    endTime.setUTCHours(23, 59, 59, 999);
     const filteredData = [];
     let totalHours = 0;
     const filteredAttendance = attendance.attendance.filter((entry) => {
-      const currentDate = new Date(entry.createdAt);
+      const currentDate = new Date(entry.checkIn.inTime);
       const matchedDate = currentDate >= startTime && currentDate <= endTime;
       if (matchedDate) {
         totalHours += entry.totalHours;
