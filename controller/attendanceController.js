@@ -62,7 +62,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
         console.log(totalHours);
         const data = {
           checkIn: entry.createdAt,
-          checkIn: entry.updatedAt,
+          checkOut: entry.updatedAt,
         };
         filteredData.push(data);
       }
@@ -70,6 +70,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
     console.log(filteredData);
     const latestAttendance = {
       _id: attendance._id,
+      username: attendance.username,
       filteredData,
     };
     res
