@@ -22,7 +22,7 @@ const getAttendanceById = async (req, res) => {
     if (!attendance)
       return res.status(404).json({ message: `No user with ID ${id} found` });
     const filteredAttendance = attendance.attendance.filter((entry) => {
-      const currentDate = new Date(entry.createdAt);
+      const currentDate = new Date(entry.checkIn.inTime);
       console.log(currentDate);
       return currentDate >= startDateTime && currentDate <= endDateTime;
     });
