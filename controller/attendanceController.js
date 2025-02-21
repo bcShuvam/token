@@ -21,13 +21,13 @@ const getAttendanceById = async (req, res) => {
     const attendance = await Attendance.findOne({ _id: id });
     if (!attendance)
       return res.status(404).json({ message: `No user with ID ${id} found` });
-    const filteredAttendance = attendance.attendance.filter((entry) => {
-      const currentDate = new Date(entry.checkIn.inTime);
-      console.log(currentDate);
-      return currentDate >= startDateTime && currentDate <= endDateTime;
-    });
-    console.log(filteredAttendance);
-    res.status(200).json(filteredAttendance);
+    // const filteredAttendance = attendance.attendance.filter((entry) => {
+    //   const currentDate = new Date(entry.checkIn.inTime);
+    //   console.log(currentDate);
+    //   return currentDate >= startDateTime && currentDate <= endDateTime;
+    // });
+    console.log(attendance);
+    res.status(200).json(attendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -100,6 +100,7 @@ const postAttendanceByID = async (req, res) => {
     console.log("last attendanceRecord passed");
 
     if (!lastAttendance || lastAttendance.status === "check-out") {
+      console.log("inside if check lastAttendance passed");
       // Add a new "check-in" entry
       attendanceRecord.attendance.push({
         status: "check-in",
@@ -119,11 +120,13 @@ const postAttendanceByID = async (req, res) => {
         },
       });
     } else if (lastAttendance.status === "check-in") {
+      console.log("inside else if check lastAttendance passed");
       // Update the last "check-in" entry with "check-out" details
       const startTime = new Date(lastAttendance.checkIn.inTime);
       const endTime = new Date(attendanceTime);
       const startTimeStamp = new Date(startTime).getTime();
       const differenceInMs = endTime - startTimeStamp;
+      attendanceRecord.username = attendanceRecord.username;
       lastAttendance.status = "check-out";
       lastAttendance.checkOut = {
         status: "check-out",
@@ -133,6 +136,7 @@ const postAttendanceByID = async (req, res) => {
         longitude: longitude,
       };
       lastAttendance.totalHours = differenceInMs / (1000 * 60 * 60);
+      console.log("After saving attendance record passed");
     }
 
     await attendanceRecord.save();
