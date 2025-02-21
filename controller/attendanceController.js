@@ -18,16 +18,21 @@ const getAttendanceById = async (req, res) => {
     console.log("End Date:", endDateTime.toISOString());
 
     if (!id) return res.status(400).json({ message: "ID is required" });
-    const attendance = await Attendance.findOne({ _id: id });
-    if (!attendance)
+    const foundAttendance = await Attendance.findOne({ _id: id });
+    if (!foundAttendance)
       return res.status(404).json({ message: `No user with ID ${id} found` });
+    let lastAttendance = [];
+    if (foundAttendance.attendance.length !== 0) {
+      lastAttendance =
+        foundAttendance.attendance[foundAttendance.attendance.length - 1];
+    }
     // const filteredAttendance = attendance.attendance.filter((entry) => {
     //   const currentDate = new Date(entry.checkIn.inTime);
     //   console.log(currentDate);
     //   return currentDate >= startDateTime && currentDate <= endDateTime;
     // });
-    console.log(attendance);
-    res.status(200).json(attendance);
+    console.log(lastAttendance);
+    res.status(200).json(lastAttendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
