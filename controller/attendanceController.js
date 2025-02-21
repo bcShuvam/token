@@ -70,7 +70,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
     console.log(filteredData);
     const latestAttendance = {
       _id: attendance._id,
-      filteredAttendance,
+      filteredData,
     };
     res.status(200).json({ message: "successful", latestAttendance });
   } catch (error) {
