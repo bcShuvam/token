@@ -29,6 +29,7 @@ app.use("/api/refreshToken", require("./routes/verifyRefreshToken"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/location", require("./routes/location"));
+app.use("/api/mail", require("./routes/sendMail"));
 app.use(verifyJWT);
 app.use("/api/hello", require("./routes/testHello"));
 app.use("/api/attendance", require("./routes/attendance"));

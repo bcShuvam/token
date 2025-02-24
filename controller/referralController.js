@@ -1,7 +1,7 @@
 const Patient = require("../model/patient");
 const POC = require("../model/poc");
 const Referral = require("../model/referral");
-const mongoose = require("mongoose");
+const nodemailer = require("nodemailer");
 
 const getReferralById = async (req, res) => {
   const { _id, from, to } = req.query;
