@@ -23,6 +23,7 @@ const sendMail = async (req, res) => {
       html: "<b>Hello from Deskgoo HTML✔</b>", // html body
     });
     console.log(`Message sent ${info.messageId}`);
+    console.log('Hello from');
     return res
       .status(200)
       .json({ message: "Main sent successfully", mail: info });
