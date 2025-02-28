@@ -54,7 +54,7 @@ const getReferralByDateAndRegion = async (req, res) => {
         const foundAmb = logs.ambId ? await POC.findOne({ _id: logs.ambId }) : {};
         const foundPatient = logs.patientId ? await Patient.findOne({ _id: logs.patientId }) : {};
 
-        let data = null;
+        let data = {};
 
         if (
           foundPatient &&
