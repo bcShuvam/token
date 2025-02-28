@@ -66,6 +66,7 @@ const getReferralByDateAndRegion = async (req, res) => {
         } else {
           foundPatient = {}
         }
+
         data = {
           referral: logs,
           patient: foundPatient,
