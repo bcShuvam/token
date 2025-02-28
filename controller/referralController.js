@@ -25,6 +25,49 @@ const getReferralById = async (req, res) => {
   res.status(200).json({ message: "success", referralLogs: filteredReferrals });
 };
 
+const getReferralByDateAndRegion = async (req, res) => {
+  const { _id, from, to, country, region, city } = req.query;
+  if (!_id) return res.status(400).json({ message: "_id is required" });
+  if (!from || !to || !country || !region)
+    return res.status(400).json({ message: "from, to, country and region are required" });
+  const referralDateFrom = new Date(from);
+  referralDateFrom.setUTCHours(0, 0, 0, 0);
+  const referralDateTo = new Date(to);
+  referralDateTo.setUTCHours(23, 59, 59, 999);
+  const foundReferral = await Referral.findById(_id);
+  if (!foundReferral)
+    return res
+      .status(404)
+      .json({ message: "no referral found", referralLogs: {} });
+  let filteredReferrals = foundReferral.referralLogs.filter((logs) => {
+    const date = new Date(logs.referralDate);
+    return date >= referralDateFrom && date <= referralDateTo;
+  });
+
+  // Process POC and AMB queries
+  filteredReferrals = await Promise.all(
+    filteredReferrals.map(async (logs) => {
+      let pocData = null;
+      let ambData = null;
+
+      if (logs.pocId) {
+        pocData = await POC.findOne({ _id: logs.pocId });
+      }
+      if (logs.ambId) {
+        ambData = await POC.findOne({ _id: logs.ambId });
+      }
+
+      // If either exists, return the log entry
+      if (pocData || ambData) {
+        return { ...logs, pocData, ambData };
+      }
+      return null; // Exclude if both are null
+    })
+  );
+  console.log(filteredReferrals);
+  res.status(200).json({ message: "success", referralLogs: filteredReferrals });
+};
+
 const createReferral = async (req, res) => {
   try {
     const {
@@ -159,4 +202,4 @@ const createReferral = async (req, res) => {
   }
 };
 
-module.exports = { getReferralById, createReferral };
+module.exports = { getReferralById, getReferralByDateAndRegion, createReferral };
