@@ -26,46 +26,54 @@ const getReferralById = async (req, res) => {
 };
 
 const getReferralByDateAndRegion = async (req, res) => {
-  const { _id, from, to, country, region, city } = req.query;
-  if (!_id) return res.status(400).json({ message: "_id is required" });
-  if (!from || !to || !country || !region)
-    return res.status(400).json({ message: "from, to, country and region are required" });
-  const referralDateFrom = new Date(from);
-  referralDateFrom.setUTCHours(0, 0, 0, 0);
-  const referralDateTo = new Date(to);
-  referralDateTo.setUTCHours(23, 59, 59, 999);
-  const foundReferral = await Referral.findById(_id);
-  if (!foundReferral)
-    return res
-      .status(404)
-      .json({ message: "no referral found", referralLogs: {} });
-  let filteredReferrals = foundReferral.referralLogs.filter((logs) => {
-    const date = new Date(logs.referralDate);
-    return date >= referralDateFrom && date <= referralDateTo;
-  });
+  try {
+    const { _id, from, to, country, region, city } = req.query;
+    if (!_id) return res.status(400).json({ message: "_id is required" });
+    if (!from || !to || !country || !region)
+      return res.status(400).json({ message: "from, to, country and region are required" });
+    const referralDateFrom = new Date(from);
+    referralDateFrom.setUTCHours(0, 0, 0, 0);
+    const referralDateTo = new Date(to);
+    referralDateTo.setUTCHours(23, 59, 59, 999);
+    const foundReferral = await Referral.findById(_id);
+    if (!foundReferral)
+      return res
+        .status(404)
+        .json({ message: "no referral found", referralLogs: {} });
+    let filteredReferrals = foundReferral.referralLogs.filter((logs) => {
+      const date = new Date(logs.referralDate);
+      return date >= referralDateFrom && date <= referralDateTo;
+    });
 
-  // Process POC and AMB queries
-  filteredReferrals = await Promise.all(
-    filteredReferrals.map(async (logs) => {
-      let pocData = null;
-      let ambData = null;
-
-      if (logs.pocId) {
-        pocData = await POC.findOne({ _id: logs.pocId });
+    // Process POC and AMB queries
+    let formattedReferralData = [];
+    let foundPoc;
+    let foundAmb;
+    if (filteredReferrals.length != 0) {
+      for (const logs of filteredReferrals) {
+        if (logs.pocId) {
+          foundPoc = await POC.findOne({ _id: logs.pocId });
+        } else {
+          foundPoc = {}
+        }
+        if (logs.ambId) {
+          foundAmb = await POC.findOne({ _id: logs.ambId });
+        } else {
+          foundAmb = {}
+        }
+        data = {
+          referral: logs,
+          poc: foundPoc,
+          amb: foundAmb,
+        }
+        formattedReferralData.push(data);
       }
-      if (logs.ambId) {
-        ambData = await POC.findOne({ _id: logs.ambId });
-      }
-
-      // If either exists, return the log entry
-      if (pocData || ambData) {
-        return { ...logs, pocData, ambData };
-      }
-      return null; // Exclude if both are null
-    })
-  );
-  console.log(filteredReferrals);
-  res.status(200).json({ message: "success", referralLogs: filteredReferrals });
+    }
+    // console.log(formattedReferralData);
+    res.status(200).json({ message: "success", referralLogs: formattedReferralData });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 const createReferral = async (req, res) => {
