@@ -72,33 +72,36 @@ const getReferralByDateAndRegion = async (req, res) => {
         if(foundPatient.country == country && foundPatient.region === region && foundPatient.city === city){
           data = {
             referral: logs,
-            patient: filteredPatient,
+            patient: foundPatient,
             poc: foundPoc,
             amb: foundAmb,
           }
         }else if(foundPatient.country == country && foundPatient.region === region){
           data = {
             referral: logs,
-            patient: filteredPatient,
+            patient: foundPatient,
             poc: foundPoc,
             amb: foundAmb,
           }
         }else if(foundPatient.country == country){
           data = {
             referral: logs,
-            patient: filteredPatient,
+            patient: foundPatient,
             poc: foundPoc,
             amb: foundAmb,
           }
         }else{
           data = {}
         }
-        
+
         if (data){
           formattedReferralData.push(data);
         }
       }
     }
+    // const remappedData = formattedReferralData.map((logs) => ({
+    //   patientId: 
+    // }))
     // console.log(formattedReferralData);
     res.status(200).json({ message: "success", referralLogs: formattedReferralData });
   } catch (err) {
