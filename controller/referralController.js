@@ -45,10 +45,10 @@ const getReferralByDateAndRegion = async (req, res) => {
       return date >= referralDateFrom && date <= referralDateTo;
     });
 
-    // Process POC and AMB queries
     let formattedReferralData = [];
     let foundPoc;
     let foundAmb;
+    let foundPatient;
     if (filteredReferrals.length != 0) {
       for (const logs of filteredReferrals) {
         if (logs.pocId) {
@@ -61,8 +61,14 @@ const getReferralByDateAndRegion = async (req, res) => {
         } else {
           foundAmb = {}
         }
+        if (logs.patientId) {
+          foundPatient = await POC.findOne({ _id: logs.patientId });
+        } else {
+          foundPatient = {}
+        }
         data = {
           referral: logs,
+          patient: foundPatient,
           poc: foundPoc,
           amb: foundAmb,
         }
