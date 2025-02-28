@@ -48,7 +48,9 @@ const getReferralByDateAndRegion = async (req, res) => {
     let formattedReferralData = [];
     let foundPoc;
     let foundAmb;
+    let filteredPatient;
     let foundPatient;
+    let data;
     if (filteredReferrals.length != 0) {
       for (const logs of filteredReferrals) {
         if (logs.pocId) {
@@ -67,13 +69,34 @@ const getReferralByDateAndRegion = async (req, res) => {
           foundPatient = {}
         }
 
-        data = {
-          referral: logs,
-          patient: foundPatient,
-          poc: foundPoc,
-          amb: foundAmb,
+        if(foundPatient.country == country && foundPatient.region === region && foundPatient.city === city){
+          data = {
+            referral: logs,
+            patient: filteredPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          }
+        }else if(foundPatient.country == country && foundPatient.region === region){
+          data = {
+            referral: logs,
+            patient: filteredPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          }
+        }else if(foundPatient.country == country){
+          data = {
+            referral: logs,
+            patient: filteredPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          }
+        }else{
+          data = {}
         }
-        formattedReferralData.push(data);
+        
+        if (data){
+          formattedReferralData.push(data);
+        }
       }
     }
     // console.log(formattedReferralData);
