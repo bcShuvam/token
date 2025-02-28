@@ -31,83 +31,57 @@ const getReferralByDateAndRegion = async (req, res) => {
     if (!_id) return res.status(400).json({ message: "_id is required" });
     if (!from || !to || !country || !region)
       return res.status(400).json({ message: "from, to, country and region are required" });
+
     const referralDateFrom = new Date(from);
     referralDateFrom.setUTCHours(0, 0, 0, 0);
     const referralDateTo = new Date(to);
     referralDateTo.setUTCHours(23, 59, 59, 999);
+
     const foundReferral = await Referral.findById(_id);
     if (!foundReferral)
-      return res
-        .status(404)
-        .json({ message: "no referral found", referralLogs: {} });
+      return res.status(404).json({ message: "no referral found", referralLogs: {} });
+
     let filteredReferrals = foundReferral.referralLogs.filter((logs) => {
       const date = new Date(logs.referralDate);
       return date >= referralDateFrom && date <= referralDateTo;
     });
 
     let formattedReferralData = [];
-    let foundPoc;
-    let foundAmb;
-    let filteredPatient;
-    let foundPatient;
-    let data;
-    if (filteredReferrals.length != 0) {
+
+    if (filteredReferrals.length !== 0) {
       for (const logs of filteredReferrals) {
-        if (logs.pocId) {
-          foundPoc = await POC.findOne({ _id: logs.pocId });
-        } else {
-          foundPoc = {}
-        }
-        if (logs.ambId) {
-          foundAmb = await POC.findOne({ _id: logs.ambId });
-        } else {
-          foundAmb = {}
-        }
-        if (logs.patientId) {
-          foundPatient = await Patient.findOne({ _id: logs.patientId });
-        } else {
-          foundPatient = {}
+        const foundPoc = logs.pocId ? await POC.findOne({ _id: logs.pocId }) : {};
+        const foundAmb = logs.ambId ? await POC.findOne({ _id: logs.ambId }) : {};
+        const foundPatient = logs.patientId ? await Patient.findOne({ _id: logs.patientId }) : {};
+
+        let data = null;
+
+        if (
+          foundPatient &&
+          ((country && region && city && foundPatient.country === country && foundPatient.region === region && foundPatient.city === city) ||
+          (country && region && foundPatient.country === country && foundPatient.region === region) ||
+          (country && foundPatient.country === country))
+        ) {
+          data = {
+            referral: logs,
+            patient: foundPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          };
         }
 
-        if((country && region && city) && foundPatient.country == country && foundPatient.region === region && foundPatient.city === city){
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
-          }
-        }else if((country && region) && foundPatient.country == country && foundPatient.region === region){
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
-          }
-        }else if(country && foundPatient.country == country){
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
-          }
-        }else{
-          data = {}
-        }
-
-        if (data){
+        if (data) {
           formattedReferralData.push(data);
         }
       }
     }
-    // const remappedData = formattedReferralData.map((logs) => ({
-    //   patientId: 
-    // }))
-    // console.log(formattedReferralData);
+
     res.status(200).json({ message: "success", referralLogs: formattedReferralData });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 const createReferral = async (req, res) => {
   try {
