@@ -47,7 +47,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
     if (!id) return res.status(400).json({ message: "id is required" });
     const attendance = await Attendance.findOne({ _id: id });
     if (!attendance)
-      return res.status(404).json({ message: `No user with ID ${id} found` });
+      return res.status(404).json({ message: `No user with id ${id} found` });
     const startTime = new Date(from);
     startTime.setUTCHours(0, 0, 0, 0);
     const endTime = new Date(to);
