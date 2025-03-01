@@ -62,8 +62,8 @@ const getAttendanceByIdAndDate = async (req, res) => {
         console.log(totalHours);
         const data = {
           checkIn: entry.checkIn.deviceInTime,
-          checkInLatitude: entry.checkOut.latitude,
-          checkInLongitude: entry.checkOut.longitude,
+          checkInLatitude: entry.checkIn.latitude,
+          checkInLongitude: entry.checkIn.longitude,
           checkOut: entry.checkOut.deviceOutTime,
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
