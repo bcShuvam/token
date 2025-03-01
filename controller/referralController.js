@@ -56,21 +56,7 @@ const getReferralByDateAndRegion = async (req, res) => {
 
         let data = {};
 
-        if(foundPatient.country == country && foundPatient.region == region && foundPatient.city == city){
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
-          }
-        }else if(foundPatient.country == country && foundPatient.region == region){
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
-          }
-        }else if(foundPatient.country == country){
+        if(foundPatient.country == country && foundPatient.region == region){
           data = {
             referral: logs,
             patient: foundPatient,
@@ -78,6 +64,21 @@ const getReferralByDateAndRegion = async (req, res) => {
             amb: foundAmb,
           }
         }
+        // else if(foundPatient.country == country && foundPatient.region == region){
+        //   data = {
+        //     referral: logs,
+        //     patient: foundPatient,
+        //     poc: foundPoc,
+        //     amb: foundAmb,
+        //   }
+        // }else if(foundPatient.country == country){
+        //   data = {
+        //     referral: logs,
+        //     patient: foundPatient,
+        //     poc: foundPoc,
+        //     amb: foundAmb,
+        //   }
+        // }
 
         if (Object.keys(data).length !== 0) {
           formattedReferralData.push(data);
