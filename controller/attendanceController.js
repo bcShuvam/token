@@ -83,10 +83,9 @@ const getAttendanceByIdAndDate = async (req, res) => {
     const minutes = Math.floor((totalHours - hours) * 60); // Convert remaining fraction to minutes
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60); // Convert remaining fraction to seconds
 
-    // console.log(`${hours} hours, ${minutes} minutes, ${seconds} seconds`);
     res
       .status(200)
-      .json({ message: "successful", totalHours, totalTime: `${hours}:${minutes}:${seconds}`, latestAttendance });
+      .json({ message: `successful, Attendance from ${startTime} to ${endTime}`, totalHours, totalTime: `${hours}:${minutes}:${seconds}`, latestAttendance });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
