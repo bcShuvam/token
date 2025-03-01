@@ -29,8 +29,8 @@ const getReferralByDateAndRegion = async (req, res) => {
   try {
     const { _id, from, to, country, region, city } = req.query;
     if (!_id) return res.status(400).json({ message: "_id is required" });
-    if (!from || !to || !country || !region)
-      return res.status(400).json({ message: "from, to, country and region are required" });
+    if (!from || !to || !country)
+      return res.status(400).json({ message: "from, to and country are required" });
 
     const referralDateFrom = new Date(from);
     referralDateFrom.setUTCHours(0, 0, 0, 0);
@@ -56,6 +56,14 @@ const getReferralByDateAndRegion = async (req, res) => {
 
         let data = {};
 
+        if(foundPatient.country == country && foundPatient.region == region && foundPatient.city == city){
+          data = {
+            referral: logs,
+            patient: foundPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          }
+        }
         if(foundPatient.country == country && foundPatient.region == region){
           data = {
             referral: logs,
@@ -64,21 +72,14 @@ const getReferralByDateAndRegion = async (req, res) => {
             amb: foundAmb,
           }
         }
-        // else if(foundPatient.country == country && foundPatient.region == region){
-        //   data = {
-        //     referral: logs,
-        //     patient: foundPatient,
-        //     poc: foundPoc,
-        //     amb: foundAmb,
-        //   }
-        // }else if(foundPatient.country == country){
-        //   data = {
-        //     referral: logs,
-        //     patient: foundPatient,
-        //     poc: foundPoc,
-        //     amb: foundAmb,
-        //   }
-        // }
+        if(foundPatient.country == country){
+          data = {
+            referral: logs,
+            patient: foundPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          }
+        }
 
         if (Object.keys(data).length !== 0) {
           formattedReferralData.push(data);
