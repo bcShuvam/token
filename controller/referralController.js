@@ -29,8 +29,8 @@ const getReferralByDateCountryRegionAndCity = async (req, res) => {
   try {
     const { _id, from, to, country, region, city } = req.query;
     if (!_id) return res.status(400).json({ message: "_id is required" });
-    if (!from || !to || !country)
-      return res.status(400).json({ message: "from, to and country are required" });
+    if (!from || !to || !country || !region ||!city)
+      return res.status(400).json({ message: "from, to and country, region and city are required" });
 
     const referralDateFrom = new Date(from);
     referralDateFrom.setUTCHours(0, 0, 0, 0);
@@ -121,8 +121,8 @@ const getReferralByDateCountryAndRegion = async (req, res) => {
   try {
     const { _id, from, to, country, region, city } = req.query;
     if (!_id) return res.status(400).json({ message: "_id is required" });
-    if (!from || !to || !country)
-      return res.status(400).json({ message: "from, to and country are required" });
+    if (!from || !to || !country || !region)
+      return res.status(400).json({ message: "from, to and country and region are required" });
 
     const referralDateFrom = new Date(from);
     referralDateFrom.setUTCHours(0, 0, 0, 0);
@@ -239,34 +239,13 @@ const getReferralByDateAndCountry = async (req, res) => {
         const foundPatient = logs.patientId ? await Patient.findOne({ _id: logs.patientId }) : {};
 
         let data = {};
-        if(country){
-          if(foundPatient.country == country){
-            data = {
-              referral: logs,
-              patient: foundPatient,
-              poc: foundPoc,
-              amb: foundAmb,
-            }
-          }
-        }
-        if(region){
-          if(foundPatient.country == country && foundPatient.region == region){
-            data = {
-              referral: logs,
-              patient: foundPatient,
-              poc: foundPoc,
-              amb: foundAmb,
-            }
-          }
-        }
-        if(city){
-          if(foundPatient.country == country && foundPatient.region == region && foundPatient.city == city){
-            data = {
-              referral: logs,
-              patient: foundPatient,
-              poc: foundPoc,
-              amb: foundAmb,
-            }
+
+        if(foundPatient.country == country){
+          data = {
+            referral: logs,
+            patient: foundPatient,
+            poc: foundPoc,
+            amb: foundAmb,
           }
         }
 
