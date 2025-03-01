@@ -56,7 +56,21 @@ const getReferralByDateAndRegion = async (req, res) => {
 
         let data = {};
 
-        if(foundPatient.country == country && foundPatient.region == region){
+        if(foundPatient.country == country && foundPatient.region == region && foundPatient.city == city){
+          data = {
+            referral: logs,
+            patient: foundPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          }
+        }else if(foundPatient.country == country && foundPatient.region == region){
+          data = {
+            referral: logs,
+            patient: foundPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          }
+        }else if(foundPatient.country == country){
           data = {
             referral: logs,
             patient: foundPatient,
