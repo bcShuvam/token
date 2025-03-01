@@ -83,9 +83,14 @@ const getAttendanceByIdAndDate = async (req, res) => {
     const minutes = Math.floor((totalHours - hours) * 60); // Convert remaining fraction to minutes
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60); // Convert remaining fraction to seconds
 
+    // Format with leading zeros
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+
     res
       .status(200)
-      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${hours}:${minutes}:${seconds}`, latestAttendance });
+      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`, latestAttendance });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
