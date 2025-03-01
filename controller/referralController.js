@@ -53,36 +53,33 @@ const getReferralByDateAndRegion = async (req, res) => {
         const foundPoc = logs.pocId ? await POC.findOne({ _id: logs.pocId }) : {};
         const foundAmb = logs.ambId ? await POC.findOne({ _id: logs.ambId }) : {};
         const foundPatient = logs.patientId ? await Patient.findOne({ _id: logs.patientId }) : {};
-
-        let data = {};
-
-        if(foundPatient.country == country && foundPatient.region == region && foundPatient.city == city){
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
+    
+        if (
+          foundPatient &&
+          foundPatient.country &&
+          foundPatient.region &&
+          foundPatient.city
+        ) {
+          let data = null;
+    
+          if (
+            foundPatient.country === country &&
+            foundPatient.region === region &&
+            foundPatient.city === city
+          ) {
+            data = { referral: logs, patient: foundPatient, poc: foundPoc, amb: foundAmb };
+          } else if (
+            foundPatient.country === country &&
+            foundPatient.region === region
+          ) {
+            data = { referral: logs, patient: foundPatient, poc: foundPoc, amb: foundAmb };
+          } else if (foundPatient.country === country) {
+            data = { referral: logs, patient: foundPatient, poc: foundPoc, amb: foundAmb };
           }
-        }
-        if(foundPatient.country == country && foundPatient.region == region){
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
+    
+          if (data) {
+            formattedReferralData.push(data);
           }
-        }
-        if(foundPatient.country == country){
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
-          }
-        }
-
-        if (Object.keys(data).length !== 0) {
-          formattedReferralData.push(data);
         }
       }
     }
