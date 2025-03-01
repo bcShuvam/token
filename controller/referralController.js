@@ -65,11 +65,24 @@ const getReferralByDateAndRegion = async (req, res) => {
           }
         }
 
-        if (data) {
+        if (Object.keys(data).length !== 0) {
           formattedReferralData.push(data);
         }
       }
     }
+
+    // const formattedReferral = formattedReferralData.map((logs) => ({
+    //   _id: logs._id,
+    //   pocName: logs.pocName,
+    //   age: logs.age,
+    //   gender: logs.gender,
+    //   category: logs.category,
+    //   specialization: logs.specialization,
+    //   organization: logs.organization,
+    //   ambNumber: logs.ambNumber,
+    //   number: logs.number,
+    //   address: `${logs.country}, ${logs.region}, ${logs.city}, ${logs.address}`,
+    // }));
 
     res.status(200).json({ message: "success", referralLogs: formattedReferralData });
   } catch (err) {
