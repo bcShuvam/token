@@ -71,20 +71,47 @@ const getReferralByDateAndRegion = async (req, res) => {
       }
     }
 
-    // const formattedReferral = formattedReferralData.map((logs) => ({
-    //   _id: logs._id,
-    //   pocName: logs.pocName,
-    //   age: logs.age,
-    //   gender: logs.gender,
-    //   category: logs.category,
-    //   specialization: logs.specialization,
-    //   organization: logs.organization,
-    //   ambNumber: logs.ambNumber,
-    //   number: logs.number,
-    //   address: `${logs.country}, ${logs.region}, ${logs.city}, ${logs.address}`,
-    // }));
+    const formattedReferral = formattedReferralData.map((logs) => ({
+      _id: logs.referral._id,
+      createdById: logs.referral.createdById, 
+      createdBy: logs.referral.createdByName, 
+      referralDate: logs.referral.referralDate,
+      mobileTime: logs.referral.mobileTime,
+      latitude: logs.referral.latitude,
+      longitude: logs.referral.longitude,
+      patientId: logs.patient._id,
+      patientName: logs.patient.fullName,
+      patientAge: logs.patient.age,
+      provisionalDiagnosis: logs.patient.provisionalDiagnosis,
+      country: logs.patient.country,
+      region: logs.patient.region,
+      city: logs.patient.city,
+      address: logs.patient.address,
+      city: logs.patient.city,
+      pocName: logs.poc.pocName,
+      pocAge: logs.poc.age,
+      pocNumber: logs.poc.number,
+      pocGender: logs.poc.gender,
+      pocCountry: logs.poc.country,
+      pocRegion: logs.poc.country,
+      pocCity: logs.poc.city,
+      pocAddress: logs.poc.address,
+      pocCategory: logs.poc.category,
+      pocSpecialization: logs.poc.specialization,
+      pocOrganization: logs.poc.organization,
+      ambId: logs.amb._id,
+      ambName: logs.amb.pocName,
+      ambAge: logs.amb.age,
+      ambNumber: logs.amb.number,
+      ambCountry: logs.amb.country,
+      ambRegion: logs.amb.region,
+      ambCity: logs.amb.region,
+      ambAddress: logs.amb.address,
+      ambOrganization: logs.amb.organization,
+      ambVehicleNumber: logs.amb.ambNumber,
+    }));
 
-    res.status(200).json({ message: "success", referralLogs: formattedReferralData });
+    res.status(200).json({ message: "success", referralLogs: formattedReferral });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
