@@ -74,9 +74,15 @@ const getAttendanceByIdAndDate = async (req, res) => {
       username: attendance.username,
       filteredData,
     };
+
+    const hours = Math.floor(totalHours); // Extract full hours
+    const minutes = Math.floor((totalHours - hours) * 60); // Convert remaining fraction to minutes
+    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60); // Convert remaining fraction to seconds
+
+    // console.log(`${hours} hours, ${minutes} minutes, ${seconds} seconds`);
     res
       .status(200)
-      .json({ message: "successful", totalHours, latestAttendance });
+      .json({ message: "successful", totalHour: `${hours} hours, ${minutes} minutes, ${seconds} seconds`, latestAttendance });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
