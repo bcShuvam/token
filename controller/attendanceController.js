@@ -68,7 +68,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
         filteredData.push(data);
       }
     });
-    console.log(filteredData);
+    // console.log(filteredData);
     const latestAttendance = {
       _id: attendance._id,
       username: attendance.username,
@@ -82,7 +82,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
     // console.log(`${hours} hours, ${minutes} minutes, ${seconds} seconds`);
     res
       .status(200)
-      .json({ message: "successful", totalHour: `${hours} hours, ${minutes} minutes, ${seconds} seconds`, latestAttendance });
+      .json({ message: "successful", totalHours, totalTime: `${hours}:${minutes}:${seconds}`, latestAttendance });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
