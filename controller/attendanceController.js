@@ -85,7 +85,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`, attendance: latestAttendance });
+      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`, attendance });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
