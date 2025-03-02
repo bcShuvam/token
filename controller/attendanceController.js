@@ -27,12 +27,7 @@ const getAttendanceById = async (req, res) => {
       lastAttendance =
         foundAttendance.attendance[foundAttendance.attendance.length - 1];
     }
-    // const filteredAttendance = attendance.attendance.filter((entry) => {
-    //   const currentDate = new Date(entry.checkIn.inTime);
-    //   console.log(currentDate);
-    //   return currentDate >= startDateTime && currentDate <= endDateTime;
-    // });
-    // console.log(lastAttendance);
+
     res.status(200).json(lastAttendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -45,16 +40,16 @@ const getAttendanceByIdAndDate = async (req, res) => {
     const { from, to } = req.query;
     console.log(from, to);
     if (!id) return res.status(400).json({ message: "id is required" });
-    const attendance = await Attendance.findOne({ _id: id });
-    if (!attendance)
+    const foundAttendance = await Attendance.findOne({ _id: id });
+    if (!foundAttendance)
       return res.status(404).json({ message: `No user with id ${id} found` });
     const startTime = new Date(from);
     startTime.setUTCHours(0, 0, 0, 0);
     const endTime = new Date(to);
     endTime.setUTCHours(23, 59, 59, 999);
-    const filteredData = [];
+    const attendanceLogs = [];
     let totalHours = 0;
-    const filteredAttendance = attendance.attendance.filter((entry) => {
+    const filteredAttendance = foundAttendance.attendance.filter((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
       const matchedDate = currentDate >= startTime && currentDate <= endTime;
       if (matchedDate) {
@@ -69,14 +64,14 @@ const getAttendanceByIdAndDate = async (req, res) => {
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
         };
-        filteredData.push(data);
+        attendanceLogs.push(data);
       }
     });
     // console.log(filteredData);
-    const latestAttendance = {
+    const attendance = {
       _id: attendance._id,
       username: attendance.username,
-      filteredData,
+      attendanceLogs,
     };
 
     const hours = Math.floor(totalHours); // Extract full hours
@@ -90,7 +85,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`, latestAttendance });
+      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`, attendance: latestAttendance });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
