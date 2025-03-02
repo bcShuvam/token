@@ -69,8 +69,8 @@ const getAttendanceByIdAndDate = async (req, res) => {
     });
     // console.log(filteredData);
     const attendance = {
-      _id: attendance._id,
-      username: attendance.username,
+      _id: foundAttendance._id,
+      username: foundAttendance.username,
       attendanceLogs,
     };
 
