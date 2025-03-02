@@ -53,9 +53,9 @@ const getReferralById = async (req, res) => {
     "referralDate": "2025-02-06T09:52:33.000Z",
     "_id": "67a435856f4148235e9f88d4",
   }));
-  console.log(filteredReferrals);
-  exportData = filteredReferrals;
-  res.status(200).json({ message: "success", referralLogs: filteredReferrals });
+  console.log(formattedReferral);
+  exportData = formattedReferral;
+  res.status(200).json({ message: "success", referralLogs: formattedReferral });
 };
 
 const getReferralByDateCountryRegionAndCity = async (req, res) => {
