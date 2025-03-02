@@ -2,6 +2,20 @@ const Patient = require("../model/patient");
 const POC = require("../model/poc");
 const Referral = require("../model/referral");
 const nodemailer = require("nodemailer");
+// const csv = require("csvtojson");
+const CsvParser = require("json2csv");
+let exportData;
+
+const exportCSVData = async (req, res) => {
+  try {
+    if (!exportData) return res.status(404).json({ message: "No data to export" });
+    const csvFields = [];
+    const csvData = exportData;
+    return res.status(200).json({ message: "success", data: exportData });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
 
 const getReferralById = async (req, res) => {
   const { _id, from, to } = req.query;
@@ -21,7 +35,26 @@ const getReferralById = async (req, res) => {
     const date = new Date(logs.referralDate);
     return date >= referralDateFrom && date <= referralDateTo;
   });
+  const formattedReferral = filteredReferrals.map((ref) => ({
+    "patientId": "67a435856f4148235e9f88d2",
+    "patientName": "Ram Babu",
+    "createdById": "679b632e4c526fbfe839ada5",
+    "createdByName": "Farhan Ansari",
+    "pocId": "679cb907361bda6bedb8679c",
+    "pocName": "Jay Prakash Malla",
+    "pocNumber": "+9779866774499",
+    "ambId": "67a335b8a92371b08e0e295f",
+    "ambDriverName": "Hari Yadav",
+    "ambDriverNumber": "+9779812345615",
+    "ambNumber": "KO 22 P 18",
+    "latitude": 26.4577518899581,
+    "longitude": 87.27941914017262,
+    "mobileTime": "09:52:33 06-02-2025",
+    "referralDate": "2025-02-06T09:52:33.000Z",
+    "_id": "67a435856f4148235e9f88d4",
+  }));
   console.log(filteredReferrals);
+  exportData = filteredReferrals;
   res.status(200).json({ message: "success", referralLogs: filteredReferrals });
 };
 
@@ -29,7 +62,7 @@ const getReferralByDateCountryRegionAndCity = async (req, res) => {
   try {
     const { _id, from, to, country, region, city } = req.query;
     if (!_id) return res.status(400).json({ message: "_id is required" });
-    if (!from || !to || !country || !region ||!city)
+    if (!from || !to || !country || !region || !city)
       return res.status(400).json({ message: "from, to and country, region and city are required" });
 
     const referralDateFrom = new Date(from);
@@ -56,7 +89,7 @@ const getReferralByDateCountryRegionAndCity = async (req, res) => {
 
         let data = {};
 
-        if(foundPatient.country == country && foundPatient.region == region && foundPatient.city == city){
+        if (foundPatient.country == country && foundPatient.region == region && foundPatient.city == city) {
           data = {
             referral: logs,
             patient: foundPatient,
@@ -73,8 +106,8 @@ const getReferralByDateCountryRegionAndCity = async (req, res) => {
 
     const formattedReferral = formattedReferralData.map((logs) => ({
       _id: logs.referral._id,
-      createdById: logs.referral.createdById, 
-      createdBy: logs.referral.createdByName, 
+      createdById: logs.referral.createdById,
+      createdBy: logs.referral.createdByName,
       referralDate: logs.referral.referralDate,
       mobileTime: logs.referral.mobileTime,
       latitude: logs.referral.latitude,
@@ -148,7 +181,7 @@ const getReferralByDateCountryAndRegion = async (req, res) => {
 
         let data = {};
 
-        if(foundPatient.country == country && foundPatient.region == region){
+        if (foundPatient.country == country && foundPatient.region == region) {
           data = {
             referral: logs,
             patient: foundPatient,
@@ -165,8 +198,8 @@ const getReferralByDateCountryAndRegion = async (req, res) => {
 
     const formattedReferral = formattedReferralData.map((logs) => ({
       _id: logs.referral._id,
-      createdById: logs.referral.createdById, 
-      createdBy: logs.referral.createdByName, 
+      createdById: logs.referral.createdById,
+      createdBy: logs.referral.createdByName,
       referralDate: logs.referral.referralDate,
       mobileTime: logs.referral.mobileTime,
       latitude: logs.referral.latitude,
@@ -240,7 +273,7 @@ const getReferralByDateAndCountry = async (req, res) => {
 
         let data = {};
 
-        if(foundPatient.country == country){
+        if (foundPatient.country == country) {
           data = {
             referral: logs,
             patient: foundPatient,
@@ -257,8 +290,8 @@ const getReferralByDateAndCountry = async (req, res) => {
 
     const formattedReferral = formattedReferralData.map((logs) => ({
       _id: logs.referral._id,
-      createdById: logs.referral.createdById, 
-      createdBy: logs.referral.createdByName, 
+      createdById: logs.referral.createdById,
+      createdBy: logs.referral.createdByName,
       referralDate: logs.referral.referralDate,
       mobileTime: logs.referral.mobileTime,
       latitude: logs.referral.latitude,
@@ -436,4 +469,4 @@ const createReferral = async (req, res) => {
   }
 };
 
-module.exports = { getReferralById, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, createReferral };
+module.exports = { getReferralById, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, createReferral, exportCSVData };
