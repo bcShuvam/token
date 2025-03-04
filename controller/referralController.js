@@ -36,6 +36,7 @@ const getReferralById = async (req, res) => {
     return date >= referralDateFrom && date <= referralDateTo;
   });
   const formattedReferral = filteredReferrals.map((ref) => ({
+    "_id": "67a435856f4148235e9f88d4",
     "patientId": "67a435856f4148235e9f88d2",
     "patientName": "Ram Babu",
     "createdById": "679b632e4c526fbfe839ada5",
@@ -51,7 +52,6 @@ const getReferralById = async (req, res) => {
     "longitude": 87.27941914017262,
     "mobileTime": "09:52:33 06-02-2025",
     "referralDate": "2025-02-06T09:52:33.000Z",
-    "_id": "67a435856f4148235e9f88d4",
   }));
   console.log(formattedReferral);
   exportData = formattedReferral;
