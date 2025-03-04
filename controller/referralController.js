@@ -3,15 +3,36 @@ const POC = require("../model/poc");
 const Referral = require("../model/referral");
 const nodemailer = require("nodemailer");
 // const csv = require("csvtojson");
-const CsvParser = require("json2csv");
+const CsvParser = require("json2csv").Parser;
 let exportData;
 
 const exportCSVData = async (req, res) => {
   try {
     if (!exportData) return res.status(404).json({ message: "No data to export" });
-    const csvFields = [];
-    const csvData = exportData;
-    return res.status(200).json({ message: "success", data: exportData });
+     exportData;
+    const csvFields = [
+      "ID",
+      "Patient Id",
+      "Patient Name",
+      "Created By Id",
+      "Created By Name",
+      "Poc Id",
+      "Poc Name",
+      "Poc Number",
+      "Ambulance Id",
+      "Ambulance Driver Name",
+      "Ambulance Driver Number",
+      "Ambulance Number",
+      "Latitude",
+      "Longitude",
+      "Mobile Time",
+      "Referral Date",
+    ];
+    const csvParser = new CsvParser({csvFields});
+    const csvData = csvParser.parse(exportData);
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment: filename=referralDataById.csv");
+    return res.status(200).end(csvData);
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
