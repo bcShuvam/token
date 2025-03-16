@@ -57,22 +57,22 @@ const getReferralById = async (req, res) => {
     return date >= referralDateFrom && date <= referralDateTo;
   });
   const formattedReferral = filteredReferrals.map((ref) => ({
-    "_id": "67a435856f4148235e9f88d4",
-    "patientId": "67a435856f4148235e9f88d2",
-    "patientName": "Ram Babu",
-    "createdById": "679b632e4c526fbfe839ada5",
-    "createdByName": "Farhan Ansari",
-    "pocId": "679cb907361bda6bedb8679c",
-    "pocName": "Jay Prakash Malla",
-    "pocNumber": "+9779866774499",
-    "ambId": "67a335b8a92371b08e0e295f",
-    "ambDriverName": "Hari Yadav",
-    "ambDriverNumber": "+9779812345615",
-    "ambNumber": "KO 22 P 18",
-    "latitude": 26.4577518899581,
-    "longitude": 87.27941914017262,
-    "mobileTime": "09:52:33 06-02-2025",
-    "referralDate": "2025-02-06T09:52:33.000Z",
+    "_id": ref._id,
+    "patientId": ref.patientId,
+    "patientName": ref.patientName,
+    "createdById": ref.createdById,
+    "createdByName": ref.createdByName,
+    "pocId": ref.pocId,
+    "pocName": ref.pocName,
+    "pocNumber": ref.pocNumber,
+    "ambId": ref.ambId,
+    "ambDriverName": ref.ambDriverName,
+    "ambDriverNumber": ref.ambDriverNumber,
+    "ambNumber": ref.ambNumber,
+    "latitude": ref.latitude,
+    "longitude": ref.longitude,
+    "mobileTime": ref.mobileTime,
+    "referralDate": ref.referralDate,
   }));
   console.log(formattedReferral);
   exportData = formattedReferral;

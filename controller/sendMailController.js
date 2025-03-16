@@ -5,10 +5,11 @@ const rootDirName = path.join(__dirname, "..");
 
 const transporter = nodemailer.createTransport({
   // host: "smtp.gmail.com",
-  host: process.env.GOLDENMAIL,
-  port: 587,
-  port: 465,
-  secure: true,
+  // host: process.env.GOLDENMAIL,
+  // port: 587,
+  // port: 465,
+  // secure: true,
+  service: "gmail",
   auth: {
     // user: process.env.USERMAIL,
     // pass: process.env.APP_PASSWORD,
@@ -20,8 +21,8 @@ const transporter = nodemailer.createTransport({
 const mailOptions = {
   from: {
     name: "Deskgoo",
-    // address: process.env.USERMAIL,
-    address: process.env.GOLDENMAIL,
+    address: process.env.USERMAIL,
+    // address: process.env.GOLDENMAIL,
   },
   to: ["dhungelnimesh@gmail.com", "drscorpion4@gmail.com", "kshitijdahal456@gmail.com", "jyotishahqwerty@gmail.com"],
   subject: "Sending Email through NodeMailer",
