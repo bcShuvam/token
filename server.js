@@ -25,6 +25,7 @@ app.use(express.json());
 // app.use(cookieParser());
 
 // routes
+app.use("/api/img", require("./routes/uploadImage"));
 app.use("/api/refreshToken", require("./routes/verifyRefreshToken"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
