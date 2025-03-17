@@ -34,6 +34,7 @@ const handleLogin = async (req, res) => {
         maritalStatus: foundUser?.maritalStatus,
         nationality: foundUser?.nationality,
         doj: foundUser?.doj,
+        profileImage: foundUser?.profileImage,
         isFirstLogin: foundUser?.isFirstLogin,
         reset: foundUser?.reset,
       };
@@ -71,6 +72,7 @@ const handleLogin = async (req, res) => {
         maritalStatus: foundUser?.maritalStatus,
         nationality: foundUser?.nationality,
         doj: foundUser?.doj,
+        profileImage: foundUser?.profileImage,
         isFirstLogin: foundUser?.isFirstLogin,
         reset: foundUser?.reset,
       };
