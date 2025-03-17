@@ -30,6 +30,7 @@ const getUsers = async (req, res) => {
       maritalStatus: user.maritalStatus,
       nationality: user.nationality,
       doj: user.doj,
+      profileImage: user.profileImage,
       isFirstLogin: user.isFirstLogin,
       reset: user.reset,
     }));
@@ -119,6 +120,7 @@ const createUser = async (req, res) => {
       maritalStatus: newUser.maritalStatus,
       nationality: newUser.nationality,
       doj: newUser.doj,
+      profileImage: newUser.profileImage,
       isFirstLogin: newUser.isFirstLogin,
       reset: newUser.reset,
     };

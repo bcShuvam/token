@@ -61,6 +61,7 @@ const verifyRefreshToken = async (req, res, next) => {
           number: foundUser.number,
           address: foundUser.address,
           dob: foundUser.dob,
+          profileImage: foundUser.profileImage,
           isFirstLogin: foundUser.isFirstLogin,
           reset: foundUser.reset,
         };
