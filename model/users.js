@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema(
   {
-    profileImage: {type: String, default: ""},
+    profileImage: {type: String, default: "http://res.cloudinary.com/dfpxa2e7r/image/upload/v1742724107/uploads/xrxak1efn47qho6aw4a7.png"},
     username: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: Object, required: true },
