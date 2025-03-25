@@ -100,7 +100,7 @@ const getLocationByID = async (req, res) => {
         message: `Location data for employee: ${device.username} fetched successfully`,
         _id: device._id,
         username: device.username,
-        profile: foundUser.profileImage,
+        // profile: foundUser.profileImage,
         latestLocation: latestLocation,
         totalDistanceToday:
           device.distanceByDate.find(
