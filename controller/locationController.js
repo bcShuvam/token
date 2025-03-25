@@ -1,6 +1,5 @@
 const Location = require("../model/location");
 const todayDate = require("../config/todayDate");
-const Users = require("../model/users");
 
 const postLocation = async (req, res) => {
   try {
@@ -89,10 +88,8 @@ const getLocationByID = async (req, res) => {
     // Fetch all devices with latest location
     const devices = await Location.find();
 
-    const latestData = devices.map(async (device) => {
+    const latestData = devices.map((device) => {
       const latestLocation = device.locations.slice(-1)[0] || {};
-      console.log(device._id);
-      // const foundUser = await Users.findById(device._id);
 
       // if (Object.keys(latestLocation).length === 0) {
       //   latestLocation = {};
@@ -101,7 +98,6 @@ const getLocationByID = async (req, res) => {
         message: `Location data for employee: ${device.username} fetched successfully`,
         _id: device._id,
         username: device.username,
-        // profile: foundUser.profileImage,
         latestLocation: latestLocation,
         totalDistanceToday:
           device.distanceByDate.find(
