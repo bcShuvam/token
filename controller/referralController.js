@@ -318,9 +318,12 @@ const getReferralByDateAndCountry = async (req, res) => {
       }
     }
 
+    const foundUser = await Users.findById(foundReferral.createdById);
+
     const formattedReferral = formattedReferralData.map((logs) => ({
       _id: logs.referral._id,
       createdById: logs.referral.createdById,
+      profileImage: foundUser.profileImage,
       createdBy: logs.referral.createdByName,
       referralDate: logs.referral.referralDate,
       mobileTime: logs.referral.mobileTime,
