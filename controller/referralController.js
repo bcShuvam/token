@@ -1,6 +1,7 @@
 const Patient = require("../model/patient");
 const POC = require("../model/poc");
 const Referral = require("../model/referral");
+const Users = require("../model/users");
 const nodemailer = require("nodemailer");
 // const csv = require("csvtojson");
 const CsvParser = require("json2csv").Parser;
@@ -56,11 +57,13 @@ const getReferralById = async (req, res) => {
     const date = new Date(logs.referralDate);
     return date >= referralDateFrom && date <= referralDateTo;
   });
+  const foundUser = await Users.findById(foundReferral.createdById);
   const formattedReferral = filteredReferrals.map((ref) => ({
     "_id": ref._id,
     "patientId": ref.patientId,
     "patientName": ref.patientName,
     "createdById": ref.createdById,
+    "profileImage": foundUser.profileImage,
     "createdByName": ref.createdByName,
     "pocId": ref.pocId,
     "pocName": ref.pocName,
@@ -125,10 +128,13 @@ const getReferralByDateCountryRegionAndCity = async (req, res) => {
       }
     }
 
+    const foundUser = await Users.findById(foundReferral.createdById);
+
     const formattedReferral = formattedReferralData.map((logs) => ({
       _id: logs.referral._id,
       createdById: logs.referral.createdById,
       createdBy: logs.referral.createdByName,
+      profileImage: foundUser.profileImage,
       referralDate: logs.referral.referralDate,
       mobileTime: logs.referral.mobileTime,
       latitude: logs.referral.latitude,
@@ -217,10 +223,13 @@ const getReferralByDateCountryAndRegion = async (req, res) => {
       }
     }
 
+    const foundUser = await Users.findById(foundReferral.createdById);
+
     const formattedReferral = formattedReferralData.map((logs) => ({
       _id: logs.referral._id,
       createdById: logs.referral.createdById,
       createdBy: logs.referral.createdByName,
+      profileImage: foundUser.profileImage,
       referralDate: logs.referral.referralDate,
       mobileTime: logs.referral.mobileTime,
       latitude: logs.referral.latitude,
@@ -309,9 +318,12 @@ const getReferralByDateAndCountry = async (req, res) => {
       }
     }
 
+    const foundUser = await Users.findById(foundReferral.createdById);
+
     const formattedReferral = formattedReferralData.map((logs) => ({
       _id: logs.referral._id,
       createdById: logs.referral.createdById,
+      profileImage: foundUser.profileImage,
       createdBy: logs.referral.createdByName,
       referralDate: logs.referral.referralDate,
       mobileTime: logs.referral.mobileTime,
