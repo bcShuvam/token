@@ -58,7 +58,7 @@ const getReferralById = async (req, res) => {
     return date >= referralDateFrom && date <= referralDateTo;
   });
 
-  const id = foundReferral.createdById;
+  const id = foundReferral._id;
   console.log("id = " + id);
   const foundUser = await Users.findById(id);
 
