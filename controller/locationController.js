@@ -66,6 +66,7 @@ const getLocationByID = async (req, res) => {
     if (_id) {
       // Find a specific device by _id
       const device = await Location.findOne({ _id });
+      const foundUser = await Users.findById(device._id);
 
       if (!device) {
         return res.status(404).json({ message: "Location not found" });
@@ -76,6 +77,7 @@ const getLocationByID = async (req, res) => {
         latestData: {
           _id: device._id,
           username: device.username,
+          profileImage: foundUser.profileImage,
           latestLocation: device.locations.slice(-1)[0] || {}, // Avoid error if empty
           totalDistanceToday:
             device.distanceByDate.find(
@@ -173,6 +175,8 @@ const getLocationFromDate = async (req, res) => {
       return res.status(404).json({ message: "Location not found" });
     }
 
+    const foundUser = await Users.findById(device._id);
+
     let locations = device.locations;
 
     // Filter locations based on date range if provided
@@ -200,6 +204,7 @@ const getLocationFromDate = async (req, res) => {
       message: "Locations fetched successfully",
       _id: device._id,
       username: device.username, // Use username
+      profileImage: foundUser.profileImage,
       totalDistance: device.totalDistance,
       locations,
     });
