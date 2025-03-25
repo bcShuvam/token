@@ -91,7 +91,7 @@ const getLocationByID = async (req, res) => {
 
     const latestData = devices.map(async (device) => {
       const latestLocation = device.locations.slice(-1)[0] || {};
-      const foundUser = await Users.findById(device._id);
+      // const foundUser = await Users.findById(device._id);
 
       // if (Object.keys(latestLocation).length === 0) {
       //   latestLocation = {};
