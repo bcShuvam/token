@@ -49,6 +49,8 @@ const getReferralById = async (req, res) => {
   const referralDateTo = new Date(to);
   referralDateTo.setUTCHours(23, 59, 59, 999);
   const foundReferral = await Referral.findById(_id);
+  console.log("Found Referrals0:");
+  console.log(formattedReferral);
   if (!foundReferral)
     return res
       .status(404)
