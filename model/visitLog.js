@@ -8,6 +8,7 @@ const visitLogModel = new mongoose.Schema(
     mobileTime: { type: String, required: true },
     visitDate: { type: Date, required: true },
     visitType: { type: String, required: true },
+    approvalStatus: { type: String, default: "pending" },
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
   },
