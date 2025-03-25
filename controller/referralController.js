@@ -61,7 +61,8 @@ const getReferralById = async (req, res) => {
   });
   console.log("Found Referrals:");
   console.log(foundReferral);
-  const foundUser = await Users.findOne({_id: foundReferral.createdById})
+  const id = '679b632e4c526fbfe839ada5';
+  const foundUser = await Users.findById(id);
   console.log("Found User:");;
   console.log(foundUser);
   const formattedReferral = filteredReferrals.map((ref) => ({
