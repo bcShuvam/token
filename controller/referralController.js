@@ -58,6 +58,7 @@ const getReferralById = async (req, res) => {
     return date >= referralDateFrom && date <= referralDateTo;
   });
   const foundUser = await Users.findById(foundReferral.createdById);
+  console.log(foundUser);
   const formattedReferral = filteredReferrals.map((ref) => ({
     "_id": ref._id,
     "patientId": ref.patientId,
