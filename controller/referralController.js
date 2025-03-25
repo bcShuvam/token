@@ -59,7 +59,6 @@ const getReferralById = async (req, res) => {
   });
 
   const id = foundReferral._id;
-  console.log("id = " + id);
   const foundUser = await Users.findById(id);
 
   const formattedReferral = filteredReferrals.map((ref) => ({
@@ -132,7 +131,7 @@ const getReferralByDateCountryRegionAndCity = async (req, res) => {
       }
     }
 
-    const id = foundReferral.createdById;
+    const id = foundReferral._id;
     const foundUser = await Users.findById(id);
 
     const formattedReferral = formattedReferralData.map((logs) => ({
@@ -228,7 +227,7 @@ const getReferralByDateCountryAndRegion = async (req, res) => {
       }
     }
 
-    const id = foundReferral.createdById;
+    const id = foundReferral._id;
     const foundUser = await Users.findById(id);
 
     const formattedReferral = formattedReferralData.map((logs) => ({
@@ -324,7 +323,7 @@ const getReferralByDateAndCountry = async (req, res) => {
       }
     }
 
-    const id = foundReferral.createdById;
+    const id = foundReferral._id;
     const foundUser = await Users.findById(id);
 
     const formattedReferral = formattedReferralData.map((logs) => ({
