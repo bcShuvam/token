@@ -65,7 +65,12 @@ const visitLogsById = async (req, res) => {
       filteredVisitLogs.map(async (log) => {
         const pocDetails = await POC.findById(log.pocId);
         return {
-          pocAddress: `${pocDetails.country}, ${pocDetails.region} ${pocDetails.city}, ${pocDetails.address}`,
+          pocAddress: `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`,
+          pocNumber: pocDetails.number,
+          pocCategory: pocDetails.category,
+          pocSpecialization: pocDetails.specialization,
+          ambNumber: pocDetails.ambNumber,
+          pocReferral: pocDetails.referralCounter,
           pocId: log.pocId,
           pocName: log.pocName,
           remarks: log.remarks,
