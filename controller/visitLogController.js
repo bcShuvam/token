@@ -64,18 +64,18 @@ const visitLogsById = async (req, res) => {
     const formattedFilteredVisitLogs = await Promise.all(
       filteredVisitLogs.map(async (log) => {
         const pocDetails = await POC.findById(log.pocId);
-        return 
+        return {
           pocAddress: `${pocDetails.country}, ${pocDetails.region} ${pocDetails.city}, ${pocDetails.address}`,
-          // pocId: log.pocId,
-          // pocName: log.pocName,
-          // remarks: log.remarks,
-          // mobileTime: log.mobileTime,
-          // visitDate: log.visitDate,
-          // visitType: log.visitType,
-          // latitude: log.latitude,
-          // longitude: log.longitude,
-          // approvalStatus: log.approvalStatus,
-        
+          pocId: log.pocId,
+          pocName: log.pocName,
+          remarks: log.remarks,
+          mobileTime: log.mobileTime,
+          visitDate: log.visitDate,
+          visitType: log.visitType,
+          latitude: log.latitude,
+          longitude: log.longitude,
+          approvalStatus: log.approvalStatus,
+        };
       })
     );
 
