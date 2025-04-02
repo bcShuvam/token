@@ -67,7 +67,7 @@ const visitLogsById = async (req, res) => {
         return {
           pocAddress: `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`,
           pocVisitCounter: pocDetails.visitCounter,
-          pocReferralCounter: pocDetails.visitCounter,
+          pocReferralCounter: pocDetails.referralCounter,
           pocNumber: pocDetails.number,
           pocCategory: pocDetails.category,
           pocGender: pocDetails.gender,
