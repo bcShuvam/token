@@ -66,8 +66,11 @@ const visitLogsById = async (req, res) => {
         const pocDetails = await POC.findById(log.pocId);
         return {
           pocAddress: `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`,
+          pocVisitCounter: pocDetails.visitCounter,
+          pocReferralCounter: pocDetails.visitCounter,
           pocNumber: pocDetails.number,
           pocCategory: pocDetails.category,
+          pocGender: pocDetails.gender,
           pocSpecialization: pocDetails.specialization,
           ambNumber: pocDetails.ambNumber,
           pocReferral: pocDetails.referralCounter,
