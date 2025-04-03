@@ -391,6 +391,29 @@ const getVisitByDateAndCountry = async (req, res) => {
   }
 };
 
+const updateReferralLogStatus = async (req, res) => {
+  try {
+    const logs = req.body; // Expecting an array of objects with _id (logId) and approvalStatus
+
+    if (!Array.isArray(logs) || logs.length === 0) {
+      return res.status(400).json({ message: "Invalid request data" });
+    }
+
+    // Update each nested visit log by _id
+    const updatePromises = logs.map(log =>
+      VisitLog.updateOne(
+        { "visitLogs._id": log._id }, // Find the document containing the nested log by its _id
+        { $set: { "visitLogs.$.approvalStatus": log.approvalStatus } } // Update approvalStatus for the matched visitLog
+      )
+    );
+
+    await Promise.all(updatePromises);
+    res.status(200).json({ message: "Logs updated successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
 
 
-module.exports = { visitLogsList, visitLogsById };
+
+module.exports = { visitLogsList, visitLogsById, updateReferralLogStatus };
