@@ -6,7 +6,7 @@ const {
   updateReferralLogStatus
 } = require("../controller/visitLogController");
 
-router.route("/users").get(visitLogsList).put(updateReferralLogStatus);
-router.route("").get(visitLogsById);
+router.route("/users").get(visitLogsList);
+router.route("").get(visitLogsById).put(updateReferralLogStatus);
 
 module.exports = router;
