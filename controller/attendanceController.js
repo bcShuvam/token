@@ -96,6 +96,7 @@ const getAllAttendanceByDate = async (req, res) => {
     const { from, to } = req.query;
     console.log(from, to);
     const foundAttendance = await Attendance.find();
+    console.log(foundAttendance);
     if (!foundAttendance)
       return res.status(404).json({ message: `No user with id ${id} found` });
     const startTime = new Date(from);
