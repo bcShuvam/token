@@ -94,55 +94,66 @@ const getAttendanceByIdAndDate = async (req, res) => {
 const getAllAttendanceByDate = async (req, res) => {
   try {
     const { from, to } = req.query;
-    console.log(from, to);
-    const foundAttendance = await Attendance.find();
-    console.log(foundAttendance);
-    if (!foundAttendance)
-      return res.status(404).json({ message: `No user with id ${id} found` });
+    console.log("From:", from, "To:", to);
+    
+    const foundAttendance = await Attendance.find(); // Fetch all attendance records
+    console.log("Fetched Attendance:", JSON.stringify(foundAttendance, null, 2));
+
+    if (!foundAttendance || foundAttendance.length === 0) {
+      return res.status(404).json({ message: "No attendance records found" });
+    }
+
     const startTime = new Date(from);
     startTime.setUTCHours(0, 0, 0, 0);
     const endTime = new Date(to);
     endTime.setUTCHours(23, 59, 59, 999);
-    const attendanceLogs = [];
+
+    let attendanceLogs = [];
     let totalHours = 0;
-    const filteredAttendance = foundAttendance.attendance.filter((entry) => {
-      const currentDate = new Date(entry.checkIn.inTime);
-      const matchedDate = currentDate >= startTime && currentDate <= endTime;
-      if (matchedDate) {
-        totalHours += entry.totalHours;
-        console.log(totalHours);
-        const data = {
-          checkIn: entry.checkIn.deviceInTime,
-          checkInLatitude: entry.checkIn.latitude,
-          checkInLongitude: entry.checkIn.longitude,
-          checkOut: entry.checkOut.deviceOutTime,
-          checkOutLatitude: entry.checkOut.latitude,
-          checkOutLongitude: entry.checkOut.longitude,
-          totalHour: entry.totalHours,
-        };
-        attendanceLogs.push(data);
+
+    // Iterate over all users
+    foundAttendance.forEach((user) => {
+      if (user.attendance && Array.isArray(user.attendance)) {
+        user.attendance.forEach((entry) => {
+          const currentDate = new Date(entry.checkIn.inTime);
+          const matchedDate = currentDate >= startTime && currentDate <= endTime;
+          if (matchedDate) {
+            totalHours += entry.totalHours;
+
+            attendanceLogs.push({
+              username: user.username,
+              checkIn: entry.checkIn.deviceInTime,
+              checkInLatitude: entry.checkIn.latitude,
+              checkInLongitude: entry.checkIn.longitude,
+              checkOut: entry.checkOut.deviceOutTime,
+              checkOutLatitude: entry.checkOut.latitude,
+              checkOutLongitude: entry.checkOut.longitude,
+              totalHour: entry.totalHours,
+            });
+          }
+        });
       }
     });
-    const attendance = {
-      _id: foundAttendance._id,
-      username: foundAttendance.username,
+
+    if (attendanceLogs.length === 0) {
+      return res.status(404).json({ message: "No attendance records found for the given date range" });
+    }
+
+    // Format totalHours into HH:MM:SS
+    const hours = Math.floor(totalHours);
+    const minutes = Math.floor((totalHours - hours) * 60);
+    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+    const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    res.status(200).json({
+      message: `Successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
+      totalHours,
+      totalTime: formattedTime,
       attendanceLogs,
-    };
-
-    const hours = Math.floor(totalHours); // Extract full hours
-    const minutes = Math.floor((totalHours - hours) * 60); // Convert remaining fraction to minutes
-    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60); // Convert remaining fraction to seconds
-
-    // Format with leading zeros
-    const formattedHours = String(hours).padStart(2, '0');
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(seconds).padStart(2, '0');
-
-    res
-      .status(200)
-      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`, attendance });
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error:", error);
+    return res.status(500).json({ message: error.message });
   }
 };
 
