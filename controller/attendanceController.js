@@ -95,8 +95,9 @@ const getAllAttendanceByDate = async (req, res) => {
   try {
     const { from, to } = req.query;
     console.log("From:", from, "To:", to);
-    
-    const foundAttendance = await Attendance.find(); // Fetch all attendance records
+
+    // Fetch all users' attendance data
+    const foundAttendance = await Attendance.find();
     console.log("Fetched Attendance:", JSON.stringify(foundAttendance, null, 2));
 
     if (!foundAttendance || foundAttendance.length === 0) {
@@ -108,49 +109,44 @@ const getAllAttendanceByDate = async (req, res) => {
     const endTime = new Date(to);
     endTime.setUTCHours(23, 59, 59, 999);
 
-    let attendanceLogs = [];
-    let totalHours = 0;
+    // Array to hold user attendance summaries
+    const userAttendanceSummaries = [];
 
-    // Iterate over all users
     foundAttendance.forEach((user) => {
       if (user.attendance && Array.isArray(user.attendance)) {
-        user.attendance.forEach((entry) => {
+        // Filter attendance logs by date range
+        const filteredAttendance = user.attendance.filter((entry) => {
           const currentDate = new Date(entry.checkIn.inTime);
-          const matchedDate = currentDate >= startTime && currentDate <= endTime;
-          if (matchedDate) {
-            totalHours += entry.totalHours;
-
-            attendanceLogs.push({
-              username: user.username,
-              checkIn: entry.checkIn.deviceInTime,
-              checkInLatitude: entry.checkIn.latitude,
-              checkInLongitude: entry.checkIn.longitude,
-              checkOut: entry.checkOut.deviceOutTime,
-              checkOutLatitude: entry.checkOut.latitude,
-              checkOutLongitude: entry.checkOut.longitude,
-              totalHour: entry.totalHours,
-            });
-          }
+          return currentDate >= startTime && currentDate <= endTime;
         });
+
+        // Calculate total hours worked
+        const totalHours = filteredAttendance.reduce((sum, entry) => sum + entry.totalHours, 0);
+
+        if (filteredAttendance.length > 0) {
+          // Format total hours into HH:MM:SS
+          const hours = Math.floor(totalHours);
+          const minutes = Math.floor((totalHours - hours) * 60);
+          const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+          const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+          userAttendanceSummaries.push({
+            _id: user._id,
+            username: user.username,
+            totalHoursWorked: totalHours,
+            totalTime: formattedTime,
+            totalAttendance: filteredAttendance.length, // Number of attendance records in the range
+          });
+        }
       }
     });
 
-    if (attendanceLogs.length === 0) {
+    if (userAttendanceSummaries.length === 0) {
       return res.status(404).json({ message: "No attendance records found for the given date range" });
     }
 
-    // Format totalHours into HH:MM:SS
-    const hours = Math.floor(totalHours);
-    const minutes = Math.floor((totalHours - hours) * 60);
-    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
-    const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    res.status(200).json(userAttendanceSummaries);
 
-    res.status(200).json({
-      message: `Successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
-      totalHours,
-      totalTime: formattedTime,
-      attendanceLogs,
-    });
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({ message: error.message });
