@@ -110,9 +110,7 @@ const getAllAttendanceByDate = async (req, res) => {
     endTime.setUTCHours(23, 59, 59, 999);
 
     // Array to hold user attendance summaries
-    const userAttendanceSummaries = [];
-
-    foundAttendance.forEach((user) => {
+    const userAttendanceSummaries = foundAttendance.map((user) => {
       if (user.attendance && Array.isArray(user.attendance)) {
         // Filter attendance logs by date range
         const filteredAttendance = user.attendance.filter((entry) => {
@@ -123,27 +121,29 @@ const getAllAttendanceByDate = async (req, res) => {
         // Calculate total hours worked
         const totalHours = filteredAttendance.reduce((sum, entry) => sum + entry.totalHours, 0);
 
-        if (filteredAttendance.length > 0) {
-          // Format total hours into HH:MM:SS
-          const hours = Math.floor(totalHours);
-          const minutes = Math.floor((totalHours - hours) * 60);
-          const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
-          const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        // Format total hours into HH:MM:SS
+        const hours = Math.floor(totalHours);
+        const minutes = Math.floor((totalHours - hours) * 60);
+        const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+        const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-          userAttendanceSummaries.push({
-            _id: user._id,
-            username: user.username,
-            totalHoursWorked: totalHours,
-            totalTime: formattedTime,
-            totalAttendance: filteredAttendance.length, // Number of attendance records in the range
-          });
-        }
+        return {
+          _id: user._id,
+          username: user.username,
+          totalHoursWorked: filteredAttendance.length > 0 ? totalHours : 0,
+          totalTime: filteredAttendance.length > 0 ? formattedTime : "00:00:00",
+          totalAttendance: filteredAttendance.length,
+        };
+      } else {
+        return {
+          _id: user._id,
+          username: user.username,
+          totalHoursWorked: 0,
+          totalTime: "00:00:00",
+          totalAttendance: 0,
+        };
       }
     });
-
-    if (userAttendanceSummaries.length === 0) {
-      return res.status(404).json({ message: "No attendance records found for the given date range" });
-    }
 
     res.status(200).json(userAttendanceSummaries);
 
