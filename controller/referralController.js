@@ -10,7 +10,7 @@ let exportData;
 const exportCSVData = async (req, res) => {
   try {
     if (!exportData) return res.status(404).json({ message: "No data to export" });
-     exportData;
+    exportData;
     const csvFields = [
       "ID",
       "Patient Id",
@@ -29,7 +29,7 @@ const exportCSVData = async (req, res) => {
       "Mobile Time",
       "Referral Date",
     ];
-    const csvParser = new CsvParser({csvFields});
+    const csvParser = new CsvParser({ csvFields });
     const csvData = csvParser.parse(exportData);
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", "attachment: filename=referralDataById.csv");
@@ -428,20 +428,34 @@ const createReferral = async (req, res) => {
       return res
         .status(404)
         .json({ message: `referral id '${createdById}' not found` });
+    
     let foundPOCId;
     let foundAmbId;
+
     if (pocId) {
       foundPOCId = await POC.findById(pocId);
-      if (!foundReferralId)
+      if (!foundPOCId) {
         return res.status(404).json({ message: `POC id '${pocId}' not found` });
+      }
+
+      // 🔼 Increment visit and referral counters
+      await POC.findByIdAndUpdate(pocId, {
+        $inc: {
+          visitCounter: 1,
+          referralCounter: 1,
+        },
+      });
     }
+
     if (ambId) {
       foundAmbId = await POC.findById(ambId);
-      if (!foundReferralId)
+      if (!foundAmbId) {
         return res
           .status(404)
           .json({ message: `Ambulance id '${ambId}' not found` });
+      }
     }
+    
     const createPatient = await Patient.create({
       fullName: fullName,
       age: age,
@@ -469,6 +483,7 @@ const createReferral = async (req, res) => {
       mobileTime: mobileTime,
       dateTime: dateTime,
     });
+
     const referralLogDetail = {
       patientId: createPatient._id,
       patientName: createPatient.fullName,
@@ -486,10 +501,16 @@ const createReferral = async (req, res) => {
       mobileTime: mobileTime,
       referralDate: dateTime,
     };
-    const updatedReferral = await Referral.findByIdAndUpdate(createdById, {
-      $inc: { referralLogCounter: 1 },
-      $push: { referralLogs: referralLogDetail },
-    });
+
+    const updatedReferral = await Referral.findByIdAndUpdate(
+      createdById,
+      {
+        $inc: { referralLogCounter: 1 },
+        $push: { referralLogs: referralLogDetail },
+      },
+      { new: true } // return the updated doc
+    );
+    
     const latestReferral =
       updatedReferral.referralLogs.length == 0
         ? {}

@@ -17,6 +17,7 @@ const referralLogModel = new mongoose.Schema(
     longitude: { type: Number, required: true },
     mobileTime: { type: String, required: true },
     referralDate: { type: Date, required: true },
+    approvalStatus: {type: String, default: "pending"}
   },
   { timestamps: true }
 );
