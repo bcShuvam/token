@@ -60,7 +60,7 @@ const getReferralById = async (req, res) => {
 
   const id = foundReferral._id;
   const foundUser = await Users.findById(id);
-  console.log(foundUser);
+  console.log(filteredReferrals);
 
   const formattedReferral = filteredReferrals.map((ref) => ({
     "_id": ref._id,
