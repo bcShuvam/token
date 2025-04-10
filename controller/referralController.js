@@ -85,6 +85,19 @@ const getReferralById = async (req, res) => {
   res.status(200).json({ message: "success", referralLogs: formattedReferral });
 };
 
+const getReferralByIdAndDate = async (req, res) => {
+  try {
+    const {id, from, to} = req.params;
+    if(!id || !from || !to) return res.status(400).json({message: "user id, from and to are required"})
+    const foundReferral = await Referral.findById(id);
+    if(!foundReferral) return res.status(404).json({message: "No Referrals found", referral: foundReferral})
+    // console.log(foundReferral);  
+    return res.status(200).json({message: "Referral found", referrals: foundReferral})
+  } catch (err) {
+    return res.status(500).json({message: err.message});
+  }
+}
+
 const getReferralByDateCountryRegionAndCity = async (req, res) => {
   try {
     const { _id, from, to, country, region, city } = req.query;
@@ -529,4 +542,4 @@ const createReferral = async (req, res) => {
   }
 };
 
-module.exports = { getReferralById, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, createReferral, exportCSVData };
+module.exports = { getReferralById, getReferralByIdAndDate, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, createReferral, exportCSVData };
