@@ -60,6 +60,7 @@ const getReferralById = async (req, res) => {
 
   const id = foundReferral._id;
   const foundUser = await Users.findById(id);
+  console.log(foundUser);
 
   const formattedReferral = filteredReferrals.map((ref) => ({
     "_id": ref._id,
@@ -80,7 +81,7 @@ const getReferralById = async (req, res) => {
     "mobileTime": ref.mobileTime,
     "referralDate": ref.referralDate,
   }));
-  console.log(formattedReferral);
+  // console.log(formattedReferral);
   exportData = formattedReferral;
   res.status(200).json({ message: "success", referralLogs: formattedReferral });
 };
