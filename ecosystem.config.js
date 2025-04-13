@@ -1,5 +1,4 @@
 const path = require("path");
-const { watch } = require("./model/patient");
 
 module.exports = {
     apps: [{
