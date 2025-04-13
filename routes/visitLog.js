@@ -4,11 +4,13 @@ const {
   visitLogsList,
   visitLogsById,
   updateReferralLogStatus,
-  averageVisit
+  averageVisit,
+  getPocVisitLog
 } = require("../controller/visitLogController");
 
 router.route("/users").get(visitLogsList);
 router.route("/average").get(averageVisit);
+router.route("/average/poc").get(getPocVisitLog);
 router.route("").get(visitLogsById).put(updateReferralLogStatus);
 
 module.exports = router;
