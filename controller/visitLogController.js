@@ -455,5 +455,50 @@ const averageVisit = async (req, res) => {
   }
 };
 
+const getPocVisitLog = async (req, res) => {
+  try {
+    const { userId, pocId, from, to } = req.query;
 
-module.exports = { visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit };
+    // Validation
+    if (!userId || !pocId || !from || !to) {
+      return res.status(400).json({
+        message: 'userId, pocId, from and to are required'
+      });
+    }
+
+    const foundVisitLog = await VisitLog.findById(userId);
+    if (!foundVisitLog) {
+      return res.status(404).json({
+        message: 'User not found',
+        logs: []
+      });
+    }
+
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    // Filter the logs
+    const filteredLogs = foundVisitLog.visitLogs.filter((log) => {
+      const visitDate = new Date(log.visitDate);
+      return (
+        log.pocId === pocId &&
+        visitDate >= fromDate &&
+        visitDate <= toDate
+      );
+    });
+
+    return res.status(200).json({
+      message: 'Filtered visit logs retrieved',
+      logs: filteredLogs
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      message: err.message
+    });
+  }
+};
+
+
+
+module.exports = { visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit,getPocVisitLog };
