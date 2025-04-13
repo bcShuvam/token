@@ -416,13 +416,15 @@ const updateReferralLogStatus = async (req, res) => {
 
 const averageVisit = async (req, res) => {
   try {
-    const {userId, pocId, from, to} = req.query;
+    const {userId, from, to} = req.query;
+    if(!userId, !from || !to) return res.status(400).json({message: 'userId, pocId, from and to are required'})
     const foundVisitLog = await VisitLog.findById(userId);
+    if(!foundVisitLog) return res.status(404).json({message: "User not found", logs: []})
     console.log(foundVisitLog);
     return res.status(200).json({"message": "visit log found", logs: foundVisitLog})
   } catch (err) {
-    return res.status(500).json({ 'message': err.message });
+    return res.status(500).json({ message: err.message });
   }
 }
 
-module.exports = { visitLogsList, visitLogsById, updateReferralLogStatus };
+module.exports = { visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit };
