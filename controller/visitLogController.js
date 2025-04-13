@@ -416,15 +416,44 @@ const updateReferralLogStatus = async (req, res) => {
 
 const averageVisit = async (req, res) => {
   try {
-    const {userId, from, to} = req.query;
-    if(!userId, !from || !to) return res.status(400).json({message: 'userId, pocId, from and to are required'})
+    const { userId, from, to } = req.query;
+
+    if (!userId || !from || !to) {
+      return res.status(400).json({ message: 'userId, from, and to are required' });
+    }
+
     const foundVisitLog = await VisitLog.findById(userId);
-    if(!foundVisitLog) return res.status(404).json({message: "User not found", logs: []})
-    console.log(foundVisitLog);
-    return res.status(200).json({"message": "visit log found", logs: foundVisitLog})
+    if (!foundVisitLog) {
+      return res.status(404).json({ message: "User not found", logs: [] });
+    }
+
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    if (isNaN(fromDate) || isNaN(toDate)) {
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+
+    const filteredLogs = foundVisitLog.visitLogs.filter(log => {
+      const visitDate = new Date(log.visitDate);
+      return visitDate >= fromDate && visitDate <= toDate;
+    });
+
+    const timeDiff = Math.abs(toDate - fromDate);
+    const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // including both dates
+    const totalVisits = filteredLogs.length;
+    const averagePerDay = totalVisits / days;
+
+    return res.status(200).json({
+      message: "Average visits calculated",
+      totalVisits,
+      days,
+      averagePerDay: averagePerDay.toFixed(2),
+      logs: filteredLogs,
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
-}
+};
+
 
 module.exports = { visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit };
