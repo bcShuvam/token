@@ -414,6 +414,15 @@ const updateReferralLogStatus = async (req, res) => {
   }
 }
 
-
+const averageVisit = async (req, res) => {
+  try {
+    const {userId, pocId, from, to} = req.query;
+    const foundVisitLog = await VisitLog.findById(userId);
+    console.log(foundVisitLog);
+    return res.status(200).json({"message": "visit log found", logs: foundVisitLog})
+  } catch (err) {
+    return res.status(500).json({ 'message': err.message });
+  }
+}
 
 module.exports = { visitLogsList, visitLogsById, updateReferralLogStatus };
