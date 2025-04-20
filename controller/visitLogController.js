@@ -110,24 +110,24 @@ const getVisitByDateCountryRegionAndCity = async (req, res) => {
     if (!from || !to || !country || !region || !city)
       return res.status(400).json({ message: "from, to and country, region and city are required" });
 
-    const referralDateFrom = new Date(from);
-    referralDateFrom.setUTCHours(0, 0, 0, 0);
-    const referralDateTo = new Date(to);
-    referralDateTo.setUTCHours(23, 59, 59, 999);
+    const visitDateFrom = new Date(from);
+    visitDateFrom.setUTCHours(0, 0, 0, 0);
+    const visitDateTo = new Date(to);
+    visitDateTo.setUTCHours(23, 59, 59, 999);
 
-    const foundReferral = await Referral.findById(_id);
-    if (!foundReferral)
+    const foundVisitLog = await VisitLog.findById(_id);
+    if (!foundVisitLog)
       return res.status(404).json({ message: "no referral found", referralLogs: {} });
 
-    let filteredReferrals = foundReferral.referralLogs.filter((logs) => {
-      const date = new Date(logs.referralDate);
-      return date >= referralDateFrom && date <= referralDateTo;
+    let filteredVisitLogs = foundVisitLog.visitLogs.filter((logs) => {
+      const date = new Date(logs.visitDate);
+      return date >= visitDateFrom && date <= visitDateTo;
     });
 
-    let formattedReferralData = [];
+    let formattedVisitData = [];
 
-    if (filteredReferrals.length !== 0) {
-      for (const logs of filteredReferrals) {
+    if (filteredVisitLogs.length !== 0) {
+      for (const logs of filteredVisitLogs) {
         const foundPoc = logs.pocId ? await POC.findOne({ _id: logs.pocId }) : {};
         const foundAmb = logs.ambId ? await POC.findOne({ _id: logs.ambId }) : {};
         const foundPatient = logs.patientId ? await Patient.findOne({ _id: logs.patientId }) : {};
