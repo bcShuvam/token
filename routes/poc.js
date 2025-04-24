@@ -14,5 +14,5 @@ router.route("/category").get(getPOCByCreatedByIdAndCategory);
 router.route("/createdBy").get(getPocCreatedById);
 router.route("/create").post(createPOC);
 router.route("/followup").post(pocFollowUp);
-router.route("/area").post(pocByArea);
+router.route("/area").get(pocByArea);
 module.exports = router;
