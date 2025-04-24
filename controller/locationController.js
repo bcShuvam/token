@@ -1,6 +1,8 @@
 const Location = require("../model/location");
 const todayDate = require("../config/todayDate");
 const Users = require("../model/users");
+const express = require('express');
+const { getDistance } = require('geolib');
 
 const postLocation = async (req, res) => {
   try {
