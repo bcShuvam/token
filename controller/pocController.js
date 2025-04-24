@@ -233,7 +233,7 @@ const pocFollowUp = async (req, res) => {
 
 const pocByArea = async (req, res) => {
   try {
-    const { country, region, city } = req.params;
+    const { country, region, city } = req.query;
     let foundPOC;
     if (country && region && city) {
       foundPOC = await POC.find({ $and: [{ region }, { city }] });
