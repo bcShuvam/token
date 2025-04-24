@@ -242,7 +242,7 @@ const pocByArea = async (req, res) => {
     } else if (country && (!city && !region)) {
       foundPOC = await POC.find({ country });
     }
-    if (!foundPOC) return res.status(404).json({message: `POC not found by area ${country} ${region} ${city}`})
+    if (!foundPOC && foundPOC.length === 0) return res.status(404).json({message: `POC not found by area ${country} ${region} ${city}`, poc: foundPOC })
     return res.status(200).json({ message: "POC found", poc: foundPOC });
   } catch (err) {
     return res.status(500).json({ message: err.message });
