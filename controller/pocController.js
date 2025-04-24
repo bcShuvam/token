@@ -1,6 +1,7 @@
 const POC = require("../model/poc");
 const VisitLog = require("../model/visitLog");
 const User = require("../model/users");
+const { response } = require("express");
 
 const getPOCs = async (req, res) => {
   try {
@@ -230,10 +231,28 @@ const pocFollowUp = async (req, res) => {
   }
 };
 
+const pocByArea = async (req, res) => {
+  try {
+    const { country, region, city } = req.params;
+    let foundPOC;
+    if (country && region && city) {
+      foundPOC = await POC.find({ $and: [{ region }, { city }] });
+    } else if (country && region && !city) {
+      foundPOC = await POC.find({ $and: [{ country }, { region }] });
+    } else if (country && (!city && !region)) {
+      foundPOC = await POC.find({ country });
+    }
+    return res.status(200).json({ message: "POC by Area found", poc: foundPOC });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
+
 module.exports = {
   getPOCs,
   getPOCByCreatedByIdAndCategory,
   getPocCreatedById,
   createPOC,
   pocFollowUp,
+  pocByArea,
 };
