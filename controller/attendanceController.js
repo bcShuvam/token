@@ -95,7 +95,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
   }
 };
 
-const exportAttendanceToExcel = async (req, res) => {
+const exportAttendanceToCSV = async (req, res) => {
   try {
     const id = req.query.userId;
     const { from, to } = req.query;
@@ -128,23 +128,19 @@ const exportAttendanceToExcel = async (req, res) => {
       }
     });
 
-    // Create a worksheet
+    // Create worksheet
     const worksheet = XLSX.utils.json_to_sheet(attendanceLogs);
 
-    // Create a new workbook and append the worksheet
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance');
+    // Convert worksheet to CSV
+    const csvData = XLSX.utils.sheet_to_csv(worksheet);
 
-    // Write to buffer
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'csv' });
-
-    // Send file directly
-    res.setHeader('Content-Disposition', `attachment; filename="attendance_${foundAttendance.username}_${from}_to_${to}.xlsx"`);
-    // res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    // Set headers for CSV download
+    res.setHeader('Content-Disposition', `attachment; filename="attendance_${foundAttendance.username}_${from}_to_${to}.csv"`);
     res.setHeader('Content-Type', 'text/csv');
-    res.send(buffer);
+    res.status(200).send(csvData);
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -299,5 +295,5 @@ module.exports = {
   postAttendanceByID,
   getAttendanceByIdAndDate,
   getAllAttendanceByDate,
-  exportAttendanceToExcel
+  exportAttendanceToCSV
 };
