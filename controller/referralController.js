@@ -387,6 +387,111 @@ const getReferralByDateAndCountry = async (req, res) => {
   }
 };
 
+const XLSX = require('xlsx');
+
+const downloadReferralByDateAndCountryCSV = async (req, res) => {
+  try {
+    const { _id, from, to, country } = req.query;
+    if (!_id) return res.status(400).json({ message: "_id is required" });
+    if (!from || !to || !country)
+      return res.status(400).json({ message: "from, to, and country are required" });
+
+    const referralDateFrom = new Date(from);
+    referralDateFrom.setUTCHours(0, 0, 0, 0);
+    const referralDateTo = new Date(to);
+    referralDateTo.setUTCHours(23, 59, 59, 999);
+
+    const foundReferral = await Referral.findById(_id);
+    if (!foundReferral)
+      return res.status(404).json({ message: "No referral found" });
+
+    let filteredReferrals = foundReferral.referralLogs.filter((logs) => {
+      const date = new Date(logs.referralDate);
+      return date >= referralDateFrom && date <= referralDateTo;
+    });
+
+    let formattedReferralData = [];
+
+    if (filteredReferrals.length !== 0) {
+      for (const logs of filteredReferrals) {
+        const foundPoc = logs.pocId ? await POC.findOne({ _id: logs.pocId }) : {};
+        const foundAmb = logs.ambId ? await POC.findOne({ _id: logs.ambId }) : {};
+        const foundPatient = logs.patientId ? await Patient.findOne({ _id: logs.patientId }) : {};
+
+        let data = {};
+
+        if (foundPatient.country == country) {
+          data = {
+            referral: logs,
+            patient: foundPatient,
+            poc: foundPoc,
+            amb: foundAmb,
+          };
+        }
+
+        if (Object.keys(data).length !== 0) {
+          formattedReferralData.push(data);
+        }
+      }
+    }
+
+    const id = foundReferral._id;
+    const foundUser = await Users.findById(id);
+
+    const formattedReferral = formattedReferralData.map((logs) => ({
+      _id: logs.referral._id?.toString() || '',
+      createdById: logs.referral.createdById?.toString() || '',
+      profileImage: foundUser.profileImage || '',
+      createdBy: logs.referral.createdByName || '',
+      referralDate: logs.referral.referralDate || '',
+      mobileTime: logs.referral.mobileTime || '',
+      latitude: logs.referral.latitude || '',
+      longitude: logs.referral.longitude || '',
+      patientId: logs.patient._id?.toString() || '',
+      patientName: logs.patient.fullName || '',
+      patientAge: logs.patient.age || '',
+      provisionalDiagnosis: logs.patient.provisionalDiagnosis || '',
+      country: logs.patient.country || '',
+      region: logs.patient.region || '',
+      city: logs.patient.city || '',
+      address: logs.patient.address || '',
+      pocName: logs.poc.pocName || '',
+      pocAge: logs.poc.age || '',
+      pocNumber: logs.poc.number || '',
+      pocGender: logs.poc.gender || '',
+      pocCountry: logs.poc.country || '',
+      pocRegion: logs.poc.region || '',
+      pocCity: logs.poc.city || '',
+      pocAddress: logs.poc.address || '',
+      pocCategory: logs.poc.category || '',
+      pocSpecialization: logs.poc.specialization || '',
+      pocOrganization: logs.poc.organization || '',
+      ambId: logs.amb._id?.toString() || '',
+      ambName: logs.amb.pocName || '',
+      ambAge: logs.amb.age || '',
+      ambNumber: logs.amb.number || '',
+      ambCountry: logs.amb.country || '',
+      ambRegion: logs.amb.region || '',
+      ambCity: logs.amb.city || '',
+      ambAddress: logs.amb.address || '',
+      ambOrganization: logs.amb.organization || '',
+      ambVehicleNumber: logs.amb.ambNumber || '',
+    }));
+
+    // Now export formattedReferral as CSV
+    const worksheet = XLSX.utils.json_to_sheet(formattedReferral);
+    const csvData = XLSX.utils.sheet_to_csv(worksheet);
+
+    res.setHeader('Content-Disposition', `attachment; filename="referral_logs_${from}_to_${to}.csv"`);
+    res.setHeader('Content-Type', 'text/csv');
+    res.status(200).send(csvData);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 const createReferral = async (req, res) => {
   try {
@@ -543,4 +648,4 @@ const createReferral = async (req, res) => {
   }
 };
 
-module.exports = { getReferralById, getReferralByIdAndDate, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, createReferral, exportCSVData };
+module.exports = { getReferralById, getReferralByIdAndDate, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, createReferral, exportCSVData, downloadReferralByDateAndCountryCSV };
