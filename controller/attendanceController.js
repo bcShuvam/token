@@ -1,3 +1,7 @@
+
+const XLSX = require('xlsx');
+const fs = require('fs');
+const path = require('path');
 const Attendance = require("../model/attendance");
 
 const getAttendanceById = async (req, res) => {
@@ -90,6 +94,61 @@ const getAttendanceByIdAndDate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+const exportAttendanceToExcel = async (req, res) => {
+  try {
+    const id = req.query.userId;
+    const { from, to } = req.query;
+
+    if (!id) return res.status(400).json({ message: "id is required" });
+
+    const foundAttendance = await Attendance.findOne({ _id: id });
+    if (!foundAttendance) {
+      return res.status(404).json({ message: `No user with id ${id} found` });
+    }
+
+    const startTime = new Date(from);
+    startTime.setUTCHours(0, 0, 0, 0);
+    const endTime = new Date(to);
+    endTime.setUTCHours(23, 59, 59, 999);
+
+    const attendanceLogs = [];
+    foundAttendance.attendance.forEach((entry) => {
+      const currentDate = new Date(entry.checkIn.inTime);
+      if (currentDate >= startTime && currentDate <= endTime) {
+        attendanceLogs.push({
+          CheckIn: entry.checkIn.deviceInTime,
+          CheckInLatitude: entry.checkIn.latitude,
+          CheckInLongitude: entry.checkIn.longitude,
+          CheckOut: entry.checkOut.deviceOutTime,
+          CheckOutLatitude: entry.checkOut.latitude,
+          CheckOutLongitude: entry.checkOut.longitude,
+          TotalHours: entry.totalHours
+        });
+      }
+    });
+
+    // Create a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(attendanceLogs);
+
+    // Create a new workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance');
+
+    // Write to buffer
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'csv' });
+
+    // Send file directly
+    res.setHeader('Content-Disposition', `attachment; filename="attendance_${foundAttendance.username}_${from}_to_${to}.xlsx"`);
+    // res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Type', 'text/csv');
+    res.send(buffer);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 const getAllAttendanceByDate = async (req, res) => {
   try {
@@ -240,4 +299,5 @@ module.exports = {
   postAttendanceByID,
   getAttendanceByIdAndDate,
   getAllAttendanceByDate,
+  exportAttendanceToExcel
 };
