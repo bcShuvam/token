@@ -5,11 +5,11 @@ const {
   postAttendanceByID,
   getAttendanceByIdAndDate,
   getAllAttendanceByDate,
-  exportAttendanceToExcel
+  exportAttendanceToCSV
 } = require("../controller/attendanceController");
 router.route("/userId").get(getAttendanceById).post(postAttendanceByID);
 router.route("/date").get(getAttendanceByIdAndDate);
 router.route("/date/all").get(getAllAttendanceByDate);
-router.get('/export', exportAttendanceToExcel);
+router.get('/export', exportAttendanceToCSV);
 
 module.exports = router;
