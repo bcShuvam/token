@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const handleLogin = require("../controller/authController");
+const {handleLogin, forgotPassword} = require("../controller/authController");
 
 router.route("/").post(handleLogin);
+router.route("/forgot-password").post(forgotPassword);
 
 module.exports = handleLogin;
