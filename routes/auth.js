@@ -3,6 +3,6 @@ const router = express.Router();
 const {handleLogin, forgotPassword} = require("../controller/authController");
 
 router.route("/").post(handleLogin);
-router.route("/forgot-password").post(forgotPassword);
+router.route("/forgot").post(forgotPassword);
 
 module.exports = handleLogin;
