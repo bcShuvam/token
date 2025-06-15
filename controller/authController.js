@@ -101,4 +101,34 @@ const handleLogin = async (req, res) => {
   }
 };
 
-module.exports = handleLogin;
+const forgotPassword = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+    if (!email) return res.status(400).json({ message: "email is required" });
+    let foundUser = await Users.findOne({ email });
+
+    if (!foundUser)
+      return res.status(404).json({ message: "Incorrect email" });
+
+    if (!password || !confirmPassword)
+      return res
+        .status(400)
+        .json({ message: "password and confirm password are required" });
+
+    if (password !== confirmPassword)
+      return res.status(400).json({ message: "Passwords do not match" });
+
+    foundUser.password = await bcrypt.hash(password, 10);
+
+    foundUser.save();
+
+    res.status(200).json({
+      message: "Password Changed Successfully",
+      password: password, foundUser
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {handleLogin, forgotPassword};
