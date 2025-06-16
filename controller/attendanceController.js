@@ -1,5 +1,6 @@
 
 const XLSX = require('xlsx');
+const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const Attendance = require("../model/attendance");
@@ -351,6 +352,70 @@ const downloadAttendanceReport = async (req, res) => {
   }
 };
 
+const downloadAttendanceReportById = async (req, res) => {
+  try {
+    const id = req.query.userId;
+    const { from, to } = req.query;
+    console.log(from, to);
+    if (!id) return res.status(400).json({ message: "id is required" });
+
+    const foundAttendance = await Attendance.findOne({ _id: id });
+    if (!foundAttendance)
+      return res.status(404).json({ message: `No user with id ${id} found` });
+
+    const startTime = new Date(from);
+    startTime.setUTCHours(0, 0, 0, 0);
+    const endTime = new Date(to);
+    endTime.setUTCHours(23, 59, 59, 999);
+
+    const attendanceLogs = [];
+    let totalHours = 0;
+
+    foundAttendance.attendance.forEach((entry) => {
+      const currentDate = new Date(entry.checkIn.inTime);
+      const matchedDate = currentDate >= startTime && currentDate <= endTime;
+      if (matchedDate) {
+        totalHours += entry.totalHours;
+        const data = {
+          checkIn: entry.checkIn.deviceInTime,
+          checkInLatitude: entry.checkIn.latitude,
+          checkInLongitude: entry.checkIn.longitude,
+          checkOut: entry.checkOut.deviceOutTime,
+          checkOutLatitude: entry.checkOut.latitude,
+          checkOutLongitude: entry.checkOut.longitude,
+          totalHour: entry.totalHours,
+        };
+        attendanceLogs.push(data);
+      }
+    });
+
+    const hours = Math.floor(totalHours);
+    const minutes = Math.floor((totalHours - hours) * 60);
+    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+
+    // Convert attendanceLogs to CSV
+    const fields = ['checkIn', 'checkInLatitude', 'checkInLongitude', 'checkOut', 'checkOutLatitude', 'checkOutLongitude', 'totalHour'];
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(attendanceLogs);
+
+    // Optional: write CSV to file if you want to store locally (can be skipped if just downloading directly)
+    // const filePath = path.join(__dirname, 'attendance.csv');
+    // fs.writeFileSync(filePath, csv);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment(`attendance_${id}_${from}_${to}.csv`);
+    res.send(csv);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 module.exports = {
   getAttendanceById,
   postAttendanceByID,
@@ -358,4 +423,5 @@ module.exports = {
   getAllAttendanceByDate,
   exportAttendanceToCSV,
   downloadAttendanceReport,
+  downloadAttendanceReportById,
 };
