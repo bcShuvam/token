@@ -360,6 +360,7 @@ const downloadAttendanceReportById = async (req, res) => {
     if (!id) return res.status(400).json({ message: "id is required" });
 
     const foundAttendance = await Attendance.findOne({ _id: id });
+    const userName = foundAttendance.attendance.username;
     if (!foundAttendance)
       return res.status(404).json({ message: `No user with id ${id} found` });
 
@@ -398,7 +399,7 @@ const downloadAttendanceReportById = async (req, res) => {
     const formattedSeconds = String(seconds).padStart(2, '0');
 
     // Convert attendanceLogs to CSV
-    const fields = ['checkIn', 'checkInLatitude', 'checkInLongitude', 'checkOut', 'checkOutLatitude', 'checkOutLongitude', 'totalHour'];
+    const fields = ['Check-In', 'check-In Latitude', 'check-In Longitude', 'Check-Out', 'Check-Out Latitude', 'Check-Out Longitude', 'Total Hours'];
     const json2csvParser = new Parser({ fields });
     const csv = json2csvParser.parse(attendanceLogs);
 
@@ -407,7 +408,7 @@ const downloadAttendanceReportById = async (req, res) => {
     // fs.writeFileSync(filePath, csv);
 
     res.header('Content-Type', 'text/csv');
-    res.attachment(`attendance_${id}_${from}_${to}.csv`);
+    res.attachment(`${userName}attendance_report_${from}_${to}.csv`);
     res.send(csv);
 
   } catch (error) {
