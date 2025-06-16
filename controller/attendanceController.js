@@ -383,7 +383,7 @@ const downloadAttendanceReportById = async (req, res) => {
           checkOut: entry.checkOut.deviceOutTime,
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
-          totalHour: entry.totalHours,
+          totalHour: entry.totalHours.toFixed(),
         };
         attendanceLogs.push(data);
       }
