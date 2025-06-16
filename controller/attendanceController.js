@@ -356,13 +356,16 @@ const downloadAttendanceReportById = async (req, res) => {
   try {
     const id = req.query.userId;
     const { from, to } = req.query;
-    console.log(from, to);
-    if (!id) return res.status(400).json({ message: "id is required" });
+
+    if (!id) {
+      return res.status(400).json({ message: "userId is required" });
+    }
 
     const foundAttendance = await Attendance.findOne({ _id: id });
-    const userName = foundAttendance.attendance.username;
-    if (!foundAttendance)
+
+    if (!foundAttendance) {
       return res.status(404).json({ message: `No user with id ${id} found` });
+    }
 
     const startTime = new Date(from);
     startTime.setUTCHours(0, 0, 0, 0);
@@ -372,24 +375,30 @@ const downloadAttendanceReportById = async (req, res) => {
     const attendanceLogs = [];
     let totalHours = 0;
 
+    const userName = foundAttendance.username; // <-- Corrected here
+
     foundAttendance.attendance.forEach((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
       const matchedDate = currentDate >= startTime && currentDate <= endTime;
+
       if (matchedDate) {
         totalHours += entry.totalHours;
+
         const data = {
-          checkIn: entry.checkIn.deviceInTime,
-          checkInLatitude: entry.checkIn.latitude,
-          checkInLongitude: entry.checkIn.longitude,
-          checkOut: entry.checkOut.deviceOutTime,
-          checkOutLatitude: entry.checkOut.latitude,
-          checkOutLongitude: entry.checkOut.longitude,
-          totalHour: entry.totalHours.toFixed(2),
+          'Check-In': entry.checkIn.deviceInTime,
+          'Check-In Latitude': entry.checkIn.latitude,
+          'Check-In Longitude': entry.checkIn.longitude,
+          'Check-Out': entry.checkOut.deviceOutTime,
+          'Check-Out Latitude': entry.checkOut.latitude,
+          'Check-Out Longitude': entry.checkOut.longitude,
+          'Total Hours': entry.totalHours.toFixed(2),
         };
+
         attendanceLogs.push(data);
       }
     });
 
+    // Total time calculation (optional if you want to add to CSV later)
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
@@ -399,23 +408,20 @@ const downloadAttendanceReportById = async (req, res) => {
     const formattedSeconds = String(seconds).padStart(2, '0');
 
     // Convert attendanceLogs to CSV
-    const fields = ['Check-In', 'check-In Latitude', 'check-In Longitude', 'Check-Out', 'Check-Out Latitude', 'Check-Out Longitude', 'Total Hours'];
+    const fields = ['Check-In', 'Check-In Latitude', 'Check-In Longitude', 'Check-Out', 'Check-Out Latitude', 'Check-Out Longitude', 'Total Hours'];
     const json2csvParser = new Parser({ fields });
     const csv = json2csvParser.parse(attendanceLogs);
 
-    // Optional: write CSV to file if you want to store locally (can be skipped if just downloading directly)
-    // const filePath = path.join(__dirname, 'attendance.csv');
-    // fs.writeFileSync(filePath, csv);
-
+    // Send CSV as file download
     res.header('Content-Type', 'text/csv');
-    res.attachment(`${userName}attendance_report_${from}_${to}.csv`);
+    res.attachment(`${userName}_Attendance_Report_${from}_${to}.csv`);
     res.send(csv);
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
-
 
 module.exports = {
   getAttendanceById,
