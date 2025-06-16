@@ -290,10 +290,72 @@ const postAttendanceByID = async (req, res) => {
   }
 };
 
+const downloadAttendanceReport = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const foundAttendance = await Attendance.find();
+    if (!foundAttendance || foundAttendance.length === 0) {
+      return res.status(404).json({ message: "No attendance records found" });
+    }
+
+    const startTime = new Date(from);
+    startTime.setUTCHours(0, 0, 0, 0);
+    const endTime = new Date(to);
+    endTime.setUTCHours(23, 59, 59, 999);
+
+    const userAttendanceSummaries = foundAttendance.map((user) => {
+      if (user.attendance && Array.isArray(user.attendance)) {
+        const filteredAttendance = user.attendance.filter((entry) => {
+          const currentDate = new Date(entry.checkIn.inTime);
+          return currentDate >= startTime && currentDate <= endTime;
+        });
+
+        const totalHours = filteredAttendance.reduce((sum, entry) => sum + entry.totalHours, 0);
+
+        const hours = Math.floor(totalHours);
+        const minutes = Math.floor((totalHours - hours) * 60);
+        const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+        const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        return {
+          _id: user._id,
+          username: user.username,
+          totalHoursWorked: filteredAttendance.length > 0 ? totalHours : 0,
+          totalTime: filteredAttendance.length > 0 ? formattedTime : "00:00:00",
+          totalAttendance: filteredAttendance.length,
+        };
+      } else {
+        return {
+          _id: user._id,
+          username: user.username,
+          totalHoursWorked: 0,
+          totalTime: "00:00:00",
+          totalAttendance: 0,
+        };
+      }
+    });
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(userAttendanceSummaries);
+
+    // Convert worksheet to CSV
+    const csvData = XLSX.utils.sheet_to_csv(worksheet);
+
+    // Set headers for CSV download
+    res.setHeader('Content-Disposition', `attachment; filename="attendance_report_${from}_to_${to}.csv"`);
+    res.setHeader('Content-Type', 'text/csv');
+    res.status(200).send(csvData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getAttendanceById,
   postAttendanceByID,
   getAttendanceByIdAndDate,
   getAllAttendanceByDate,
-  exportAttendanceToCSV
+  exportAttendanceToCSV,
+  downloadAttendanceReport,
 };
