@@ -385,6 +385,7 @@ const downloadAttendanceReportById = async (req, res) => {
         totalHours += entry.totalHours;
 
         const data = {
+          'Name': userName,
           'Check-In': entry.checkIn.deviceInTime,
           'Check-In Latitude': entry.checkIn.latitude,
           'Check-In Longitude': entry.checkIn.longitude,
@@ -408,7 +409,7 @@ const downloadAttendanceReportById = async (req, res) => {
     const formattedSeconds = String(seconds).padStart(2, '0');
 
     // Convert attendanceLogs to CSV
-    const fields = ['Check-In', 'Check-In Latitude', 'Check-In Longitude', 'Check-Out', 'Check-Out Latitude', 'Check-Out Longitude', 'Total Hours'];
+    const fields = ['Name', 'Check-In', 'Check-In Latitude', 'Check-In Longitude', 'Check-Out', 'Check-Out Latitude', 'Check-Out Longitude', 'Total Hours'];
     const json2csvParser = new Parser({ fields });
     const csv = json2csvParser.parse(attendanceLogs);
 
