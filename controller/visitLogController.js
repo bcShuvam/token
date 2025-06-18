@@ -547,30 +547,27 @@ const downloadVisitLogsById = async (req, res) => {
           SN: index + 1,
           username: foundVisitLog.username,
           pocName: log.pocName,
+          pocGender: pocDetails.gender,
           pocNumber: pocDetails.number,
           pocCategory: pocDetails.category,
-          pocGender: pocDetails.gender,
           pocSpecialization: pocDetails.specialization,
           pocAddress: `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`,
+          visitType: log.visitType,
           pocVisitCounter: pocDetails.visitCounter,
           pocReferralCounter: pocDetails.referralCounter,
           ambNumber: pocDetails.ambNumber,
-          remarks: log.remarks,
           mobileTime: log.mobileTime,
-          visitDate: new Date(log.visitDate).toISOString(),
-          visitType: log.visitType,
+          remarks: log.remarks,
+          approvalStatus: log.approvalStatus,
           latitude: log.latitude,
           longitude: log.longitude,
-          approvalStatus: log.approvalStatus,
         };
       })
     );
 
     // Generate CSV
-    const fields = [];
-    for (const key in formattedFilteredVisitLogs[0]) {
-      fields.push({ label: key, value: key });
-    }
+    const fields = ['SN', 'Name', 'POC Name', 'Gender', 'Number', 'Category', 'Specialization', 'Address', 'Visit Type', 'Visit Counter', 'Referral Counter', 'Ambulance Number','Mobile Time', 'Remarks', 'Approval Status', 'Latitude', 'Longitude',];
+   
     const parser = new Parser({ fields });
     const csv = parser.parse(formattedFilteredVisitLogs);
 
