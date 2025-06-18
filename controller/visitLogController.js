@@ -1,5 +1,9 @@
 const VisitLog = require("../model/visitLog");
 const POC = require("../model/poc");
+const XLSX = require('xlsx');
+const { Parser } = require('json2csv');
+const fs = require('fs');
+const path = require('path');
 
 const visitLogsList = async (req, res) => {
   try {
@@ -499,6 +503,73 @@ const getPocVisitLog = async (req, res) => {
   }
 };
 
+const downloadVisitLogReport = async (req, res) => {
+  try {
+    const { userId, pocId, from, to } = req.query;
 
+    // Validation
+    if (!userId || !pocId || !from || !to) {
+      return res.status(400).json({
+        message: 'userId, pocId, from and to are required'
+      });
+    }
 
-module.exports = { visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit,getPocVisitLog };
+    const foundVisitLog = await VisitLog.findById(userId);
+    if (!foundVisitLog) {
+      return res.status(404).json({
+        message: 'User not found',
+        logs: []
+      });
+    }
+
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    // Filter logs
+    const filteredLogs = foundVisitLog.visitLogs.filter((log) => {
+      const visitDate = new Date(log.visitDate);
+      return (
+        log.pocId === pocId &&
+        visitDate >= fromDate &&
+        visitDate <= toDate
+      );
+    });
+
+    // Map logs to CSV format
+    const logsForCsv = filteredLogs.map((log, index) => ({
+      SN: index + 1,
+      userName: foundVisitLog.username,
+      pocName: log.pocName,
+      pocNumber: log.pocNumber,
+      pocAddress: log.pocAddress,
+      pocCategory: log.pocCategory,
+      pocGender: log.pocGender,
+      pocSpecialization: log.pocSpecialization,
+      ambNumber: log.ambNumber,
+      visitType: log.visitType,
+      visitDate: new Date(log.visitDate).toLocaleString(),
+      mobileTime: log.mobileTime,
+      latitude: log.latitude,
+      longitude: log.longitude,
+      approvalStatus: log.approvalStatus,
+      remarks: log.remarks
+    }));
+
+    // Generate CSV
+    const parser = new Parser();
+    const csv = parser.parse(logsForCsv);
+
+    // Set filename
+    const filename = `${foundVisitLog.username.replace(/ /g, '_')}_visitlogs_${from}_${to}.csv`;
+
+    // Set headers
+    res.header('Content-Type', 'text/csv');
+    res.attachment(filename);
+    return res.send(csv);
+
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { downloadVisitLogReport, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit,getPocVisitLog };
