@@ -503,73 +503,89 @@ const getPocVisitLog = async (req, res) => {
   }
 };
 
-const downloadVisitLogReport = async (req, res) => {
+const downloadVisitLogsById = async (req, res) => {
   try {
-    const { userId, pocId, from, to } = req.query;
-
-    // Validation
-    if (!userId || !pocId || !from || !to) {
-      return res.status(400).json({
-        message: 'userId, pocId, from and to are required'
-      });
+    const _id = req.query.visitLogId;
+    if (!_id) {
+      return res.status(400).json({ message: "visitLogId is required" });
     }
 
-    const foundVisitLog = await VisitLog.findById(userId);
+    const from = req.query.from ? new Date(req.query.from) : null;
+    const to = req.query.to ? new Date(req.query.to) : null;
+
+    if (!from || isNaN(from)) {
+      return res.status(400).json({ message: "Invalid or missing 'from' date" });
+    }
+    if (!to || isNaN(to)) {
+      return res.status(400).json({ message: "Invalid or missing 'to' date" });
+    }
+
+    from.setUTCHours(0, 0, 0, 0);
+    to.setUTCHours(23, 59, 59, 999);
+
+    const foundVisitLog = await VisitLog.findById(_id);
     if (!foundVisitLog) {
-      return res.status(404).json({
-        message: 'User not found',
-        logs: []
-      });
+      return res.status(404).json({ message: "VisitLog not found for given id" });
     }
 
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
-
-    // Filter logs
-    const filteredLogs = foundVisitLog.visitLogs.filter((log) => {
+    const filteredVisitLogs = foundVisitLog.visitLogs.filter((log) => {
       const visitDate = new Date(log.visitDate);
-      return (
-        log.pocId === pocId &&
-        visitDate >= fromDate &&
-        visitDate <= toDate
-      );
+      return visitDate >= from && visitDate <= to;
     });
 
-    // Map logs to CSV format
-    const logsForCsv = filteredLogs.map((log, index) => ({
-      SN: index + 1,
-      userName: foundVisitLog.username,
-      pocName: log.pocName,
-      pocNumber: log.pocNumber,
-      pocAddress: log.pocAddress,
-      pocCategory: log.pocCategory,
-      pocGender: log.pocGender,
-      pocSpecialization: log.pocSpecialization,
-      ambNumber: log.ambNumber,
-      visitType: log.visitType,
-      visitDate: new Date(log.visitDate).toLocaleString(),
-      mobileTime: log.mobileTime,
-      latitude: log.latitude,
-      longitude: log.longitude,
-      approvalStatus: log.approvalStatus,
-      remarks: log.remarks
-    }));
+    if (filteredVisitLogs.length === 0) {
+      return res.status(404).json({
+        message: `No visitLog found from ${from.toISOString()} to ${to.toISOString()}.`,
+        visitLogs: [],
+      });
+    }
+
+    const formattedFilteredVisitLogs = await Promise.all(
+      filteredVisitLogs.map(async (log, index) => {
+        const pocDetails = await POC.findById(log.pocId);
+        return {
+          SN: index + 1,
+          username: foundVisitLog.username,
+          pocName: log.pocName,
+          pocNumber: pocDetails.number,
+          pocCategory: pocDetails.category,
+          pocGender: pocDetails.gender,
+          pocSpecialization: pocDetails.specialization,
+          pocAddress: `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`,
+          pocVisitCounter: pocDetails.visitCounter,
+          pocReferralCounter: pocDetails.referralCounter,
+          ambNumber: pocDetails.ambNumber,
+          remarks: log.remarks,
+          mobileTime: log.mobileTime,
+          visitDate: new Date(log.visitDate).toISOString(),
+          visitType: log.visitType,
+          latitude: log.latitude,
+          longitude: log.longitude,
+          approvalStatus: log.approvalStatus,
+        };
+      })
+    );
 
     // Generate CSV
-    const parser = new Parser();
-    const csv = parser.parse(logsForCsv);
+    const fields = [];
+    for (const key in formattedFilteredVisitLogs[0]) {
+      fields.push({ label: key, value: key });
+    }
+    const parser = new Parser({ fields });
+    const csv = parser.parse(formattedFilteredVisitLogs);
 
-    // Set filename
-    const filename = `${foundVisitLog.username.replace(/ /g, '_')}_visitlogs_${from}_${to}.csv`;
+    // Filename: username_visitlogs_from_to.csv
+    const usernameSafe = foundVisitLog.username.replace(/ /g, '_');
+    const filename = `${usernameSafe}_visitlogs_${req.query.from}_${req.query.to}.csv`;
 
-    // Set headers
     res.header('Content-Type', 'text/csv');
     res.attachment(filename);
     return res.send(csv);
 
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    console.error("Error:", err);
+    res.status(500).json({ message: err.message });
   }
 };
 
-module.exports = { downloadVisitLogReport, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit,getPocVisitLog };
+module.exports = {downloadVisitLogsById, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit,getPocVisitLog };
