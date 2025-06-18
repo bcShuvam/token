@@ -566,10 +566,30 @@ const downloadVisitLogsById = async (req, res) => {
     );
 
     // Generate CSV
-    const fields = ['SN', 'Name', 'POC Name', 'Gender', 'Number', 'Category', 'Specialization', 'Address', 'Visit Type', 'Visit Counter', 'Referral Counter', 'Ambulance Number','Mobile Time', 'Remarks', 'Approval Status', 'Latitude', 'Longitude',];
-   
+
+    const fields = [
+      { label: 'SN', value: 'SN' },
+      { label: 'Name', value: 'username' },
+      { label: 'POC Name', value: 'pocName' },
+      { label: 'Gender', value: 'pocGender' },
+      { label: 'Number', value: 'pocNumber' },
+      { label: 'Category', value: 'pocCategory' },
+      { label: 'Specialization', value: 'pocSpecialization' },
+      { label: 'Address', value: 'pocAddress' },
+      { label: 'Visit Type', value: 'visitType' },
+      { label: 'Visit Counter', value: 'pocVisitCounter' },
+      { label: 'Referral Counter', value: 'pocReferralCounter' },
+      { label: 'Ambulance Number', value: 'ambNumber' },
+      { label: 'Mobile Time', value: 'mobileTime' },
+      { label: 'Remarks', value: 'remarks' },
+      { label: 'Approval Status', value: 'approvalStatus' },
+      { label: 'Latitude', value: 'latitude' },
+      { label: 'Longitude', value: 'longitude' },
+    ];
+
     const parser = new Parser({ fields });
     const csv = parser.parse(formattedFilteredVisitLogs);
+
 
     // Filename: username_visitlogs_from_to.csv
     const usernameSafe = foundVisitLog.username.replace(/ /g, '_');
@@ -585,4 +605,4 @@ const downloadVisitLogsById = async (req, res) => {
   }
 };
 
-module.exports = {downloadVisitLogsById, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit,getPocVisitLog };
+module.exports = { downloadVisitLogsById, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit, getPocVisitLog };
