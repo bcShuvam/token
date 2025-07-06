@@ -74,6 +74,60 @@ const getPocCreatedById = async (req, res) => {
   }
 };
 
+const getPocCreatedByIdWithPagination = async (req, res) => {
+  try {
+    const createdById = req.params.id;
+    const { pocName, page = 1, limit = 20 } = req.query;
+
+    if (!createdById) {
+      return res.status(400).json({ message: "createdById is required" });
+    }
+
+    // Build filter
+    const filter = { createdById };
+
+    // Apply case-insensitive "starts with" filter on pocName if provided
+    if (pocName && pocName.trim() !== "") {
+      filter.pocName = { $regex: new RegExp(`^${pocName}`, "i") };
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Query with pagination
+    const foundPOC = await POC.find(filter)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    if (!foundPOC || foundPOC.length === 0) {
+      return res.status(404).json({ message: "No matching POCs found." });
+    }
+
+    // Format the result
+    const formattedPOC = foundPOC.map((poc) => ({
+      _id: poc._id,
+      pocName: poc.pocName,
+      age: poc.age,
+      gender: poc.gender,
+      category: poc.category,
+      specialization: poc.specialization,
+      organization: poc.organization,
+      ambNumber: poc.ambNumber,
+      number: poc.number,
+      address: `${poc.country}, ${poc.region}, ${poc.city}, ${poc.address}`,
+    }));
+
+    res.status(200).json({
+      message: "Success",
+      page: parseInt(page),
+      limit: parseInt(limit),
+      poc: formattedPOC,
+    });
+  } catch (error) {
+    console.error("Error fetching POCs:", error);
+    res.status(500).json({ message: "Error fetching POCs" });
+  }
+};
+
 const createPOC = async (req, res) => {
   try {
     const {
@@ -253,6 +307,7 @@ module.exports = {
   getPOCs,
   getPOCByCreatedByIdAndCategory,
   getPocCreatedById,
+  getPocCreatedByIdWithPagination,
   createPOC,
   pocFollowUp,
   pocByArea,
