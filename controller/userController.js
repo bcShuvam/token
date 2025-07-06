@@ -6,6 +6,16 @@ const Location = require("../model/location");
 const Plan = require("../model/plan");
 const bcrypt = require("bcrypt");
 const ROLES_LIST = require("../config/roles_list");
+const nodemailer = require("nodemailer");
+
+// Email Transporter Setup
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: "deskgoo2024@gmail.com",
+        pass: "hauevnqxexvmoptg", // App password
+    },
+});
 
 const getUsers = async (req, res) => {
   // updateField();
@@ -156,6 +166,32 @@ const createUser = async (req, res) => {
       _id: newUser._id,
       username: newUser.username,
     });
+
+    await transporter.sendMail({
+            from: "deskgoo2024@gmail.com",
+            to: email,
+            subject: "Welcome to Deskgoo Track App",
+            text: `Hello ${username},
+
+        Welcome to Deskgoo Track App!
+
+        Your account has been successfully created. You can now log in using the credentials below:
+
+        📧 Email: ${email}
+        🔐 Password: ${username}
+        👨‍💼 Role: ${role.role}
+
+        📱 Download the TMS app: 
+        - Android (Play Store): coming soon on play store
+        - iOS (App Store): coming soon on app store
+
+        We recommend changing your password after your first login for security purposes.
+
+        If you have any questions, feel free to reach out.
+
+        Best regards,  
+        Deskgoo Track Team`,
+        });
 
     // createReferralLogId.save();
     res.status(200).json({

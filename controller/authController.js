@@ -1,6 +1,16 @@
 const Users = require("../model/users");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+
+// Email Transporter Setup
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: "deskgoo2024@gmail.com",
+        pass: "hauevnqxexvmoptg", // App password
+    },
+});
 
 const handleLogin = async (req, res) => {
   try {
@@ -121,6 +131,28 @@ const forgotPassword = async (req, res) => {
     foundUser.password = await bcrypt.hash(password, 10);
 
     foundUser.save();
+
+    await transporter.sendMail({
+            from: "deskgoo2024@gmail.com",
+            to: email,
+            subject: "Welcome to Task Management System",
+            text: `Hello ${foundUser.username},
+
+        We are from Deskgoo Track App!
+
+        Your account password has been successfully changed. You can now use your new password to log in using the credentials below:
+
+        📧 Email: ${email}
+        🔐 Password: ${password}
+
+        📱 Download the TMS app: 
+        - Android (Play Store): 
+
+        If you have any questions, feel free to reach out.
+
+        Best regards,  
+        Deskgoo Track Team`,
+        });
 
     res.status(200).json({
       message: "Password Changed Successfully",
