@@ -13,7 +13,7 @@ connectDB();
 // "type": "module", to use import
 
 var admin = require("firebase-admin");
-var serviceAccount = require("./deskgoo-track-firebase-adminsdk-fbsvc-8a35faf080.json");
+var serviceAccount = require("./firebaseAdmin.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
