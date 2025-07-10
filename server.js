@@ -9,6 +9,16 @@ const { verifyJWT, verifyRefreshToken } = require("./middleware/verifyJWT");
 // connect the mongodb
 connectDB();
 
+// Add this line after main: server.js line on package.json file
+// "type": "module", to use import
+
+var admin = require("firebase-admin");
+var serviceAccount = require("./deskgoo-track-firebase-adminsdk-fbsvc-8a35faf080.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 // built-in middleware to handle urlencoded data
 // in other words, form data:
 // 'content-type: application/x-www-form-urlencoded'
@@ -25,6 +35,7 @@ app.use(express.json());
 // app.use(cookieParser());
 
 // routes
+app.use("/api/notification", require("./routes/notificationRoutes"));
 app.use("/api/attendance", require("./routes/attendance"));
 app.use("/api/referral", require("./routes/referral"));
 app.use("/api/img", require("./routes/uploadImage"));
