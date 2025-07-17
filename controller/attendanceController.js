@@ -188,7 +188,7 @@ const getAllAttendanceByDate = async (req, res) => {
         return {
           _id: user._id,
           username: user.username,
-          profileImage: user.profileImage,
+          profileImage: user?.profileImage ?? '',
           totalHoursWorked: filteredAttendance.length > 0 ? totalHours : 0,
           totalTime: filteredAttendance.length > 0 ? formattedTime : "00:00:00",
           checkInTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? '',
@@ -199,6 +199,7 @@ const getAllAttendanceByDate = async (req, res) => {
         return {
           _id: user._id,
           username: user.username,
+          profileImage: user?.profileImage ?? '',
           totalHoursWorked: 0,
           totalTime: "00:00:00",
           checkInTime: 'Unknown',
