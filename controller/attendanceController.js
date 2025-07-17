@@ -182,16 +182,17 @@ const getAllAttendanceByDate = async (req, res) => {
         const minutes = Math.floor((totalHours - hours) * 60);
         const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
         const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        // console.log('********************************************************');
-        // console.log(filteredAttendance);
+        console.log('********************************************************');
+        console.log(filteredAttendance);
         // console.log(filteredAttendance.checkIn);
         return {
           _id: user._id,
           username: user.username,
+          profileImage: user.profileImage,
           totalHoursWorked: filteredAttendance.length > 0 ? totalHours : 0,
           totalTime: filteredAttendance.length > 0 ? formattedTime : "00:00:00",
           checkInTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? '',
-          checkOutTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? '',
+          checkOutTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? 'Not Check-Out',
           totalAttendance: filteredAttendance.length,
         };
       } else {
@@ -200,6 +201,8 @@ const getAllAttendanceByDate = async (req, res) => {
           username: user.username,
           totalHoursWorked: 0,
           totalTime: "00:00:00",
+          checkInTime: 'Unknown',
+          checkOutTime: 'Unknown',
           totalAttendance: 0,
         };
       }
