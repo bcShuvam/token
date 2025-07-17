@@ -154,7 +154,7 @@ const getAllAttendanceByDate = async (req, res) => {
 
     // Fetch all users' attendance data
     const foundAttendance = await Attendance.find();
-    console.log("Fetched Attendance:", JSON.stringify(foundAttendance, null, 2));
+    // console.log("Fetched Attendance:", JSON.stringify(foundAttendance, null, 2));
 
     if (!foundAttendance || foundAttendance.length === 0) {
       return res.status(404).json({ message: "No attendance records found" });
@@ -182,14 +182,16 @@ const getAllAttendanceByDate = async (req, res) => {
         const minutes = Math.floor((totalHours - hours) * 60);
         const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
         const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
+        // console.log('********************************************************');
+        // console.log(filteredAttendance);
+        // console.log(filteredAttendance.checkIn);
         return {
           _id: user._id,
           username: user.username,
           totalHoursWorked: filteredAttendance.length > 0 ? totalHours : 0,
           totalTime: filteredAttendance.length > 0 ? formattedTime : "00:00:00",
-          checkInTime: filteredAttendance?.checkIn?.deviceInTime ?? filteredAttendance,
-          checkOutTime: user ?? '',
+          checkInTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? '',
+          checkOutTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? '',
           totalAttendance: filteredAttendance.length,
         };
       } else {
