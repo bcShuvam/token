@@ -194,7 +194,7 @@ const getAllAttendanceByDate = async (req, res) => {
           totalHoursWorked: filteredAttendance.length > 0 ? totalHours : 0,
           totalTime: filteredAttendance.length > 0 ? formattedTime : "00:00:00",
           checkInTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? '',
-          checkOutTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? 'Not Check-Out',
+          checkOutTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? '',
           totalAttendance: filteredAttendance.length,
         };
       } else {
@@ -204,8 +204,8 @@ const getAllAttendanceByDate = async (req, res) => {
           profileImage: user?.profileImage ?? '',
           totalHoursWorked: 0,
           totalTime: "00:00:00",
-          checkInTime: 'Unknown',
-          checkOutTime: 'Unknown',
+          checkInTime: '',
+          checkOutTime: '',
           totalAttendance: 0,
         };
       }
