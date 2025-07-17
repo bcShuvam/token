@@ -189,7 +189,7 @@ const getAllAttendanceByDate = async (req, res) => {
           totalHoursWorked: filteredAttendance.length > 0 ? totalHours : 0,
           totalTime: filteredAttendance.length > 0 ? formattedTime : "00:00:00",
           checkInTime: filteredAttendance?.checkIn?.deviceInTime ?? filteredAttendance,
-          checkOutTime: filteredAttendance?.checkOut?.deviceOutTime ?? '',
+          checkOutTime: filteredAttendance?.checkOut ?? '',
           totalAttendance: filteredAttendance.length,
         };
       } else {
