@@ -26,6 +26,7 @@ const attendanceSchema = mongoose.Schema(
   {
     _id: { type: String, required: true },
     username: { type: String, required: true },
+    profileImage: { type: String, required: false },
     attendance: [attendanceModel],
   },
   { timestamps: true }
