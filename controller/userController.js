@@ -143,6 +143,7 @@ const createUser = async (req, res) => {
     const createAttendanceId = await Attendance.create({
       _id: newUser._id,
       username: newUser.username,
+      profileImage: newUser.profileImage
     });
     // createAttendanceId.save();
     // Creating attendance id as userId after the user has been created successfully

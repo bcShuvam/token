@@ -182,7 +182,9 @@ const getAllAttendanceByDate = async (req, res) => {
         const minutes = Math.floor((totalHours - hours) * 60);
         const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
         const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        console.log('********************************************************');
+        console.log('************************ USER ********************************');
+        console.log(user);  
+        console.log('************************ FilteredAttendance ********************************');
         console.log(filteredAttendance);
         // console.log(filteredAttendance.checkIn);
         return {
