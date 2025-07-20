@@ -155,7 +155,7 @@ const forgotPassword = async (req, res) => {
         });
 
     res.status(200).json({
-      message: "Password Changed Successfully",
+      message: "Password Changed Successfully. An email has been sent to your email",
       // password: password
     });
   } catch (error) {
