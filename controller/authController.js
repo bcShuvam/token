@@ -135,7 +135,7 @@ const forgotPassword = async (req, res) => {
     await transporter.sendMail({
             from: "deskgoo2024@gmail.com",
             to: email,
-            subject: "Welcome to Task Management System",
+            subject: "Welcome to Deskgoo Track",
             text: `Hello ${foundUser.username},
 
         We are from Deskgoo Track App!
@@ -145,7 +145,7 @@ const forgotPassword = async (req, res) => {
         📧 Email: ${email}
         🔐 Password: ${password}
 
-        📱 Download the TMS app: 
+        📱 Download the Deskgoo Track app: 
         - Android (Play Store): 
 
         If you have any questions, feel free to reach out.
