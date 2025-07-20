@@ -60,7 +60,6 @@ const getTodaysAverageVisitOfAll = async (req, res) => {
         averageVisit: userTotalVisits, // Per user average (equal to total here)
         totalNewVisit: userNewVisit,
         totalFollowUpVisit: userFollowUpVisit,
-        // visitLogs: filteredLogs
       };
     });
 
@@ -81,6 +80,87 @@ const getTodaysAverageVisitOfAll = async (req, res) => {
     });
 
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+const exportAverageVisitCSV = async (req, res) => {
+  try {
+    const from = req.query.from ? new Date(req.query.from) : null;
+    const to = req.query.to ? new Date(req.query.to) : null;
+
+    if (!from || isNaN(from)) {
+      return res.status(400).json({ message: "Invalid or missing 'from' date" });
+    }
+    if (!to || isNaN(to)) {
+      return res.status(400).json({ message: "Invalid or missing 'to' date" });
+    }
+
+    from.setUTCHours(0, 0, 0, 0);
+    to.setUTCHours(23, 59, 59, 999);
+
+    const allVisitLogs = await VisitLog.find();
+
+    const formattedFrom = from.toISOString().split('T')[0];
+    const formattedTo = to.toISOString().split('T')[0];
+
+    const userRows = [];
+
+    allVisitLogs.forEach((user, index) => {
+      const filteredLogs = user.visitLogs.filter(log => {
+        if (!log.mobileTime) return false;
+        const [timePart, datePart] = log.mobileTime.split(' ');
+        const logDate = new Date(`${datePart}T${timePart}Z`);
+        return logDate >= from && logDate <= to;
+      });
+
+      let userNewVisit = 0;
+      let userFollowUpVisit = 0;
+
+      filteredLogs.forEach(log => {
+        if (log.visitType === "New") userNewVisit++;
+        else if (log.visitType === "Follow Up") userFollowUpVisit++;
+      });
+
+      const userTotalVisits = filteredLogs.length;
+
+      userRows.push({
+        Sn: index + 1,
+        Name: user.username,
+        From: formattedFrom,
+        To: formattedTo,
+        'Total Visits': userTotalVisits,
+        'Average Visits': userTotalVisits,
+        'New Visits': userNewVisit,
+        'Average New Visits': userNewVisit,
+        'FollowUp Visits': userFollowUpVisit,
+        'Average FollowUp Visits': userFollowUpVisit
+      });
+    });
+
+    const csvFields = [
+      'Sn',
+      'Name',
+      'From',
+      'To',
+      'Total Visits',
+      'Average Visits',
+      'New Visits',
+      'Average New Visits',
+      'FollowUp Visits',
+      'Average FollowUp Visits'
+    ];
+
+    const parser = new Parser({ fields: csvFields });
+    const csv = parser.parse(userRows);
+
+    const fileName = `Average Visit ${formattedFrom} to ${formattedTo}.csv`;
+    res.header('Content-Type', 'text/csv');
+    res.attachment(fileName);
+    return res.send(csv);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -685,4 +765,4 @@ const downloadVisitLogsById = async (req, res) => {
   }
 };
 
-module.exports = { downloadVisitLogsById, getTodaysAverageVisitOfAll, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit, getPocVisitLog };
+module.exports = { downloadVisitLogsById, getTodaysAverageVisitOfAll, exportAverageVisitCSV, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit, getPocVisitLog };
