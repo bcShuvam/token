@@ -5,6 +5,86 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 
+const getTodaysAverageVisitOfAll = async (req, res) => {
+  try {
+    const from = req.query.from ? new Date(req.query.from) : null;
+    const to = req.query.to ? new Date(req.query.to) : null;
+
+    if (!from || isNaN(from)) {
+      return res.status(400).json({ message: "Invalid or missing 'from' date" });
+    }
+    if (!to || isNaN(to)) {
+      return res.status(400).json({ message: "Invalid or missing 'to' date" });
+    }
+
+    from.setUTCHours(0, 0, 0, 0);
+    to.setUTCHours(23, 59, 59, 999);
+
+    const allVisitLogs = await VisitLog.find();
+
+    let totalVisitCount = 0;
+    let maxVisits = 0;
+    let totalNewVisit = 0;
+    let totalFollowUpVisit = 0;
+
+    const filteredUsers = allVisitLogs.map(user => {
+      const filteredLogs = user.visitLogs.filter(log => {
+        if (!log.mobileTime) return false;
+        const [timePart, datePart] = log.mobileTime.split(' ');
+        const logDate = new Date(`${datePart}T${timePart}Z`);
+        return logDate >= from && logDate <= to;
+      });
+
+      let userNewVisit = 0;
+      let userFollowUpVisit = 0;
+
+      filteredLogs.forEach(log => {
+        if (log.visitType === "New") {
+          userNewVisit += 1;
+        } else if (log.visitType === "Follow Up") {
+          userFollowUpVisit += 1;
+        }
+      });
+
+      const userTotalVisits = filteredLogs.length;
+      totalVisitCount += userTotalVisits;
+      totalNewVisit += userNewVisit;
+      totalFollowUpVisit += userFollowUpVisit;
+
+      if (userTotalVisits > maxVisits) maxVisits = userTotalVisits;
+
+      return {
+        _id: user._id,
+        username: user.username,
+        totalVisits: userTotalVisits,
+        averageVisit: userTotalVisits, // Per user average (equal to total here)
+        totalNewVisit: userNewVisit,
+        totalFollowUpVisit: userFollowUpVisit,
+        // visitLogs: filteredLogs
+      };
+    });
+
+    const userCount = filteredUsers.length;
+    const averageVisit = userCount > 0 ? totalVisitCount / userCount : 0;
+    const averageNewVisit = userCount > 0 ? totalNewVisit / userCount : 0;
+    const averageFollowUpVisit = userCount > 0 ? totalFollowUpVisit / userCount : 0;
+
+    res.status(200).json({
+      message: "success",
+      maxVisits,
+      averageVisit,
+      totalNewVisit,
+      averageNewVisit,
+      totalFollowUpVisit,
+      averageFollowUpVisit,
+      users: filteredUsers
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const visitLogsList = async (req, res) => {
   try {
     const _id = req.query;
@@ -605,4 +685,4 @@ const downloadVisitLogsById = async (req, res) => {
   }
 };
 
-module.exports = { downloadVisitLogsById, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit, getPocVisitLog };
+module.exports = { downloadVisitLogsById, getTodaysAverageVisitOfAll, visitLogsList, visitLogsById, updateReferralLogStatus, averageVisit, getPocVisitLog };

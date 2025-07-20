@@ -36,16 +36,17 @@ app.use(express.json());
 
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));
-app.use("/api/attendance", require("./routes/attendance"));
+
 app.use("/api/referral", require("./routes/referral"));
 app.use("/api/img", require("./routes/uploadImage"));
 app.use("/api/refreshToken", require("./routes/verifyRefreshToken"));
 app.use("/api/auth", require("./routes/auth"));
-app.use("/api/users", require("./routes/users"));
-app.use("/api/location", require("./routes/location"));
 app.use("/api/mail", require("./routes/sendMail"));
 app.use("/api/hello", require("./routes/testHello"));
 app.use(verifyJWT);
+app.use("/api/attendance", require("./routes/attendance"));
+app.use("/api/users", require("./routes/users"));
+app.use("/api/location", require("./routes/location"));
 app.use("/api/poc", require("./routes/poc"));
 app.use("/api/visitLogs", require("./routes/visitLog"));
 app.use("/api/plan", require("./routes/plan"));
