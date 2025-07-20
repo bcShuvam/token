@@ -77,7 +77,7 @@ const getPocCreatedById = async (req, res) => {
 const getPocCreatedByIdWithPagination = async (req, res) => {
   try {
     const createdById = req.params.id;
-    const { pocName = '', page = 1, limit = 20 } = req.query;
+    const { keyword = '', page = 1, limit = 20 } = req.query;
 
     if (!createdById) {
       return res.status(400).json({ message: "createdById is required" });
@@ -89,8 +89,8 @@ const getPocCreatedByIdWithPagination = async (req, res) => {
     const filter = {
       createdById,
       $or: [
-        { pocName: { $regex: new RegExp(pocName, "i") } },
-        { number: { $regex: new RegExp(pocName, "i") } }
+        { pocName: { $regex: new RegExp(keyword, "i") } },
+        { number: { $regex: new RegExp(keyword, "i") } }
       ]
     };
 
