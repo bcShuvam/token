@@ -23,7 +23,6 @@ const getTodaysAverageVisitOfAll = async (req, res) => {
     const allVisitLogs = await VisitLog.find();
 
     let totalVisitCount = 0;
-    let maxVisits = 0;
     let totalNewVisit = 0;
     let totalFollowUpVisit = 0;
 
@@ -51,26 +50,31 @@ const getTodaysAverageVisitOfAll = async (req, res) => {
       totalNewVisit += userNewVisit;
       totalFollowUpVisit += userFollowUpVisit;
 
-      if (userTotalVisits > maxVisits) maxVisits = userTotalVisits;
-
       return {
         _id: user._id,
         username: user.username,
         totalVisits: userTotalVisits,
-        averageVisit: userTotalVisits, // Per user average (equal to total here)
+        averageVisit: userTotalVisits, // Same as total for this user
         totalNewVisit: userNewVisit,
         totalFollowUpVisit: userFollowUpVisit,
       };
     });
 
     const userCount = filteredUsers.length;
+    const numberOfDays = Math.max(
+      1,
+      Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    );
+
     const averageVisit = userCount > 0 ? totalVisitCount / userCount : 0;
     const averageNewVisit = userCount > 0 ? totalNewVisit / userCount : 0;
     const averageFollowUpVisit = userCount > 0 ? totalFollowUpVisit / userCount : 0;
+    const totalAverageVisits = totalVisitCount / numberOfDays;
 
     res.status(200).json({
       message: "success",
-      maxVisits,
+      totalVisits: totalVisitCount,
+      totalAverageVisits: parseFloat(totalAverageVisits.toFixed(2)),
       averageVisit,
       totalNewVisit,
       averageNewVisit,
@@ -83,7 +87,6 @@ const getTodaysAverageVisitOfAll = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 const exportAverageVisitCSV = async (req, res) => {
   try {
@@ -100,12 +103,20 @@ const exportAverageVisitCSV = async (req, res) => {
     from.setUTCHours(0, 0, 0, 0);
     to.setUTCHours(23, 59, 59, 999);
 
+    const numberOfDays = Math.max(
+      1,
+      Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    );
+
     const allVisitLogs = await VisitLog.find();
 
     const formattedFrom = from.toISOString().split('T')[0];
     const formattedTo = to.toISOString().split('T')[0];
 
     const userRows = [];
+    let totalVisits = 0;
+    let totalNewVisit = 0;
+    let totalFollowUpVisit = 0;
 
     allVisitLogs.forEach((user, index) => {
       const filteredLogs = user.visitLogs.filter(log => {
@@ -124,6 +135,13 @@ const exportAverageVisitCSV = async (req, res) => {
       });
 
       const userTotalVisits = filteredLogs.length;
+      const userAverageVisit = userTotalVisits / numberOfDays;
+      const userAverageNewVisit = userNewVisit / numberOfDays;
+      const userAverageFollowUpVisit = userFollowUpVisit / numberOfDays;
+
+      totalVisits += userTotalVisits;
+      totalNewVisit += userNewVisit;
+      totalFollowUpVisit += userFollowUpVisit;
 
       userRows.push({
         Sn: index + 1,
@@ -131,13 +149,29 @@ const exportAverageVisitCSV = async (req, res) => {
         From: formattedFrom,
         To: formattedTo,
         'Total Visits': userTotalVisits,
-        'Average Visits': userTotalVisits,
+        'Average Visits': userAverageVisit.toFixed(2),
         'New Visits': userNewVisit,
-        'Average New Visits': userNewVisit,
+        'Average New Visits': userAverageNewVisit.toFixed(2),
         'FollowUp Visits': userFollowUpVisit,
-        'Average FollowUp Visits': userFollowUpVisit
+        'Average FollowUp Visits': userAverageFollowUpVisit.toFixed(2)
       });
     });
+
+    // Optional: add summary row
+    const summaryRow = {
+      Sn: '',
+      Name: 'TOTAL',
+      From: formattedFrom,
+      To: formattedTo,
+      'Total Visits': totalVisits,
+      'Average Visits': (totalVisits / numberOfDays).toFixed(2),
+      'New Visits': totalNewVisit,
+      'Average New Visits': (totalNewVisit / numberOfDays).toFixed(2),
+      'FollowUp Visits': totalFollowUpVisit,
+      'Average FollowUp Visits': (totalFollowUpVisit / numberOfDays).toFixed(2)
+    };
+
+    userRows.push(summaryRow);
 
     const csvFields = [
       'Sn',
@@ -159,6 +193,7 @@ const exportAverageVisitCSV = async (req, res) => {
     res.header('Content-Type', 'text/csv');
     res.attachment(fileName);
     return res.send(csv);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
