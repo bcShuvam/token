@@ -6,6 +6,7 @@ const nodemailer = require("nodemailer");
 // const csv = require("csvtojson");
 const CsvParser = require("json2csv").Parser;
 const moment = require("moment-timezone");
+const bs = require("bikram-sambat-js");
 let exportData;
 
 const exportCSVData = async (req, res) => {
@@ -663,8 +664,7 @@ const downloadReferralStatsByUsersCSV = async (req, res) => {
     const endDate = new Date(to);
     const totalDays = Math.max(1, moment(endDate).diff(moment(startDate), 'days') + 1);
 
-    const users = await Users.find({ "role.role": { $ne: "Admin" } }).select("username profileImage");
-
+    const users = await User.find({ "role.role": { $ne: "Admin" } }).select("username profileImage");
     const userIds = users.map(u => u._id);
 
     const referrals = await PatientReferral.find({
@@ -672,17 +672,26 @@ const downloadReferralStatsByUsersCSV = async (req, res) => {
       createdAt: { $gte: startDate, $lte: endDate }
     }).populate("userId", "username profileImage");
 
+    const nepaliMonthsEnglish = [
+      '', // index 0
+      'Baisakh', 'Jestha', 'Asar', 'Shrawan', 'Bhadra', 'Ashwin',
+      'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra'
+    ];
+
+    // Convert 'from' date to BS and get month and year
+    const bsStart = bs.toBik(new Date(from)); // e.g., { year: 2082, month: 3, day: 1 }
+    const referralMonth = `${nepaliMonthsEnglish[bsStart.month]}, ${bsStart.year}`;
+
     const userStats = users.map(user => {
       const userReferrals = referrals.filter(r => r.userId?._id.toString() === user._id.toString());
       const total = userReferrals.length;
-      const latestMobileTime = userReferrals.sort((a, b) => new Date(b.mobileTime) - new Date(a.mobileTime))[0]?.mobileTime || null;
 
       return {
         Username: user.username,
         "Total Referrals": total,
         "Average Referral per Day": +(total / totalDays).toFixed(2),
         "Average Referral per User": +(total / users.length).toFixed(2),
-        "Mobile Time": latestMobileTime,
+        "Referral Date": referralMonth
       };
     });
 
