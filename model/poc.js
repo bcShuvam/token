@@ -27,7 +27,7 @@ const pocModel = new mongoose.Schema(
     organization: { type: String, required: false, default: "" },
     ambNumber: { type: String, default: "" },
     deleted: { type: Boolean, default: false },
-    createdById: { type: mongoose.Schema.Types.ObjectId, required: [true, "createdById is required"] },
+    createdById: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: [true, "createdById is required"] },
     // createdByName: { type: String, required: true },
     visitCounter: { type: Number, default: 1 },
     referralCounter: { type: Number, default: 0 },
