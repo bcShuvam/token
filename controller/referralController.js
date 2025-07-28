@@ -707,7 +707,7 @@ const downloadReferralStatsByUsersCSV = async (req, res) => {
     const csv = parser.parse(userStats);
 
     res.header("Content-Type", "text/csv");
-    res.attachment(`referral_stats_users_${from}_to_${to}.csv`);
+    res.attachment(`referral_stats_users_${nepaliMonth}_${year}.csv`);
     return res.send(csv);
   } catch (err) {
     console.error("Download CSV error:", err);
