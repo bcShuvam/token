@@ -1,10 +1,11 @@
-const Patient = require("../model/patient");
+const PatientReferral = require("../model/patient");
 const POC = require("../model/poc");
 const Referral = require("../model/referral");
 const Users = require("../model/users");
 const nodemailer = require("nodemailer");
 // const csv = require("csvtojson");
 const CsvParser = require("json2csv").Parser;
+const moment = require("moment-timezone");
 let exportData;
 
 const exportCSVData = async (req, res) => {
@@ -493,7 +494,7 @@ const downloadReferralByDateAndCountryCSV = async (req, res) => {
 };
 
 
-const createReferral = async (req, res) => {
+const createPatientReferral = async (req, res) => {
   try {
     const {
       fullName,
@@ -508,62 +509,38 @@ const createReferral = async (req, res) => {
       region,
       city,
       address,
-      createdById,
-      createdByName,
+      userId,
       pocId,
-      pocName,
-      pocNumber,
       ambId,
-      ambDriverName,
-      ambNumber,
-      ambDriverNumber,
       latitude,
       longitude,
       mobileTime,
-      dateTime,
     } = req.body;
     if (
       !fullName ||
-      !age ||
       !gender ||
-      !provisionalDiagnosis ||
       !country ||
       !region ||
       !city ||
       !address ||
-      !createdById ||
-      !createdByName ||
+      !userId ||
       !mobileTime ||
       !latitude ||
-      !longitude ||
-      !dateTime
+      !longitude
     )
       return res.status(400).json({
         message:
           "fullName, age, gender, provisionalDiagnosis, number, country, region, city, address, createdById, createdByName, mobileTime, dateTime, latitude, longitude createdById, createdByName are required",
       });
-    const foundReferralId = await Referral.findById(createdById);
-    if (!foundReferralId)
-      return res
-        .status(404)
-        .json({ message: `referral id '${createdById}' not found` });
-    
-    let foundPOCId;
-    let foundAmbId;
+
+      let foundPOCId;
+      let foundAmbId;
 
     if (pocId) {
       foundPOCId = await POC.findById(pocId);
       if (!foundPOCId) {
         return res.status(404).json({ message: `POC id '${pocId}' not found` });
       }
-
-      // 🔼 Increment visit and referral counters
-      await POC.findByIdAndUpdate(pocId, {
-        $inc: {
-          visitCounter: 1,
-          referralCounter: 1,
-        },
-      });
     }
 
     if (ambId) {
@@ -575,7 +552,7 @@ const createReferral = async (req, res) => {
       }
     }
     
-    const createPatient = await Patient.create({
+    const createPatient = await PatientReferral.create({
       fullName: fullName,
       age: age,
       gender: gender,
@@ -588,64 +565,334 @@ const createReferral = async (req, res) => {
       region: region,
       city: city,
       address: address,
-      createdByName: createdByName,
-      createById: createdById,
+      userId: userId,
       pocId: pocId,
-      pocName: pocName,
-      pocNumber: pocNumber,
       ambId: ambId,
-      ambDriverName: ambDriverName,
-      ambNumber: ambNumber,
-      ambDriverNumber: ambDriverNumber,
       latitude: latitude,
       longitude: longitude,
-      mobileTime: mobileTime,
-      dateTime: dateTime,
+      mobileTime: mobileTime
     });
 
     const referralLogDetail = {
       patientId: createPatient._id,
       patientName: createPatient.fullName,
-      createdById: createdById,
-      createdByName: createdByName,
+      userId: userId,
       pocId: pocId,
-      pocName: pocName,
-      pocNumber: pocNumber,
       ambId: ambId,
-      ambDriverName: ambDriverName,
-      ambNumber: ambNumber,
-      ambDriverNumber: ambDriverNumber,
       latitude: latitude,
       longitude: longitude,
       mobileTime: mobileTime,
-      referralDate: dateTime,
+      createdAt: createPatient.createdAt,
+      approvalStatus: createPatient.approvalStatus
     };
 
-    const updatedReferral = await Referral.findByIdAndUpdate(
-      createdById,
-      {
-        $inc: { referralLogCounter: 1 },
-        $push: { referralLogs: referralLogDetail },
-      },
-      { new: true } // return the updated doc
-    );
-    
-    const latestReferral =
-      updatedReferral.referralLogs.length == 0
-        ? {}
-        : updatedReferral.referralLogs[updatedReferral.referralLogs.length - 1];
-    res.status(200).json({
+    res.status(201).json({
       message: "success",
-      latestReferral,
-      createPatient,
-      foundReferralId,
-      foundPOCId,
-      foundAmbId,
-      updatedReferral,
+      referralLogDetail
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-module.exports = { getReferralById, getReferralByIdAndDate, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, createReferral, exportCSVData, downloadReferralByDateAndCountryCSV };
+const getReferralStatsByUsers = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+
+    if (!from || !to) {
+      return res.status(400).json({ message: "Query parameters 'from' and 'to' are required" });
+    }
+
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+    const totalDays = Math.max(1, moment(endDate).diff(moment(startDate), 'days') + 1);
+
+    // 1. Get all non-admin users
+    const users = await User.find({ "role.role": { $ne: "Admin" } }).select("username profileImage");
+
+    const userIds = users.map(u => u._id);
+
+    // 2. Get referrals for those users in the given range
+    const referrals = await PatientReferral.find({
+      userId: { $in: userIds },
+      createdAt: { $gte: startDate, $lte: endDate }
+    }).populate("userId", "username profileImage");
+
+    // 3. Group referrals per user
+    const userStats = users.map(user => {
+      const userReferrals = referrals.filter(r => r.userId?._id.toString() === user._id.toString());
+      const total = userReferrals.length;
+      const latestMobileTime = userReferrals.sort((a, b) => new Date(b.mobileTime) - new Date(a.mobileTime))[0]?.mobileTime || null;
+
+      return {
+        userId: user._id,
+        username: user.username,
+        profileImage: user.profileImage,
+        totalReferral: total,
+        averageReferralPerDay: +(total / totalDays).toFixed(2),
+        mobileTime: latestMobileTime
+      };
+    });
+
+    // 4. Global stats
+    const totalReferralCount = referrals.length;
+    const averageReferralPerDay = +(totalReferralCount / totalDays).toFixed(2);
+    const averageReferralPerUser = +(totalReferralCount / users.length).toFixed(2);
+
+    res.status(200).json({
+      totalReferralCount,
+      averageReferralPerDay,
+      averageReferralPerUser,
+      data: userStats
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const downloadReferralStatsByUsersCSV = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+
+    if (!from || !to) {
+      return res.status(400).json({ message: "Query parameters 'from' and 'to' are required" });
+    }
+
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+    const totalDays = Math.max(1, moment(endDate).diff(moment(startDate), 'days') + 1);
+
+    const users = await User.find({ "role.role": { $ne: "Admin" } }).select("username profileImage");
+
+    const userIds = users.map(u => u._id);
+
+    const referrals = await PatientReferral.find({
+      userId: { $in: userIds },
+      createdAt: { $gte: startDate, $lte: endDate }
+    }).populate("userId", "username profileImage");
+
+    const userStats = users.map(user => {
+      const userReferrals = referrals.filter(r => r.userId?._id.toString() === user._id.toString());
+      const total = userReferrals.length;
+      const latestMobileTime = userReferrals.sort((a, b) => new Date(b.mobileTime) - new Date(a.mobileTime))[0]?.mobileTime || null;
+
+      return {
+        Username: user.username,
+        "Total Referrals": total,
+        "Average Referral per Day": +(total / totalDays).toFixed(2),
+        "Average Referral per User": +(total / users.length).toFixed(2),
+        "Mobile Time": latestMobileTime,
+      };
+    });
+
+    const parser = new Parser();
+    const csv = parser.parse(userStats);
+
+    res.header("Content-Type", "text/csv");
+    res.attachment(`referral_stats_users_${from}_to_${to}.csv`);
+    return res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getPatientReferralsByUserId = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { from, to, page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    if (!id || !from || !to) {
+      return res.status(400).json({ message: "userId, from, and to dates are required" });
+    }
+
+    const filter = {
+      userId: id,
+      createdAt: { $gte: new Date(from), $lte: new Date(to) }
+    };
+
+    const total = await PatientReferral.countDocuments(filter);
+
+    const referrals = await PatientReferral.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .populate('userId', 'username profileImage')
+      .populate('pocId', 'pocName number category specialization')
+      .populate('ambId', 'pocName number ambNumber category specialization');
+
+    res.status(200).json({
+      total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      data: referrals
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getPatientReferralsByPOCOrAmb = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { type, from, to, page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    if (!id || !type || !from || !to) {
+      return res.status(400).json({ message: "type (poc/amb), id, from, and to are required" });
+    }
+
+    const filter = {
+      [type === 'poc' ? 'pocId' : 'ambId']: id,
+      createdAt: { $gte: new Date(from), $lte: new Date(to) }
+    };
+
+    const total = await PatientReferral.countDocuments(filter);
+
+    const referrals = await PatientReferral.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .populate('userId', 'username profileImage')
+      .populate('pocId', 'pocName number category specialization')
+      .populate('ambId', 'pocName ambNumber category specialization');
+
+    res.status(200).json({
+      total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+      data: referrals
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const updatePatientReferral = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updated = await PatientReferral.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!updated) {
+      return res.status(404).json({ message: "Patient referral not found" });
+    }
+
+    res.status(200).json({
+      message: "Referral updated successfully",
+      data: updated
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const deletePatientReferral = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await PatientReferral.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Patient referral not found" });
+    }
+
+    res.status(200).json({ message: "Referral deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const { Parser } = require('json2csv');
+
+
+const downloadCSVByUserId = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { from, to } = req.query;
+
+    const referrals = await PatientReferral.find({
+      userId: id,
+      createdAt: { $gte: new Date(from), $lte: new Date(to) }
+    })
+      .populate('userId', 'username')
+      .populate('pocId', 'pocName number category specialization')
+      .populate('ambId', 'pocName number category ambNumber');
+
+    const formatted = referrals.map(r => ({
+      Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
+      "Patient Name": r.fullName,
+      Username: r.userId?.username || '',
+      "POC Name": r.pocId?.pocName || '',
+      "POC Number": r.pocId?.number ? `'${r.pocId.number}'` : '',
+      Category: r.pocId?.category || r.ambId?.category || '',
+      Specialization: r.pocId?.specialization || '',
+      "Driver Name": r.ambId?.pocName || '',
+      "Driver Number": r.ambId?.number ? `'${r.ambId.number}'` : '',
+      "Amb Number": r.ambId?.ambNumber ? `'${r.ambId.ambNumber}'` : ''
+    }));
+
+    if (!formatted.length) {
+      return res.status(404).json({ message: "No referrals found in the specified date range." });
+    }
+
+    const parser = new Parser();
+    const csv = parser.parse(formatted);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment(`referrals_by_user_${formatted[0].Username || "unknown"}.csv`);
+    return res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const downloadCSVByPOCOrAmb = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, from, to } = req.query;
+
+    const filter = {
+      [type === 'poc' ? 'pocId' : 'ambId']: id,
+      createdAt: { $gte: new Date(from), $lte: new Date(to) }
+    };
+
+    const referrals = await PatientReferral.find(filter)
+      .populate('userId', 'username')
+      .populate('pocId', 'pocName number category specialization')
+      .populate('ambId', 'pocName ambNumber');
+
+    const formatted = referrals.map(r => ({
+      Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
+      "Patient Name": r.fullName,
+      Username: r.userId?.username || '',
+      "POC Name": r.pocId?.pocName || '',
+      "POC Number": r.pocId?.number || '',
+      Category: r.pocId?.category || '',
+      Specialization: r.pocId?.specialization || '',
+      "Driver Name": r.ambId?.pocName || '',
+      "Amb Number": r.ambId?.ambNumber || ''
+    }));
+
+    const parser = new Parser();
+    const csv = parser.parse(formatted);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment(`referrals_by_${type}_${id}.csv`);
+    return res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { getReferralById, getReferralByIdAndDate, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, exportCSVData, downloadReferralByDateAndCountryCSV, createPatientReferral,
+  getReferralStatsByUsers,
+  getPatientReferralsByUserId,
+  getPatientReferralsByPOCOrAmb,
+  updatePatientReferral,
+  deletePatientReferral,
+  downloadReferralStatsByUsersCSV,
+  downloadCSVByUserId,
+  downloadCSVByPOCOrAmb };

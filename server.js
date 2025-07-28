@@ -37,7 +37,7 @@ app.use(express.json());
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));
 
-app.use("/api/referral", require("./routes/referral"));
+app.use("/api/patient-referral", require("./routes/referral"));
 app.use("/api/img", require("./routes/uploadImage"));
 app.use("/api/refreshToken", require("./routes/verifyRefreshToken"));
 app.use("/api/auth", require("./routes/auth"));
