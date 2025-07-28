@@ -699,7 +699,7 @@ const downloadReferralStatsByUsersCSV = async (req, res) => {
         "Total Referrals": total,
         "Average Referral per Day": +(total / totalDays).toFixed(2),
         "Average Referral per User": +(total / users.length).toFixed(2),
-        "Referral Date": nepaliMonth
+        "Referral Date": `${nepaliMonth}, ${year}`
       };
     });
 
