@@ -664,7 +664,7 @@ const downloadReferralStatsByUsersCSV = async (req, res) => {
     const endDate = new Date(to);
     const totalDays = Math.max(1, moment(endDate).diff(moment(startDate), 'days') + 1);
 
-    const users = await User.find({ "role.role": { $ne: "Admin" } }).select("username profileImage");
+    const users = await Users.find({ "role.role": { $ne: "Admin" } }).select("username profileImage");
     const userIds = users.map(u => u._id);
 
     const referrals = await PatientReferral.find({
