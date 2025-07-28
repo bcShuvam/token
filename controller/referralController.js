@@ -6,7 +6,8 @@ const nodemailer = require("nodemailer");
 // const csv = require("csvtojson");
 const CsvParser = require("json2csv").Parser;
 const moment = require("moment-timezone");
-const bs = require("bikram-sambat-js");
+const BS = require('bikram-sambat-js')
+// const NepaliDate = require('nepali-date-converter');
 let exportData;
 
 const exportCSVData = async (req, res) => {
@@ -652,6 +653,11 @@ const getReferralStatsByUsers = async (req, res) => {
   }
 };
 
+const nepaliMonthsEnglish = [
+  "", "Baisakh", "Jestha", "Asar", "Shrawan", "Bhadra", "Ashwin",
+  "Kartik", "Mangsir", "Poush", "Magh", "Falgun", "Chaitra"
+];
+
 const downloadReferralStatsByUsersCSV = async (req, res) => {
   try {
     const { from, to } = req.query;
@@ -672,15 +678,17 @@ const downloadReferralStatsByUsersCSV = async (req, res) => {
       createdAt: { $gte: startDate, $lte: endDate }
     }).populate("userId", "username profileImage");
 
-    const nepaliMonthsEnglish = [
-      '', // index 0
-      'Baisakh', 'Jestha', 'Asar', 'Shrawan', 'Bhadra', 'Ashwin',
-      'Kartik', 'Mangsir', 'Poush', 'Magh', 'Falgun', 'Chaitra'
-    ];
+    // const bsStart = toBik(from); // ✅ now works properly
+    // const [bsYear, bsMonth] = bsStart.split("-").map(Number);
+    // const referralMonth = `${nepaliMonthsEnglish[bsMonth]}, ${bsYear}`;
 
-    // Convert 'from' date to BS and get month and year
-    const bsStart = bs.toBik(new Date(from)); // e.g., { year: 2082, month: 3, day: 1 }
-    const referralMonth = `${nepaliMonthsEnglish[bsStart.month]}, ${bsStart.year}`;
+    startDate.setDate(startDate.getDate() - 1); // subtract 1 day
+    const nepaliDate = BS.ADToBS(startDate);
+    const d1 = nepaliDate.toString().split("-");
+    const year = parseInt(d1[0]);
+    const month = parseInt(d1[1]);
+    const day = parseInt(d1[2]);
+    const nepaliMonth = nepaliMonthsEnglish[month];
 
     const userStats = users.map(user => {
       const userReferrals = referrals.filter(r => r.userId?._id.toString() === user._id.toString());
@@ -691,7 +699,7 @@ const downloadReferralStatsByUsersCSV = async (req, res) => {
         "Total Referrals": total,
         "Average Referral per Day": +(total / totalDays).toFixed(2),
         "Average Referral per User": +(total / users.length).toFixed(2),
-        "Referral Date": referralMonth
+        "Referral Date": nepaliMonth
       };
     });
 
@@ -702,6 +710,7 @@ const downloadReferralStatsByUsersCSV = async (req, res) => {
     res.attachment(`referral_stats_users_${from}_to_${to}.csv`);
     return res.send(csv);
   } catch (err) {
+    console.error("Download CSV error:", err);
     res.status(500).json({ message: err.message });
   }
 };
