@@ -712,8 +712,7 @@ const downloadVisitLogsById = async (req, res) => {
           SN: index + 1,
           username: foundVisitLog.username,
           pocName: log.pocName,
-          pocGender: pocDetails.gender,
-          pocNumber: `="${pocDetails.number}"`, 
+          pocNumber: `="${pocDetails.number}"`,
           pocCategory: pocDetails.category,
           pocSpecialization: pocDetails.specialization,
           pocAddress: `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`,
@@ -724,20 +723,15 @@ const downloadVisitLogsById = async (req, res) => {
           mobileTime: log.mobileTime,
           remarks: log.remarks,
           approvalStatus: log.approvalStatus,
-          latitude: log.latitude,
-          longitude: log.longitude,
         };
       })
     );
-
-    // Generate CSV
 
     const fields = [
       { label: 'SN', value: 'SN' },
       { label: 'Name', value: 'username' },
       { label: 'POC Name', value: 'pocName' },
-      { label: 'Gender', value: 'pocGender' },
-      { label: 'Mobile Number', value: 'pocNumber' },
+      { label: 'Number', value: 'pocNumber' },
       { label: 'Category', value: 'pocCategory' },
       { label: 'Specialization', value: 'pocSpecialization' },
       { label: 'Address', value: 'pocAddress' },
@@ -748,15 +742,11 @@ const downloadVisitLogsById = async (req, res) => {
       { label: 'Visit Time', value: 'mobileTime' },
       { label: 'Remarks', value: 'remarks' },
       { label: 'Status', value: 'approvalStatus' },
-      { label: 'Latitude', value: 'latitude' },
-      { label: 'Longitude', value: 'longitude' },
     ];
 
     const parser = new Parser({ fields });
     const csv = parser.parse(formattedFilteredVisitLogs);
 
-
-    // Filename: username_visitlogs_from_to.csv
     const usernameSafe = foundVisitLog.username.replace(/ /g, '_');
     const filename = `${usernameSafe}_visitlogs_${req.query.from}_${req.query.to}.csv`;
 
