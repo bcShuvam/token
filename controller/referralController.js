@@ -840,16 +840,16 @@ const downloadCSVByUserId = async (req, res) => {
       .populate('ambId', 'pocName number category ambNumber');
 
     const formatted = referrals.map(r => ({
+      Username: r.userId?.username || '',
       Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
       "Patient Name": r.fullName,
-      Username: r.userId?.username || '',
-      "POC Name": r.pocId?.pocName || 'N/A',
-      "POC Number": r.pocId?.number ? `'${r.pocId.number}'` : 'N/A',
-      Category: r.pocId?.category || r.ambId?.category || 'N/A',
-      Specialization: r.pocId?.specialization || 'N/A',
-      "Driver Name": r.ambId?.pocName || 'N/A',
-      "Driver Number": r.ambId?.number ? `'${r.ambId.number}'` : 'N/A',
-      "Amb Number": r.ambId?.ambNumber ? `'${r.ambId.ambNumber}'` : 'N/A'
+      "POC Name": r.pocId?.pocName || '',
+      "POC Number": r.pocId?.number ? `'${r.pocId.number}'` : '',
+      Category: r.pocId?.category || r.ambId?.category || '',
+      Specialization: r.pocId?.specialization || '',
+      "Driver Name": r.ambId?.pocName || '',
+      "Driver Number": r.ambId?.number ? `'${r.ambId.number}'` : '',
+      "Amb Number": r.ambId?.ambNumber ? r.ambId.ambNumber : ''
     }));
 
     if (!formatted.length) {
