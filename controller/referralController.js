@@ -940,31 +940,32 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
       .populate("ambId", "pocName number ambNumber");
 
     const formatted = referrals.map((r) => {
-      let row = {
-        Date: moment(r.createdAt)
-          .tz("Asia/Kathmandu")
-          .format("YYYY-MM-DD HH:mm"),
-        "Patient Name": r.fullName,
-        Username: r.userId?.username || "",
-        "Approval Status": r.approvalStatus
-      };
-
-      // Add POC fields only if pocId exists
-      if (r.pocId) {
-        row["POC Name"] = r.pocId.pocName || "";
-        row["POC Number"] = r.pocId.number ? `'${r.pocId.number}'` : "";
-        row["Category"] = r.pocId.category || "";
-        row["Specialization"] = r.pocId.specialization || "";
+      if (type === "poc") {
+        return {
+          Date: moment(r.createdAt)
+            .tz("Asia/Kathmandu")
+            .format("YYYY-MM-DD HH:mm"),
+          "Patient Name": r.fullName,
+          Username: r.userId?.username || "",
+          "POC Name": r.pocId?.pocName || "",
+          "POC Number": r.pocId?.number ? `'${r.pocId.number}'` : "",
+          Category: r.pocId?.category || "",
+          Specialization: r.pocId?.specialization || "",
+          "Approval Status": r.approvalStatus || "",
+        };
+      } else if (type === "amb") {
+        return {
+          Date: moment(r.createdAt)
+            .tz("Asia/Kathmandu")
+            .format("YYYY-MM-DD HH:mm"),
+          "Patient Name": r.fullName,
+          "Driver Name": r.ambId?.pocName || "",
+          "Driver Number": r.ambId?.number ? `'${r.ambId.number}'` : "",
+          "Ambulance Number": r.ambId?.ambNumber || "",
+          Username: r.userId?.username || "",
+          "Approval Status": r.approvalStatus || "",
+        };
       }
-
-      // Add Ambulance fields only if ambId exists
-      if (r.ambId) {
-        row["Driver Name"] = r.ambId.pocName || "";
-        row["Driver Number"] = r.ambId.number ? `'${r.ambId.number}'` : "";
-        row["Ambulance Number"] = r.ambId.ambNumber || "";
-      }
-
-      return row;
     });
 
     const parser = new Parser();
@@ -977,6 +978,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 module.exports = { getReferralById, getReferralByIdAndDate, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, exportCSVData, downloadReferralByDateAndCountryCSV, createPatientReferral,
   getReferralStatsByUsers,
