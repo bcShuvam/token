@@ -927,61 +927,50 @@ const downloadCSVByUserId = async (req, res) => {
 const downloadCSVByPOCOrAmb = async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, from, to } = req.query;
+    const { from, to } = req.query;
 
-    if (!id || !type || !from || !to) {
-      return res.status(400).json({ message: "type (poc/amb), id, from, and to are required" });
-    }
-
-    const pocDoc = await POC.findById(id);
-    if (!pocDoc) {
+    // Check the category of this POC
+    const foundPOC = await POC.findById(id);
+    if (!foundPOC) {
       return res.status(404).json({ message: "POC/Ambulance not found" });
     }
 
-    if (type === "amb" && pocDoc.category !== "Ambulance") {
-      return res.status(400).json({ message: "The provided ID is not an ambulance" });
-    }
-    if (type === "poc" && pocDoc.category === "Ambulance") {
-      return res.status(400).json({ message: "The provided ID is an ambulance, not a POC" });
-    }
-
+    // Decide filter key based on category
+    const isAmbulance = foundPOC.category === "Ambulance";
     const filter = {
-      pocId: id, // always using pocId
-      createdAt: { $gte: new Date(from), $lte: new Date(to) }
+      [isAmbulance ? "ambId" : "pocId"]: new mongoose.Types.ObjectId(id),
+      createdAt: { $gte: new Date(from), $lte: new Date(to) },
     };
 
     const referrals = await PatientReferral.find(filter)
       .populate("userId", "username")
-      .populate("pocId", "pocName number category specialization ambNumber");
+      .populate("pocId", "pocName number category specialization")
+      .populate("ambId", "pocName number ambNumber");
 
     if (!referrals.length) {
-      return res.status(404).json({ message: "No referrals found for given filter" });
+      return res.status(404).json({ message: "No referrals found for given parameters" });
     }
 
     const formatted = referrals.map((r) => {
-      const dateFormatted = moment(r.createdAt)
-        .tz("Asia/Kathmandu")
-        .format("YYYY-MM-DD HH:mm");
-
-      if (type === "poc") {
+      if (isAmbulance) {
         return {
-          Date: dateFormatted,
+          Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
+          "Patient Name": r.fullName,
+          "Driver Name": r.ambId?.pocName || "",
+          "Driver Number": r.ambId?.number ? `'${r.ambId.number}'` : "",
+          "Ambulance Number": r.ambId?.ambNumber || "",
+          Username: r.userId?.username || "",
+          "Approval Status": r.approvalStatus || "",
+        };
+      } else {
+        return {
+          Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
           "Patient Name": r.fullName,
           Username: r.userId?.username || "",
           "POC Name": r.pocId?.pocName || "",
           "POC Number": r.pocId?.number ? `'${r.pocId.number}'` : "",
           Category: r.pocId?.category || "",
           Specialization: r.pocId?.specialization || "",
-          "Approval Status": r.approvalStatus || "",
-        };
-      } else if (type === "amb") {
-        return {
-          Date: dateFormatted,
-          "Patient Name": r.fullName,
-          "Driver Name": r.pocId?.pocName || "",
-          "Driver Number": r.pocId?.number ? `'${r.pocId.number}'` : "",
-          "Ambulance Number": r.pocId?.ambNumber || "",
-          Username: r.userId?.username || "",
           "Approval Status": r.approvalStatus || "",
         };
       }
@@ -991,7 +980,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
     const csv = parser.parse(formatted);
 
     res.header("Content-Type", "text/csv");
-    res.attachment(`referrals_by_${type}_${id}.csv`);
+    res.attachment(`referrals_by_${isAmbulance ? "ambulance" : "poc"}_${id}.csv`);
     return res.send(csv);
   } catch (err) {
     res.status(500).json({ message: err.message });
