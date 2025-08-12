@@ -930,31 +930,47 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
     const { type, from, to } = req.query;
 
     const filter = {
-      [type === 'poc' ? 'pocId' : 'ambId']: id,
-      createdAt: { $gte: new Date(from), $lte: new Date(to) }
+      [type === "poc" ? "pocId" : "ambId"]: id,
+      createdAt: { $gte: new Date(from), $lte: new Date(to) },
     };
 
     const referrals = await PatientReferral.find(filter)
-      .populate('userId', 'username')
-      .populate('pocId', 'pocName number category specialization')
-      .populate('ambId', 'pocName ambNumber');
+      .populate("userId", "username")
+      .populate("pocId", "pocName number category specialization")
+      .populate("ambId", "pocName number ambNumber");
 
-    const formatted = referrals.map(r => ({
-      Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
-      "Patient Name": r.fullName,
-      Username: r.userId?.username || '',
-      "POC Name": r.pocId?.pocName || '',
-      "POC Number": r.pocId?.number || '',
-      Category: r.pocId?.category || '',
-      Specialization: r.pocId?.specialization || '',
-      "Driver Name": r.ambId?.pocName || '',
-      "Amb Number": r.ambId?.ambNumber || ''
-    }));
+    const formatted = referrals.map((r) => {
+      let row = {
+        Date: moment(r.createdAt)
+          .tz("Asia/Kathmandu")
+          .format("YYYY-MM-DD HH:mm"),
+        "Patient Name": r.fullName,
+        Username: r.userId?.username || "",
+        "Approval Status": r.approvalStatus
+      };
+
+      // Add POC fields only if pocId exists
+      if (r.pocId) {
+        row["POC Name"] = r.pocId.pocName || "";
+        row["POC Number"] = r.pocId.number ? `'${r.pocId.number}'` : "";
+        row["Category"] = r.pocId.category || "";
+        row["Specialization"] = r.pocId.specialization || "";
+      }
+
+      // Add Ambulance fields only if ambId exists
+      if (r.ambId) {
+        row["Driver Name"] = r.ambId.pocName || "";
+        row["Driver Number"] = r.ambId.number ? `'${r.ambId.number}'` : "";
+        row["Ambulance Number"] = r.ambId.ambNumber || "";
+      }
+
+      return row;
+    });
 
     const parser = new Parser();
     const csv = parser.parse(formatted);
 
-    res.header('Content-Type', 'text/csv');
+    res.header("Content-Type", "text/csv");
     res.attachment(`referrals_by_${type}_${id}.csv`);
     return res.send(csv);
   } catch (err) {
