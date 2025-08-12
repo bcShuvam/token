@@ -667,7 +667,7 @@ const updateMultipleApprovalStatuses = async (req, res) => {
       });
     }
 
-    // Validate each entry
+    // Validate each update object
     for (const update of updates) {
       if (!update.referralId || !mongoose.Types.ObjectId.isValid(update.referralId)) {
         return res.status(400).json({
@@ -685,9 +685,9 @@ const updateMultipleApprovalStatuses = async (req, res) => {
 
     let updatedCount = 0;
 
-    // Update each record individually (different status for each)
+    // Update each document individually
     for (const update of updates) {
-      const result = await Referral.updateOne(
+      const result = await PatientReferral.updateOne(
         { _id: update.referralId },
         { $set: { approvalStatus: update.approvalStatus } }
       );
@@ -696,7 +696,7 @@ const updateMultipleApprovalStatuses = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `${updatedCount} referral(s) updated successfully`,
+      message: `${updatedCount} referrals updated successfully`,
     });
 
   } catch (error) {
