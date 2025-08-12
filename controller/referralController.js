@@ -653,6 +653,61 @@ const getReferralStatsByUsers = async (req, res) => {
   }
 };
 
+const allowedStatuses = ["Approved", "Pending", "Rejected"];
+
+const updateMultipleApprovalStatuses = async (req, res) => {
+  try {
+    const updates = req.body;
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body must be a non-empty array of updates",
+      });
+    }
+
+    // Validate each entry
+    for (const update of updates) {
+      if (!update.referralId || !mongoose.Types.ObjectId.isValid(update.referralId)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid referralId: ${update.referralId}`,
+        });
+      }
+      if (!update.approvalStatus || !allowedStatuses.includes(update.approvalStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid approvalStatus for referralId ${update.referralId}. Allowed values: ${allowedStatuses.join(", ")}`,
+        });
+      }
+    }
+
+    let updatedCount = 0;
+
+    // Update each record individually (different status for each)
+    for (const update of updates) {
+      const result = await Referral.updateOne(
+        { _id: update.referralId },
+        { $set: { approvalStatus: update.approvalStatus } }
+      );
+      if (result.modifiedCount > 0) updatedCount++;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `${updatedCount} referral(s) updated successfully`,
+    });
+
+  } catch (error) {
+    console.error("Error updating approvalStatus:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 const nepaliMonthsEnglish = [
   "", "Baisakh", "Jestha", "Asar", "Shrawan", "Bhadra", "Ashwin",
   "Kartik", "Mangsir", "Poush", "Magh", "Falgun", "Chaitra"
@@ -907,10 +962,12 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
 
 module.exports = { getReferralById, getReferralByIdAndDate, getReferralByDateCountryRegionAndCity, getReferralByDateCountryAndRegion, getReferralByDateAndCountry, exportCSVData, downloadReferralByDateAndCountryCSV, createPatientReferral,
   getReferralStatsByUsers,
+  updateMultipleApprovalStatuses,
   getPatientReferralsByUserId,
   getPatientReferralsByPOCOrAmb,
   updatePatientReferral,
   deletePatientReferral,
   downloadReferralStatsByUsersCSV,
   downloadCSVByUserId,
-  downloadCSVByPOCOrAmb };
+  downloadCSVByPOCOrAmb, 
+};
