@@ -905,7 +905,8 @@ const downloadCSVByUserId = async (req, res) => {
       Specialization: r.pocId?.specialization || '',
       "Driver Name": r.ambId?.pocName || '',
       "Driver Number": r.ambId?.number ? `'${r.ambId.number}'` : '',
-      "Amb Number": r.ambId?.ambNumber ? r.ambId.ambNumber : ''
+      "Amb Number": r.ambId?.ambNumber ? r.ambId.ambNumber : '',
+      "approvalStatus": r.approvalStatus,
     }));
 
     if (!formatted.length) {
