@@ -15,16 +15,6 @@ const referralSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// const referralModel = new mongoose.Schema(
-//   {
-//     _id: { type: String, required: true },
-//     username: { type: String, required: true },
-//     referralLogCounter: { type: Number, default: 0 },
-//     referralLogs: [referralLogModel],
-//   },
-//   { timestamps: true }
-// );
-
 const Referral = mongoose.model("Referral", referralSchema);
 
 module.exports = Referral;
