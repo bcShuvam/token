@@ -21,6 +21,7 @@ const patientReferralSchema = new mongoose.Schema(
     longitude: { type: Number, required: true },
     mobileTime: { type: String, required: [true, "Mobile time is required"] },
     createdAt: { type: Date, default: new Date },
+    remarks: {type: String, required: [true, 'Remarks is required']},
     approvalStatus: {type: String, default: "Pending"} // Approved, Pending, Rejected
   },
   { timestamps: true }

@@ -518,6 +518,7 @@ const createPatientReferral = async (req, res) => {
       latitude,
       longitude,
       mobileTime,
+      remarks,
     } = req.body;
     if (
       !fullName ||
@@ -528,12 +529,13 @@ const createPatientReferral = async (req, res) => {
       !address ||
       !userId ||
       !mobileTime ||
+      !remarks ||
       !latitude ||
       !longitude
     )
       return res.status(400).json({
         message:
-          "fullName, age, gender, provisionalDiagnosis, number, country, region, city, address, createdById, createdByName, mobileTime, dateTime, latitude, longitude createdById, createdByName are required",
+          "fullName, age, gender, provisionalDiagnosis, number, country, region, city, address, createdById, createdByName, mobileTime, dateTime, latitude, longitude, remarks, createdById, createdByName are required",
       });
 
       let foundPOCId;
@@ -573,7 +575,8 @@ const createPatientReferral = async (req, res) => {
       ambId: ambId,
       latitude: latitude,
       longitude: longitude,
-      mobileTime: mobileTime
+      mobileTime: mobileTime,
+      remarks: remarks,
     });
 
     const referralLogDetail = {
@@ -906,7 +909,8 @@ const downloadCSVByUserId = async (req, res) => {
       "Driver Name": r.ambId?.pocName || '',
       "Driver Number": r.ambId?.number ? `'${r.ambId.number}'` : '',
       "Amb Number": r.ambId?.ambNumber ? r.ambId.ambNumber : '',
-      "approvalStatus": r.approvalStatus,
+      "Approval Status": r.approvalStatus,
+      "Remarks": r.remarks,
     }));
 
     if (!formatted.length) {
@@ -961,6 +965,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
           "Ambulance Number": r.ambId?.ambNumber || "",
           Username: r.userId?.username || "",
           "Approval Status": r.approvalStatus || "",
+          "Remarks": r.remarks || "",
         };
       } else {
         return {
@@ -972,6 +977,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
           Category: r.pocId?.category || "",
           Specialization: r.pocId?.specialization || "",
           "Approval Status": r.approvalStatus || "",
+          "Remarks": r.remarks || "",
         };
       }
     });
