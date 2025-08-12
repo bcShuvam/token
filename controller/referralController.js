@@ -918,7 +918,7 @@ const downloadCSVByUserId = async (req, res) => {
 
     res.header('Content-Type', 'text/csv');
     res.attachment(`referrals_by_user_${formatted[0].Username || "unknown"}.csv`);
-    return res.send(csv);
+    return res.status(200).send(csv);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
