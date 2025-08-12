@@ -9,6 +9,7 @@ const {
   exportCSVData,
   downloadReferralByDateAndCountryCSV,
   getReferralStatsByUsers,
+  updateMultipleApprovalStatuses,
   getPatientReferralsByUserId,
   getPatientReferralsByPOCOrAmb,
   updatePatientReferral,
@@ -29,6 +30,7 @@ router.route("/area/country/download").get(downloadReferralByDateAndCountryCSV);
 router.post("/", createPatientReferral);
 router.get("/referral-report/by-users", getReferralStatsByUsers);
 router.get("/by-user/:id", getPatientReferralsByUserId);
+router.patch("/by-user/:id", updateMultipleApprovalStatuses);
 router.get("/by-poc-or-amb/:id", getPatientReferralsByPOCOrAmb);
 router.put("/:id", updatePatientReferral);
 router.patch("/:id", updatePatientReferral);

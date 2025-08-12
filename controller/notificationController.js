@@ -1,5 +1,6 @@
 // controller/sendNotificationController.js
 const admin = require('../firebase');
+const User = require('../model/users');
 
 const getFirebaseToken = async (req, res) => {
   try {
