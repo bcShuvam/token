@@ -921,7 +921,7 @@ const downloadCSVByUserId = async (req, res) => {
     const csv = parser.parse(formatted);
 
     res.header('Content-Type', 'text/csv');
-    res.attachment(`referrals_by_user_${formatted[0].Username || "unknown"}.csv`);
+    res.attachment(`${formatted[0].Username || "unknown"}_Referrals_${from}_${to}.csv`);
     return res.status(200).send(csv);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -986,7 +986,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
     const csv = parser.parse(formatted);
 
     res.header("Content-Type", "text/csv");
-    res.attachment(`referrals_by_${isAmbulance ? "ambulance" : "poc"}_${id}.csv`);
+    res.attachment(`Referrals_By_${foundPOC.pocName}_${from}_${to}.csv`);
     return res.send(csv);
   } catch (err) {
     res.status(500).json({ message: err.message });
