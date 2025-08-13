@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const {verifyRole} = require('../middleware/verifyRoles');
+
 const {
   getReferralById,
   getReferralByDateCountryRegionAndCity,
@@ -28,17 +30,17 @@ router.route("/area/export").get(exportCSVData);
 router.route("/area/country/download").get(downloadReferralByDateAndCountryCSV);
 
 router.post("/", createPatientReferral);
-router.get("/referral-report/by-users", getReferralStatsByUsers);
+router.get("/referral-report/by-users", verifyRole('Admin'), getReferralStatsByUsers);
 router.get("/by-user/:id", getPatientReferralsByUserId);
-router.patch("/by-user/:id", updateMultipleApprovalStatuses);
-router.get("/by-poc-or-amb/:id", getPatientReferralsByPOCOrAmb);
-router.put("/:id", updatePatientReferral);
-router.patch("/:id", updatePatientReferral);
-router.delete("/:id", deletePatientReferral);
+router.patch("/by-user/:id", verifyRole('Admin'), updateMultipleApprovalStatuses);
+router.get("/by-poc-or-amb/:id", verifyRole('Admin'), getPatientReferralsByPOCOrAmb);
+// router.put("/:id", updatePatientReferral);
+router.patch("/:id",verifyRole('Admin'), updatePatientReferral);
+router.delete("/:id",verifyRole('Admin'), deletePatientReferral);
 
 // CSV Downloads
-router.get("/referral-report/by-users/download", downloadReferralStatsByUsersCSV);
-router.get("/csv/by-user/:id", downloadCSVByUserId);
-router.get("/csv/by-poc-or-amb/:id", downloadCSVByPOCOrAmb);
+router.get("/referral-report/by-users/download",verifyRole('Admin'), downloadReferralStatsByUsersCSV);
+router.get("/csv/by-user/:id",verifyRole('Admin'), downloadCSVByUserId);
+router.get("/csv/by-poc-or-amb/:id",verifyRole('Admin'), downloadCSVByPOCOrAmb);
 
 module.exports = router;
