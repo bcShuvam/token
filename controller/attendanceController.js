@@ -4,7 +4,8 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const Attendance = require("../model/attendance");
-const adToBs = require('../utils/adToBs');
+const {convertToNepaliDateTime, convertBsRangeToAd} = require('../utils/adToBs');
+const getMonthRange = require('../utils/fromAndToBs');
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -43,8 +44,17 @@ const getAttendanceById = async (req, res) => {
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
     const id = req.query.userId;
-    const { from, to } = req.query;
-    console.log(from, to);
+    let { from, to, year, monthIndex, dateType, type } = req.query;
+
+    const { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
+    fromBS = fromBS.format('YYYY-MM-DD').toString()
+    toBS = toBS.format('YYYY-MM-DD').toString()
+
+    const { fromAD, toAD } = convertBsRangeToAd(fromBS, toBS);
+
+    from = fromAD;
+    to = toBS
+  
     if (!id) return res.status(400).json({ message: "id is required" });
     const foundAttendance = await Attendance.findOne({ _id: id });
     if (!foundAttendance)
@@ -62,10 +72,10 @@ const getAttendanceByIdAndDate = async (req, res) => {
         totalHours += entry.totalHours;
         console.log(totalHours);
         const data = {
-          checkIn: adToBs(entry.checkIn.deviceInTime),
+          checkIn: convertToNepaliDateTime(entry.checkIn.deviceInTime),
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
-          checkOut: adToBs(entry.checkOut.deviceOutTime),
+          checkOut: convertToNepaliDateTime(entry.checkOut.deviceOutTime),
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
@@ -119,10 +129,10 @@ const exportAttendanceToCSV = async (req, res) => {
       const currentDate = new Date(entry.checkIn.inTime);
       if (currentDate >= startTime && currentDate <= endTime) {
         attendanceLogs.push({
-          CheckIn: adToBs(entry.checkIn.deviceInTime),
+          CheckIn: convertToNepaliDateTime(entry.checkIn.deviceInTime),
           CheckInLatitude: entry.checkIn.latitude,
           CheckInLongitude: entry.checkIn.longitude,
-          CheckOut: adToBs(entry.checkOut.deviceOutTime),
+          CheckOut: convertToNepaliDateTime(entry.checkOut.deviceOutTime),
           CheckOutLatitude: entry.checkOut.latitude,
           CheckOutLongitude: entry.checkOut.longitude,
           TotalHours: entry.totalHours
@@ -256,7 +266,7 @@ const postAttendanceByID = async (req, res) => {
         status: "check-in",
         checkIn: {
           status: "check-in",
-          deviceInTime: adToBs(deviceTime),
+          deviceInTime: convertToNepaliDateTime(deviceTime),
           inTime: attendanceTime,
           latitude: latitude,
           longitude: longitude,
@@ -280,7 +290,7 @@ const postAttendanceByID = async (req, res) => {
       lastAttendance.status = "check-out";
       lastAttendance.checkOut = {
         status: "check-out",
-        deviceOutTime: adToBs(deviceTime),
+        deviceOutTime: convertToNepaliDateTime(deviceTime),
         outTime: attendanceTime,
         latitude: latitude,
         longitude: longitude,
@@ -397,10 +407,10 @@ const downloadAttendanceReportById = async (req, res) => {
 
         const data = {
           'Name': userName,
-          'Check-In': adToBs(entry.checkIn.deviceInTime),
+          'Check-In': convertToNepaliDateTime(entry.checkIn.deviceInTime),
           // 'Check-In Latitude': entry.checkIn.latitude,
           // 'Check-In Longitude': entry.checkIn.longitude,
-          'Check-Out': adToBs(entry.checkOut.deviceOutTime),
+          'Check-Out': convertToNepaliDateTime(entry.checkOut.deviceOutTime),
           // 'Check-Out Latitude': entry.checkOut.latitude,
           // 'Check-Out Longitude': entry.checkOut.longitude,
           'Total Hours': entry.totalHours.toFixed(2),
