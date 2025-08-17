@@ -6,6 +6,7 @@ const path = require('path');
 const Attendance = require("../model/attendance");
 const { convertToNepaliDateTime, convertBsRangeToAd } = require("../utils/adToBs");
 const getMonthRange = require("../utils/fromAndToBs");
+const formatAdDateTime = require('../utils/AttendanceFormatAdDateTime');
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -93,12 +94,12 @@ const getAttendanceByIdAndDate = async (req, res) => {
         const data = {
           checkIn: dateType === "BS"
             ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
-            : entry.checkIn.deviceInTime,
+            : formatAdDateTime(entry.checkIn.deviceInTime),
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
           checkOut: dateType === "BS"
             ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
-            : entry.checkOut.deviceOutTime,
+            : formatAdDateTime(entry.checkOut.deviceOutTime),
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
@@ -401,14 +402,39 @@ const downloadAttendanceReport = async (req, res) => {
 const downloadAttendanceReportById = async (req, res) => {
   try {
     const id = req.query.userId;
-    const { from, to } = req.query;
+    let { from, to, year, monthIndex, dateType, type } = req.query;
 
     if (!id) {
       return res.status(400).json({ message: "userId is required" });
     }
 
-    const foundAttendance = await Attendance.findOne({ _id: id });
+    // --- Handle type and dateType like getAttendanceByIdAndDate ---
+    if (type === "monthly") {
+      if (dateType === "BS") {
+        let { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
+        from = fromBS.format("YYYY-MM-DD");
+        to = toBS.format("YYYY-MM-DD");
 
+        const { fromAD, toAD } = convertBsRangeToAd(from, to);
+        from = fromAD;
+        to = toAD;
+      } else if (dateType === "AD") {
+        const start = new Date(year, monthIndex - 1, 1, 0, 0, 0);
+        const end = new Date(year, monthIndex, 0, 23, 59, 59); // last day of month
+        from = start.toISOString();
+        to = end.toISOString();
+      }
+    } else if (type === "custom") {
+      if (dateType === "BS") {
+        const { fromAD, toAD } = convertBsRangeToAd(from, to);
+        from = fromAD;
+        to = toAD;
+      } else if (dateType === "AD") {
+        // assume from and to are valid AD ISO strings
+      }
+    }
+
+    const foundAttendance = await Attendance.findOne({ _id: id });
     if (!foundAttendance) {
       return res.status(404).json({ message: `No user with id ${id} found` });
     }
@@ -420,8 +446,7 @@ const downloadAttendanceReportById = async (req, res) => {
 
     const attendanceLogs = [];
     let totalHours = 0;
-
-    const userName = foundAttendance.username; // <-- Corrected here
+    const userName = foundAttendance.username;
 
     foundAttendance.attendance.forEach((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
@@ -432,12 +457,12 @@ const downloadAttendanceReportById = async (req, res) => {
 
         const data = {
           'Name': userName,
-          'Check-In': convertToNepaliDateTime(entry.checkIn.deviceInTime),
-          // 'Check-In Latitude': entry.checkIn.latitude,
-          // 'Check-In Longitude': entry.checkIn.longitude,
-          'Check-Out': convertToNepaliDateTime(entry.checkOut.deviceOutTime),
-          // 'Check-Out Latitude': entry.checkOut.latitude,
-          // 'Check-Out Longitude': entry.checkOut.longitude,
+          'Check-In': dateType === "BS"
+            ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
+            : formatAdDateTime(entry.checkIn.deviceInTime),
+          'Check-Out': dateType === "BS"
+            ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
+            : formatAdDateTime(entry.checkOut.deviceOutTime),
           'Total Hours': entry.totalHours.toFixed(2),
         };
 
@@ -445,7 +470,7 @@ const downloadAttendanceReportById = async (req, res) => {
       }
     });
 
-    // Total time calculation (optional if you want to add to CSV later)
+    // Total time calculation (optional if you want to include in CSV)
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
@@ -455,15 +480,7 @@ const downloadAttendanceReportById = async (req, res) => {
     const formattedSeconds = String(seconds).padStart(2, '0');
 
     // Convert attendanceLogs to CSV
-    const fields = [
-      'Name', 'Check-In', 
-      // 'Check-In Latitude', 
-      // 'Check-In Longitude', 
-      'Check-Out', 
-      // 'Check-Out Latitude', 
-      // 'Check-Out Longitude', 
-      'Total Hours'
-    ];
+    const fields = ['Name', 'Check-In', 'Check-Out', 'Total Hours'];
     const json2csvParser = new Parser({ fields });
     const csv = json2csvParser.parse(attendanceLogs);
 
