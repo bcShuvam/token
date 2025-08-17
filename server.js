@@ -5,8 +5,6 @@ const mongoose = require("mongoose");
 const connectDB = require("./config/dbConnect");
 const PORT = process.env.PORT || 3001;
 const cors = require("cors");
-const getMonthRange = require('./utils/fromAndToBs');
-const {convertToNepaliDateTime, convertBsRangeToAd} = require('./utils/adToBs');
 const { verifyJWT, verifyRefreshToken } = require("./middleware/verifyJWT");
 // connect the mongodb
 connectDB();
@@ -35,20 +33,6 @@ app.use(express.json());
 
 // // middleware for cookie-parser
 // app.use(cookieParser());
-
-let { fromBS, toBS } = getMonthRange('2082-04', '2082-04');
-fromBS = fromBS.format('YYYY-MM-DD').toString()
-toBS = toBS.format('YYYY-MM-DD').toString()
-console.log(`From = ${fromBS}`);
-console.log(`To   = ${toBS}`);
-
-let { fromAD, toAD } = convertBsRangeToAd(fromBS, toBS);
-console.log("FromD =", fromAD);
-console.log("ToD   =", toAD);
-
-// const { from, to } = convertBsRangeToAd("2082-04-01", "2082-04-31");
-// console.log("From =", from);
-// console.log("To   =", to);
 
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));

@@ -46,62 +46,109 @@ const getAttendanceByIdAndDate = async (req, res) => {
     const id = req.query.userId;
     let { from, to, year, monthIndex, dateType, type } = req.query;
 
-    const { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
-    fromBS = fromBS.format('YYYY-MM-DD').toString()
-    toBS = toBS.format('YYYY-MM-DD').toString()
-
-    const { fromAD, toAD } = convertBsRangeToAd(fromBS, toBS);
-
-    from = fromAD;
-    to = toBS
-  
     if (!id) return res.status(400).json({ message: "id is required" });
+
+    // --- Handle type === 'monthly' ---
+    if (type === "monthly") {
+      if (dateType === "BS") {
+        // get BS month start/end, then convert to AD
+        let { from: fromBS, to: toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
+        fromBS = fromBS.format("YYYY-MM-DD").toString();
+        toBS = toBS.format("YYYY-MM-DD").toString();
+
+        const { from: fromAD, to: toAD } = convertBsRangeToAd(fromBS, toBS);
+        from = fromAD;
+        to = toAD;
+      } else if (dateType === "AD") {
+        // Directly take AD month range
+        const firstDay = new Date(year, monthIndex - 1, 1);
+        const lastDay = new Date(year, monthIndex, 0);
+
+        firstDay.setUTCHours(0, 0, 0, 0);
+        lastDay.setUTCHours(23, 59, 59, 999);
+
+        from = firstDay.toISOString();
+        to = lastDay.toISOString();
+      }
+    }
+
+    // --- Handle type === 'custom' ---
+    else if (type === "custom") {
+      if (dateType === "BS") {
+        // given BS range → convert to AD
+        const { from: fromAD, to: toAD } = convertBsRangeToAd(from, to);
+        from = fromAD;
+        to = toAD;
+      } else if (dateType === "AD") {
+        // already AD, just ensure ISO formatting
+        const start = new Date(from);
+        start.setUTCHours(0, 0, 0, 0);
+        const end = new Date(to);
+        end.setUTCHours(23, 59, 59, 999);
+        from = start.toISOString();
+        to = end.toISOString();
+      }
+    }
+
+    // --- Now query Attendance ---
     const foundAttendance = await Attendance.findOne({ _id: id });
     if (!foundAttendance)
       return res.status(404).json({ message: `No user with id ${id} found` });
+
     const startTime = new Date(from);
-    startTime.setUTCHours(0, 0, 0, 0);
     const endTime = new Date(to);
-    endTime.setUTCHours(23, 59, 59, 999);
+
     const attendanceLogs = [];
     let totalHours = 0;
-    const filteredAttendance = foundAttendance.attendance.filter((entry) => {
+
+    foundAttendance.attendance.forEach((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
       const matchedDate = currentDate >= startTime && currentDate <= endTime;
+
       if (matchedDate) {
         totalHours += entry.totalHours;
-        console.log(totalHours);
+
         const data = {
-          checkIn: convertToNepaliDateTime(entry.checkIn.deviceInTime),
+          checkIn:
+            dateType === "BS"
+              ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
+              : entry.checkIn.deviceInTime,
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
-          checkOut: convertToNepaliDateTime(entry.checkOut.deviceOutTime),
+          checkOut:
+            dateType === "BS"
+              ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
+              : entry.checkOut.deviceOutTime,
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
         };
+
         attendanceLogs.push(data);
       }
     });
-    // console.log(filteredData);
+
     const attendance = {
       _id: foundAttendance._id,
       username: foundAttendance.username,
       attendanceLogs,
     };
 
-    const hours = Math.floor(totalHours); // Extract full hours
-    const minutes = Math.floor((totalHours - hours) * 60); // Convert remaining fraction to minutes
-    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60); // Convert remaining fraction to seconds
+    // format total time (hh:mm:ss)
+    const hours = Math.floor(totalHours);
+    const minutes = Math.floor((totalHours - hours) * 60);
+    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
 
-    // Format with leading zeros
-    const formattedHours = String(hours).padStart(2, '0');
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(seconds).padStart(2, '0');
+    const formattedHours = String(hours).padStart(2, "0");
+    const formattedMinutes = String(minutes).padStart(2, "0");
+    const formattedSeconds = String(seconds).padStart(2, "0");
 
-    res
-      .status(200)
-      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`, attendance });
+    res.status(200).json({
+      message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
+      totalHours,
+      totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`,
+      attendance,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
