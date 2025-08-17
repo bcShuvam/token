@@ -4,8 +4,8 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const Attendance = require("../model/attendance");
-const {convertToNepaliDateTime, convertBsRangeToAd} = require('../utils/adToBs');
-const getMonthRange = require('../utils/fromAndToBs');
+const { convertToNepaliDateTime, convertBsRangeToAd } = require("../utils/adToBs");
+const getMonthRange = require("../utils/fromAndToBs");
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -48,93 +48,65 @@ const getAttendanceByIdAndDate = async (req, res) => {
 
     if (!id) return res.status(400).json({ message: "id is required" });
 
-    // --- Handle type === 'monthly' ---
+    // --- Handle type and dateType ---
     if (type === "monthly") {
       if (dateType === "BS") {
-        // get BS month start/end, then convert to AD
-        let { from: fromBS, to: toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
-        fromBS = fromBS.format("YYYY-MM-DD").toString();
-        toBS = toBS.format("YYYY-MM-DD").toString();
+        let { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
+        from = fromBS.format("YYYY-MM-DD");
+        to = toBS.format("YYYY-MM-DD");
 
-        const { from: fromAD, to: toAD } = convertBsRangeToAd(fromBS, toBS);
+        const { fromAD, toAD } = convertBsRangeToAd(from, to);
         from = fromAD;
         to = toAD;
       } else if (dateType === "AD") {
-        // Directly take AD month range
-        const firstDay = new Date(year, monthIndex - 1, 1);
-        const lastDay = new Date(year, monthIndex, 0);
-
-        firstDay.setUTCHours(0, 0, 0, 0);
-        lastDay.setUTCHours(23, 59, 59, 999);
-
-        from = firstDay.toISOString();
-        to = lastDay.toISOString();
-      }
-    }
-
-    // --- Handle type === 'custom' ---
-    else if (type === "custom") {
-      if (dateType === "BS") {
-        // given BS range → convert to AD
-        const { from: fromAD, to: toAD } = convertBsRangeToAd(from, to);
-        from = fromAD;
-        to = toAD;
-      } else if (dateType === "AD") {
-        // already AD, just ensure ISO formatting
-        const start = new Date(from);
-        start.setUTCHours(0, 0, 0, 0);
-        const end = new Date(to);
-        end.setUTCHours(23, 59, 59, 999);
+        // from & to in AD directly
+        const start = new Date(year, monthIndex - 1, 1, 0, 0, 0);
+        const end = new Date(year, monthIndex, 0, 23, 59, 59); // last day of month
         from = start.toISOString();
         to = end.toISOString();
       }
+    } else if (type === "custom") {
+      if (dateType === "BS") {
+        const { fromAD, toAD } = convertBsRangeToAd(from, to);
+        from = fromAD;
+        to = toAD;
+      } else if (dateType === "AD") {
+        // assume from and to are valid AD ISO strings
+      }
     }
 
-    // --- Now query Attendance ---
     const foundAttendance = await Attendance.findOne({ _id: id });
-    if (!foundAttendance)
+    if (!foundAttendance) {
       return res.status(404).json({ message: `No user with id ${id} found` });
+    }
 
     const startTime = new Date(from);
     const endTime = new Date(to);
-
     const attendanceLogs = [];
     let totalHours = 0;
 
     foundAttendance.attendance.forEach((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
-      const matchedDate = currentDate >= startTime && currentDate <= endTime;
-
-      if (matchedDate) {
+      if (currentDate >= startTime && currentDate <= endTime) {
         totalHours += entry.totalHours;
 
         const data = {
-          checkIn:
-            dateType === "BS"
-              ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
-              : entry.checkIn.deviceInTime,
+          checkIn: dateType === "BS"
+            ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
+            : entry.checkIn.deviceInTime,
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
-          checkOut:
-            dateType === "BS"
-              ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
-              : entry.checkOut.deviceOutTime,
+          checkOut: dateType === "BS"
+            ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
+            : entry.checkOut.deviceOutTime,
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
         };
-
         attendanceLogs.push(data);
       }
     });
 
-    const attendance = {
-      _id: foundAttendance._id,
-      username: foundAttendance.username,
-      attendanceLogs,
-    };
-
-    // format total time (hh:mm:ss)
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
@@ -142,6 +114,12 @@ const getAttendanceByIdAndDate = async (req, res) => {
     const formattedHours = String(hours).padStart(2, "0");
     const formattedMinutes = String(minutes).padStart(2, "0");
     const formattedSeconds = String(seconds).padStart(2, "0");
+
+    const attendance = {
+      _id: foundAttendance._id,
+      username: foundAttendance.username,
+      attendanceLogs,
+    };
 
     res.status(200).json({
       message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
