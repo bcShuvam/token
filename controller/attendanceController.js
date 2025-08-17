@@ -4,6 +4,7 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const Attendance = require("../model/attendance");
+const adToBs = require('../utils/adToBs');
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -61,10 +62,10 @@ const getAttendanceByIdAndDate = async (req, res) => {
         totalHours += entry.totalHours;
         console.log(totalHours);
         const data = {
-          checkIn: entry.checkIn.deviceInTime,
+          checkIn: adToBs(entry.checkIn.deviceInTime),
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
-          checkOut: entry.checkOut.deviceOutTime,
+          checkOut: adToBs(entry.checkOut.deviceOutTime),
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
@@ -118,10 +119,10 @@ const exportAttendanceToCSV = async (req, res) => {
       const currentDate = new Date(entry.checkIn.inTime);
       if (currentDate >= startTime && currentDate <= endTime) {
         attendanceLogs.push({
-          CheckIn: entry.checkIn.deviceInTime,
+          CheckIn: adToBs(entry.checkIn.deviceInTime),
           CheckInLatitude: entry.checkIn.latitude,
           CheckInLongitude: entry.checkIn.longitude,
-          CheckOut: entry.checkOut.deviceOutTime,
+          CheckOut: adToBs(entry.checkOut.deviceOutTime),
           CheckOutLatitude: entry.checkOut.latitude,
           CheckOutLongitude: entry.checkOut.longitude,
           TotalHours: entry.totalHours
@@ -255,7 +256,7 @@ const postAttendanceByID = async (req, res) => {
         status: "check-in",
         checkIn: {
           status: "check-in",
-          deviceInTime: deviceTime,
+          deviceInTime: adToBs(deviceTime),
           inTime: attendanceTime,
           latitude: latitude,
           longitude: longitude,
@@ -279,7 +280,7 @@ const postAttendanceByID = async (req, res) => {
       lastAttendance.status = "check-out";
       lastAttendance.checkOut = {
         status: "check-out",
-        deviceOutTime: deviceTime,
+        deviceOutTime: adToBs(deviceTime),
         outTime: attendanceTime,
         latitude: latitude,
         longitude: longitude,
@@ -396,10 +397,10 @@ const downloadAttendanceReportById = async (req, res) => {
 
         const data = {
           'Name': userName,
-          'Check-In': entry.checkIn.deviceInTime,
+          'Check-In': adToBs(entry.checkIn.deviceInTime),
           // 'Check-In Latitude': entry.checkIn.latitude,
           // 'Check-In Longitude': entry.checkIn.longitude,
-          'Check-Out': entry.checkOut.deviceOutTime,
+          'Check-Out': adToBs(entry.checkOut.deviceOutTime),
           // 'Check-Out Latitude': entry.checkOut.latitude,
           // 'Check-Out Longitude': entry.checkOut.longitude,
           'Total Hours': entry.totalHours.toFixed(2),
