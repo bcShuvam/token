@@ -6,7 +6,7 @@ const connectDB = require("./config/dbConnect");
 const PORT = process.env.PORT || 3001;
 const cors = require("cors");
 const getMonthRange = require('./utils/fromAndToBs');
-const adToBs = require('./utils/adToBs');
+const {convertToNepaliDateTime, convertBsRangeToAd} = require('./utils/adToBs');
 const { verifyJWT, verifyRefreshToken } = require("./middleware/verifyJWT");
 // connect the mongodb
 connectDB();
@@ -36,12 +36,19 @@ app.use(express.json());
 // // middleware for cookie-parser
 // app.use(cookieParser());
 
-const { from, to } = getMonthRange('2082-04', '2082-04');
-console.log(`From = ${from.format('YYYY-MMMM-DD')}`);
-console.log(`To   = ${to.format('YYYY-MMMM-DD')}`);
-console.log(`CheckIn   = ${adToBs('09:02:38 01/07/2025')}`);
-console.log(`CheckOut   = ${adToBs('18:45:44 02/07/2025')}`);
+let { fromBS, toBS } = getMonthRange('2082-04', '2082-04');
+fromBS = fromBS.format('YYYY-MM-DD').toString()
+toBS = toBS.format('YYYY-MM-DD').toString()
+console.log(`From = ${fromBS}`);
+console.log(`To   = ${toBS}`);
 
+let { fromAD, toAD } = convertBsRangeToAd(fromBS, toBS);
+console.log("FromD =", fromAD);
+console.log("ToD   =", toAD);
+
+// const { from, to } = convertBsRangeToAd("2082-04-01", "2082-04-31");
+// console.log("From =", from);
+// console.log("To   =", to);
 
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));

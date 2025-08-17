@@ -30,7 +30,48 @@ function convertToNepaliDateTime(dateTime) {
   return `${formattedTime} ${formattedDate}`;
 }
 
-module.exports = convertToNepaliDateTime;
+/**
+ * Convert BS date range to AD ISO datetime range
+ * @param {string} fromStr - Nepali date in format "YYYY-MM-DD"
+ * @param {string} toStr   - Nepali date in format "YYYY-MM-DD"
+ * @returns {{ from: string, to: string }}
+ */
+function convertBsRangeToAd(fromStr, toStr) {
+  console.log(fromStr, toStr);
+  // --- From ---
+  const [fromYear, fromMonth, fromDay] = fromStr.split('-').map(Number);
+  const fromBs = new NepaliDate(fromYear, fromMonth - 1, fromDay);
+  const fromAd = fromBs.toJsDate();
+
+  // set to 00:00:00
+  fromAd.setHours(0);
+  fromAd.setMinutes(0);
+  fromAd.setSeconds(0);
+
+  const fromIso = fromAd.toISOString().slice(0, 19); // yyyy-MM-ddTHH:mm:ss
+
+  // --- To ---
+  const [toYear, toMonth, toDay] = toStr.split('-').map(Number);
+  const toBs = new NepaliDate(toYear, toMonth - 1, toDay);
+  const toAd = toBs.toJsDate();
+
+  // set to 23:59:59
+  toAd.setHours(23);
+  toAd.setMinutes(59);
+  toAd.setSeconds(59);
+
+  const toIso = toAd.toISOString().slice(0, 19); // yyyy-MM-ddTHH:mm:ss
+
+  return { fromAD: fromIso, toAD: toIso };
+}
+
+// Example
+// const { from, to } = convertBsRangeToAd("2082-04-01", "2082-04-30");
+// console.log("From =", from);
+// console.log("To   =", to);
+
+
+module.exports = {convertToNepaliDateTime, convertBsRangeToAd };
 
 
 // Example
