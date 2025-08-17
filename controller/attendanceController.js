@@ -6,6 +6,7 @@ const path = require('path');
 const Attendance = require("../model/attendance");
 const { convertToNepaliDateTime, convertBsRangeToAd } = require("../utils/adToBs");
 const getMonthRange = require("../utils/fromAndToBs");
+const formatAdDateTime = require('../utils/AttendanceFormatAdDateTime');
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -93,12 +94,12 @@ const getAttendanceByIdAndDate = async (req, res) => {
         const data = {
           checkIn: dateType === "BS"
             ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
-            : entry.checkIn.deviceInTime,
+            : formatAdDateTime(entry.checkIn.deviceInTime),
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
           checkOut: dateType === "BS"
             ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
-            : entry.checkOut.deviceOutTime,
+            : formatAdDateTime(entry.checkOut.deviceOutTime),
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
