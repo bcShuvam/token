@@ -49,20 +49,37 @@ const getAttendanceByIdAndDate = async (req, res) => {
 
     if (!id) return res.status(400).json({ message: "id is required" });
 
+    // normalize monthIndex to integer
+    monthIndex = parseInt(monthIndex);
+
     // --- Handle type and dateType ---
     if (type === "monthly") {
       if (dateType === "BS") {
-        let { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
-        from = fromBS.format("YYYY-MM-DD");
-        to = toBS.format("YYYY-MM-DD");
+        // Nepali months must be 1–12
+        if (monthIndex < 1 || monthIndex > 12) {
+          return res.status(400).json({ message: "Invalid BS month index (must be 1–12)" });
+        }
 
-        const { fromAD, toAD } = convertBsRangeToAd(from, to);
+        // Get BS month range
+        let { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
+
+        // Convert BS range to AD
+        const { fromAD, toAD } = convertBsRangeToAd(
+          fromBS.format("YYYY-MM-DD"),
+          toBS.format("YYYY-MM-DD")
+        );
+
         from = fromAD;
         to = toAD;
       } else if (dateType === "AD") {
-        // from & to in AD directly
-        const start = new Date(year, monthIndex - 1, 1, 0, 0, 0);
-        const end = new Date(year, monthIndex, 0, 23, 59, 59); // last day of month
+        // Ensure AD months are 1–12 as well
+        if (monthIndex < 1 || monthIndex > 12) {
+          return res.status(400).json({ message: "Invalid AD month index (must be 1–12)" });
+        }
+
+        // Get start & end of AD month
+        const start = new Date(year, monthIndex - 1, 1, 0, 0, 0); // first day
+        const end = new Date(year, monthIndex, 0, 23, 59, 59);   // last day
         from = start.toISOString();
         to = end.toISOString();
       }
@@ -72,10 +89,11 @@ const getAttendanceByIdAndDate = async (req, res) => {
         from = fromAD;
         to = toAD;
       } else if (dateType === "AD") {
-        // assume from and to are valid AD ISO strings
+        // assume from and to are valid AD ISO strings already
       }
     }
 
+    // --- Fetch user attendance ---
     const foundAttendance = await Attendance.findOne({ _id: id });
     if (!foundAttendance) {
       return res.status(404).json({ message: `No user with id ${id} found` });
@@ -92,14 +110,16 @@ const getAttendanceByIdAndDate = async (req, res) => {
         totalHours += entry.totalHours;
 
         const data = {
-          checkIn: dateType === "BS"
-            ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
-            : formatAdDateTime(entry.checkIn.deviceInTime),
+          checkIn:
+            dateType === "BS"
+              ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
+              : formatAdDateTime(entry.checkIn.deviceInTime),
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
-          checkOut: dateType === "BS"
-            ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
-            : formatAdDateTime(entry.checkOut.deviceOutTime),
+          checkOut:
+            dateType === "BS"
+              ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
+              : formatAdDateTime(entry.checkOut.deviceOutTime),
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
@@ -108,6 +128,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
       }
     });
 
+    // --- Total hours formatting ---
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
