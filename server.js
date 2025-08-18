@@ -6,6 +6,8 @@ const connectDB = require("./config/dbConnect");
 const PORT = process.env.PORT || 3001;
 const cors = require("cors");
 const { verifyJWT, verifyRefreshToken } = require("./middleware/verifyJWT");
+const getDateRange = require("./utils/getDateRange");
+const convertToLocal = require("./utils/convertToLocal");
 // connect the mongodb
 connectDB();
 
@@ -33,6 +35,36 @@ app.use(express.json());
 
 // // middleware for cookie-parser
 // app.use(cookieParser());
+
+// Example 1: AD monthly (Jan 2025)
+console.log(getDateRange({ dateType: "AD", range: "monthly", year: 2025, monthIndex: 0 }));
+
+// Example 2: BS monthly (Baisakh 2082)
+console.log(getDateRange({ dateType: "BS", range: "monthly", year: 2082, monthIndex: 0 }));
+
+// Example 3: Custom AD range
+console.log(getDateRange({ dateType: "AD", range: "custom", from: "2025-01-10", to: "2025-01-15" }));
+
+// Example 4: Custom BS range
+console.log(getDateRange({ dateType: "BS", range: "custom", from: "2082-01-01", to: "2082-01-10" }));
+
+// UTC dates
+const fromAD = new Date("2024-12-31T18:15:00.000Z");
+const toAD = new Date("2025-01-31T18:14:59.999Z");
+
+// AD output
+console.log("AD From:", convertToLocal(fromAD, "AD"));
+// -> "00:00 January-01, 2025"
+console.log("AD To:", convertToLocal(toAD, "AD"));
+// -> "23:59 January-31, 2025"
+
+// BS output (default)
+console.log("BS From:", convertToLocal(fromAD));
+// -> "00:00 Poush-16, 2081"
+console.log("BS To:", convertToLocal(toAD));
+// -> "23:59 Magh-17, 2081"
+
+
 
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));
