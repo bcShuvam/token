@@ -4,9 +4,9 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const Attendance = require("../model/attendance");
-const { convertToNepaliDateTime, convertBsRangeToAd } = require("../utils/adToBs");
-const getMonthRange = require("../utils/fromAndToBs");
-const formatAdDateTime = require('../utils/AttendanceFormatAdDateTime');
+const { convertBsRangeToAd, getMonthRange } = require("../utils/fromAndToBs");
+const { convertToNepaliDateTime, formatAdDateTime } = require("../utils/formatDate");
+// const formatAdDateTime = require('../utils/AttendanceFormatAdDateTime');
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -49,37 +49,19 @@ const getAttendanceByIdAndDate = async (req, res) => {
 
     if (!id) return res.status(400).json({ message: "id is required" });
 
-    // normalize monthIndex to integer
-    monthIndex = parseInt(monthIndex);
-
     // --- Handle type and dateType ---
     if (type === "monthly") {
       if (dateType === "BS") {
-        // Nepali months must be 1–12
-        if (monthIndex < 1 || monthIndex > 12) {
-          return res.status(400).json({ message: "Invalid BS month index (must be 1–12)" });
-        }
+        const { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
+        from = fromBS.format("YYYY-MM-DD");
+        to = toBS.format("YYYY-MM-DD");
 
-        // Get BS month range
-        let { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
-
-        // Convert BS range to AD
-        const { fromAD, toAD } = convertBsRangeToAd(
-          fromBS.format("YYYY-MM-DD"),
-          toBS.format("YYYY-MM-DD")
-        );
-
+        const { fromAD, toAD } = convertBsRangeToAd(from, to);
         from = fromAD;
         to = toAD;
       } else if (dateType === "AD") {
-        // Ensure AD months are 1–12 as well
-        if (monthIndex < 1 || monthIndex > 12) {
-          return res.status(400).json({ message: "Invalid AD month index (must be 1–12)" });
-        }
-
-        // Get start & end of AD month
-        const start = new Date(year, monthIndex - 1, 1, 0, 0, 0); // first day
-        const end = new Date(year, monthIndex, 0, 23, 59, 59);   // last day
+        const start = new Date(year, monthIndex - 1, 1, 0, 0, 0);
+        const end = new Date(year, monthIndex, 0, 23, 59, 59);
         from = start.toISOString();
         to = end.toISOString();
       }
@@ -89,18 +71,20 @@ const getAttendanceByIdAndDate = async (req, res) => {
         from = fromAD;
         to = toAD;
       } else if (dateType === "AD") {
-        // assume from and to are valid AD ISO strings already
+        // assume from & to already in AD ISO format
       }
     }
 
-    // --- Fetch user attendance ---
     const foundAttendance = await Attendance.findOne({ _id: id });
     if (!foundAttendance) {
       return res.status(404).json({ message: `No user with id ${id} found` });
     }
 
     const startTime = new Date(from);
+    startTime.setUTCHours(0, 0, 0, 0);
     const endTime = new Date(to);
+    endTime.setUTCHours(23, 59, 59, 999);
+
     const attendanceLogs = [];
     let totalHours = 0;
 
@@ -128,7 +112,6 @@ const getAttendanceByIdAndDate = async (req, res) => {
       }
     });
 
-    // --- Total hours formatting ---
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
@@ -150,6 +133,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
       attendance,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
