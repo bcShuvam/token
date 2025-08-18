@@ -7,6 +7,8 @@ const Attendance = require("../model/attendance");
 const { convertBsRangeToAd, getMonthRange } = require("../utils/fromAndToBs");
 const { convertToNepaliDateTime, formatAdDateTime } = require("../utils/formatDate");
 // const formatAdDateTime = require('../utils/AttendanceFormatAdDateTime');
+const getDateRange = require("../utils/getDateRange");
+const convertToLocal = require("../utils/convertToLocal");
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -45,95 +47,97 @@ const getAttendanceById = async (req, res) => {
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
     const id = req.query.userId;
-    let { from, to, year, monthIndex, dateType, type } = req.query;
+    const {
+      dateType = "BS",
+      range = "monthly",
+      year,
+      monthIndex,
+      from,
+      to,
+      timezone = "Asia/Kathmandu",
+    } = req.query;
 
-    if (!id) return res.status(400).json({ message: "id is required" });
-
-    // --- Handle type and dateType ---
-    if (type === "monthly") {
-      if (dateType === "BS") {
-        const { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
-        from = fromBS.format("YYYY-MM-DD");
-        to = toBS.format("YYYY-MM-DD");
-
-        const { fromAD, toAD } = convertBsRangeToAd(from, to);
-        from = fromAD;
-        to = toAD;
-      } else if (dateType === "AD") {
-        const start = new Date(year, monthIndex - 1, 1, 0, 0, 0);
-        const end = new Date(year, monthIndex, 0, 23, 59, 59);
-        from = start.toISOString();
-        to = end.toISOString();
-      }
-    } else if (type === "custom") {
-      if (dateType === "BS") {
-        const { fromAD, toAD } = convertBsRangeToAd(from, to);
-        from = fromAD;
-        to = toAD;
-      } else if (dateType === "AD") {
-        // assume from & to already in AD ISO format
-      }
+    if (!id) {
+      return res.status(400).json({ message: "userId is required" });
     }
 
-    const foundAttendance = await Attendance.findOne({ _id: id });
+    // --- Step 1: Build from/to in AD ---
+    const { fromAD, toAD } = getDateRange({
+      dateType,
+      range,
+      year,
+      monthIndex,
+      from,
+      to,
+    });
+
+    // --- Step 2: Find user attendance ---
+    const foundAttendance = await Attendance.findById(id);
     if (!foundAttendance) {
       return res.status(404).json({ message: `No user with id ${id} found` });
     }
 
-    const startTime = new Date(from);
-    startTime.setUTCHours(0, 0, 0, 0);
-    const endTime = new Date(to);
-    endTime.setUTCHours(23, 59, 59, 999);
+    // --- Step 3: Filter logs ---
+    const startTime = new Date(fromAD);
+    const endTime = new Date(toAD);
 
-    const attendanceLogs = [];
-    let totalHours = 0;
-
-    foundAttendance.attendance.forEach((entry) => {
-      const currentDate = new Date(entry.checkIn.inTime);
-      if (currentDate >= startTime && currentDate <= endTime) {
-        totalHours += entry.totalHours;
-
-        const data = {
-          checkIn:
-            dateType === "BS"
-              ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
-              : formatAdDateTime(entry.checkIn.deviceInTime),
-          checkInLatitude: entry.checkIn.latitude,
-          checkInLongitude: entry.checkIn.longitude,
-          checkOut:
-            dateType === "BS"
-              ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
-              : formatAdDateTime(entry.checkOut.deviceOutTime),
-          checkOutLatitude: entry.checkOut.latitude,
-          checkOutLongitude: entry.checkOut.longitude,
-          totalHour: entry.totalHours,
-        };
-        attendanceLogs.push(data);
-      }
+    const attendanceLogs = foundAttendance.attendance.filter((entry) => {
+      if (!entry?.checkIn?.inTime) return false;
+      const inDate = new Date(entry.checkIn.inTime);
+      return inDate >= startTime && inDate <= endTime;
     });
 
-    const hours = Math.floor(totalHours);
-    const minutes = Math.floor((totalHours - hours) * 60);
-    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+    // --- Step 4: Format logs + accumulate hours ---
+    let totalHours = 0;
+    const formattedLogs = attendanceLogs.map((entry) => {
+      totalHours += entry.totalHours || 0;
 
-    const formattedHours = String(hours).padStart(2, "0");
-    const formattedMinutes = String(minutes).padStart(2, "0");
-    const formattedSeconds = String(seconds).padStart(2, "0");
+      return {
+        checkIn: entry.checkIn?.inTime
+          ? convertToLocal(new Date(entry.checkIn.inTime), dateType, timezone)
+          : null,
+        checkInLatitude: entry.checkIn?.latitude || 0.0,
+        checkInLongitude: entry.checkIn?.longitude || 0.0,
+
+        checkOut: entry.checkOut?.outTime
+          ? convertToLocal(new Date(entry.checkOut.outTime), dateType, timezone)
+          : null,
+        checkOutLatitude: entry.checkOut?.latitude || 0.0,
+        checkOutLongitude: entry.checkOut?.longitude || 0.0,
+
+        totalHours: entry.totalHours || 0,
+      };
+    });
 
     const attendance = {
       _id: foundAttendance._id,
       username: foundAttendance.username,
-      attendanceLogs,
+      attendanceLogs: formattedLogs,
     };
 
+    // --- Step 5: Format totalHours to hh:mm:ss ---
+    let totalTime = "00:00:00";
+    if (totalHours > 0) {
+      const hours = Math.floor(totalHours);
+      const minutes = Math.floor((totalHours - hours) * 60);
+      const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+      totalTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    // --- Step 6: Return response ---
     res.status(200).json({
-      message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
+      message: `Successful, Attendance from ${fromAD} to ${toAD}`,
+      // range: { from: fromAD, to: toAD },
+      dateType,
       totalHours,
-      totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`,
+      totalTime,
       attendance,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching attendance:", error);
     res.status(500).json({ message: error.message });
   }
 };
