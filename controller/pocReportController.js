@@ -138,6 +138,7 @@ const pocReportCSV = async (req, res) => {
 
     // Remap for CSV
     const csvData = foundPOC.map(poc => ({
+       "Username": poc.createdByName || poc.createdById?.username || "",
       "POC Name": poc.pocName,
       "Gender": poc.gender,
       "Number": poc.number,
