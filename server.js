@@ -36,6 +36,12 @@ app.use(express.json());
 // // middleware for cookie-parser
 // app.use(cookieParser());
 
+const today = new Date();
+
+console.log(`${today.getMonth() - 1}`);
+
+
+
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));
 
