@@ -4,11 +4,8 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const Attendance = require("../model/attendance");
-const { convertBsRangeToAd, getMonthRange } = require("../utils/fromAndToBs");
-const { convertToNepaliDateTime, formatAdDateTime } = require("../utils/formatDate");
-// const formatAdDateTime = require('../utils/AttendanceFormatAdDateTime');
-const getDateRange = require("../utils/getDateRange");
-const convertToLocal = require("../utils/convertToLocal");
+const { getDateRange } = require("../utils/getDateRange");
+const { convertToLocal } = require("../utils/convertToLocal");
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -43,6 +40,8 @@ const getAttendanceById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// const { getDateRange } = require("../utils/getDateRange");
 
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
@@ -129,8 +128,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
 
     // --- Step 6: Return response ---
     res.status(200).json({
-      message: `Successful, Attendance from ${fromAD} to ${toAD}`,
-      // range: { from: fromAD, to: toAD },
+      message: `Successful, Attendance from ${fromAD.toISOString()} to ${toAD.toISOString()}`,
       dateType,
       totalHours,
       totalTime,
@@ -141,6 +139,7 @@ const getAttendanceByIdAndDate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 const exportAttendanceToCSV = async (req, res) => {
   try {

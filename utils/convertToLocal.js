@@ -1,48 +1,57 @@
+// utils/convertToLocal.js
 const NepaliDate = require("nepali-date-converter").default;
 
-/**
- * Convert UTC date into local timezone and format
- *
- * @param {Date} date - UTC date (from DB or GMT 0)
- * @param {"AD"|"BS"} [dateType="BS"] - calendar type (default BS)
- * @param {string} [timeZone="Asia/Kathmandu"] - default GMT +5:45
- * @returns {string} formatted date string
- *
- * Example output:
- *   "00:00 January-01, 2025"  (AD)
- *   "00:00 Baisakh-01, 2082"  (BS)
- */
-function convertToLocal(date, dateType = "BS", timeZone = "Asia/Kathmandu") {
-  if (!date) return "";
+const BS_MONTHS = [
+  "Baisakh",
+  "Jestha",
+  "Asar",
+  "Shrawan",
+  "Bhadra",
+  "Aswin",
+  "Kartik",
+  "Mangsir",
+  "Poush",
+  "Magh",
+  "Falgun",
+  "Chaitra",
+];
 
-  // Shift date to local timezone using Intl
-  const localStr = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "long",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(date);
-
-  const parts = Object.fromEntries(localStr.map((p) => [p.type, p.value]));
-
-  const hh = parts.hour.padStart(2, "0");
-  const mm = parts.minute.padStart(2, "0");
+function convertToLocal(date, dateType = "BS", timezone = "Asia/Kathmandu") {
+  if (!date) return null;
 
   if (dateType === "AD") {
-    const yyyy = parts.year;
-    const monthName = parts.month;
-    const dd = parts.day;
-    return `${hh}:${mm} ${monthName}-${dd}, ${yyyy}`;
-  } else {
-    const nep = new NepaliDate(date); // converts to BS
-    const nepYear = nep.getYear();
-    const nepMonth = nep.format("MMMM"); // BS month name
-    const nepDay = String(nep.getDate()).padStart(2, "0");
-    return `${hh}:${mm} ${nepMonth}-${nepDay}, ${nepYear}`;
+    // Format AD using Intl API (built-in)
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      month: "long",
+      day: "2-digit",
+      year: "numeric",
+    });
+
+    // e.g. "01/31/2025, 10:15 PM" → transform to "22:15 January-31, 2025"
+    const parts = formatter.formatToParts(date);
+    const hour = parts.find(p => p.type === "hour")?.value.padStart(2, "0");
+    const minute = parts.find(p => p.type === "minute")?.value.padStart(2, "0");
+    const day = parts.find(p => p.type === "day")?.value;
+    const month = parts.find(p => p.type === "month")?.value;
+    const year = parts.find(p => p.type === "year")?.value;
+
+    return `${hour}:${minute} ${month}-${day}, ${year}`;
   }
+
+  // Format BS
+  const nepaliDate = new NepaliDate(date);
+  const year = nepaliDate.getYear();
+  const monthIndex = nepaliDate.getMonth();
+  const month = BS_MONTHS[monthIndex];
+  const day = nepaliDate.getDate();
+
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${hours}:${minutes} ${month}-${day}, ${year}`;
 }
 
-module.exports = convertToLocal;
+module.exports = { convertToLocal };
