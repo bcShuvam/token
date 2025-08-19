@@ -44,7 +44,7 @@ const getAttendanceById = async (req, res) => {
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
     const id = req.query.userId;
-    const { from, to } = req.query;
+    const { from, to, dateType, range, year, monthIndex } = req.query;
     console.log(from, to);
     if (!id) return res.status(400).json({ message: "id is required" });
     const foundAttendance = await Attendance.findOne({ _id: id });
@@ -120,10 +120,10 @@ const exportAttendanceToCSV = async (req, res) => {
       const currentDate = new Date(entry.checkIn.inTime);
       if (currentDate >= startTime && currentDate <= endTime) {
         attendanceLogs.push({
-          CheckIn: convertToNepaliDateTime(entry.checkIn.deviceInTime),
+          CheckIn: entry.checkIn.deviceInTime,
           CheckInLatitude: entry.checkIn.latitude,
           CheckInLongitude: entry.checkIn.longitude,
-          CheckOut: convertToNepaliDateTime(entry.checkOut.deviceOutTime),
+          CheckOut: entry.checkOut.deviceOutTime,
           CheckOutLatitude: entry.checkOut.latitude,
           CheckOutLongitude: entry.checkOut.longitude,
           TotalHours: entry.totalHours
@@ -257,7 +257,7 @@ const postAttendanceByID = async (req, res) => {
         status: "check-in",
         checkIn: {
           status: "check-in",
-          deviceInTime: convertToNepaliDateTime(deviceTime),
+          deviceInTime: deviceTime,
           inTime: attendanceTime,
           latitude: latitude,
           longitude: longitude,
@@ -281,7 +281,7 @@ const postAttendanceByID = async (req, res) => {
       lastAttendance.status = "check-out";
       lastAttendance.checkOut = {
         status: "check-out",
-        deviceOutTime: convertToNepaliDateTime(deviceTime),
+        deviceOutTime: deviceTime,
         outTime: attendanceTime,
         latitude: latitude,
         longitude: longitude,
@@ -423,11 +423,11 @@ const downloadAttendanceReportById = async (req, res) => {
         const data = {
           'Name': userName,
           'Check-In': dateType === "BS"
-            ? convertToNepaliDateTime(entry.checkIn.deviceInTime)
-            : formatAdDateTime(entry.checkIn.deviceInTime),
+            ? entry.checkIn.deviceInTime
+            : entry.checkIn.deviceInTime,
           'Check-Out': dateType === "BS"
-            ? convertToNepaliDateTime(entry.checkOut.deviceOutTime)
-            : formatAdDateTime(entry.checkOut.deviceOutTime),
+            ? entry.checkOut.deviceOutTime
+            : entry.checkOut.deviceOutTime,
           'Total Hours': entry.totalHours.toFixed(2),
         };
 
