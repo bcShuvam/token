@@ -150,7 +150,7 @@ const pocReportCSV = async (req, res) => {
       "Address": `${poc.country || ""}, ${poc.region || ""}, ${poc.city || ""}, ${poc.address || ""}`
     }));
 
-    const fields = ["POC Name", "Gender", "Number", "Category", "Specialization", "Ambulance Number", "Visit Count", "Referral Count", "Address"];
+    const fields = ["Username", "POC Name", "Gender", "Number", "Category", "Specialization", "Ambulance Number", "Visit Count", "Referral Count", "Address"];
     const json2csvParser = new Parser({ fields });
     const csv = json2csvParser.parse(csvData);
 
