@@ -44,100 +44,56 @@ const getAttendanceById = async (req, res) => {
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
     const id = req.query.userId;
-    const {
-      dateType = "BS",
-      range = "monthly",
-      year,
-      monthIndex,
-      from,
-      to,
-      timezone = "Asia/Kathmandu",
-    } = req.query;
-
-    if (!id) {
-      return res.status(400).json({ message: "id is required" });
-    }
-
-    // 1) Build range in AD (dates only)
-    const { fromAD, toAD } = getDateRange({
-      dateType,
-      range,
-      year,
-      monthIndex,
-      from,
-      to,
-    });
-
-    // 2) Create the inclusive UTC clamp like your old controller
-    const startTime = new Date(fromAD);
-    startTime.setUTCHours(0, 0, 0, 0);
-
-    const endTime = new Date(toAD);
-    endTime.setUTCHours(23, 59, 59, 999);
-
-    // 3) Fetch user
-    const foundAttendance = await Attendance.findById(id);
-    if (!foundAttendance) {
+    const { from, to } = req.query;
+    console.log(from, to);
+    if (!id) return res.status(400).json({ message: "id is required" });
+    const foundAttendance = await Attendance.findOne({ _id: id });
+    if (!foundAttendance)
       return res.status(404).json({ message: `No user with id ${id} found` });
-    }
-
-    // 4) Filter with the same logic as your old 'filteredAttendance'
+    const startTime = new Date(from);
+    startTime.setUTCHours(0, 0, 0, 0);
+    const endTime = new Date(to);
+    endTime.setUTCHours(23, 59, 59, 999);
     const attendanceLogs = [];
     let totalHours = 0;
-
-    foundAttendance.attendance.forEach((entry) => {
-      if (!entry?.checkIn?.inTime) return;
-
+    const filteredAttendance = foundAttendance.attendance.filter((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
       const matchedDate = currentDate >= startTime && currentDate <= endTime;
-
       if (matchedDate) {
-        const hours = entry.totalHours || 0;
-        totalHours += hours;
-
-        attendanceLogs.push({
-          checkIn: entry.checkIn?.inTime
-            ? convertToLocal(new Date(entry.checkIn.inTime), dateType, timezone)
-            : null,
-          checkInLatitude: entry.checkIn?.latitude ?? 0.0,
-          checkInLongitude: entry.checkIn?.longitude ?? 0.0,
-
-          checkOut: entry.checkOut?.outTime
-            ? convertToLocal(new Date(entry.checkOut.outTime), dateType, timezone)
-            : null,
-          checkOutLatitude: entry.checkOut?.latitude ?? 0.0,
-          checkOutLongitude: entry.checkOut?.longitude ?? 0.0,
-
-          totalHours: hours,
-        });
+        totalHours += entry.totalHours;
+        console.log(totalHours);
+        const data = {
+          checkIn: entry.checkIn.deviceInTime,
+          checkInLatitude: entry.checkIn.latitude,
+          checkInLongitude: entry.checkIn.longitude,
+          checkOut: entry.checkOut.deviceOutTime,
+          checkOutLatitude: entry.checkOut.latitude,
+          checkOutLongitude: entry.checkOut.longitude,
+          totalHour: entry.totalHours,
+        };
+        attendanceLogs.push(data);
       }
     });
-
-    // 5) Prepare response payload (format totalHours -> hh:mm:ss)
-    const hours = Math.floor(totalHours);
-    const minutes = Math.floor((totalHours - hours) * 60);
-    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
-    const totalTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(seconds).padStart(2, "0")}`;
-
+    // console.log(filteredData);
     const attendance = {
       _id: foundAttendance._id,
       username: foundAttendance.username,
       attendanceLogs,
     };
 
-    // 6) Send response (keep start/end in message like before)
-    res.status(200).json({
-      message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
-      dateType,
-      totalHours,
-      totalTime,
-      attendance,
-    });
+    const hours = Math.floor(totalHours); // Extract full hours
+    const minutes = Math.floor((totalHours - hours) * 60); // Convert remaining fraction to minutes
+    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60); // Convert remaining fraction to seconds
+
+    // Format with leading zeros
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+
+    res
+      .status(200)
+      .json({ message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`, totalHours, totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`, attendance });
   } catch (error) {
-    console.error("Error fetching attendance:", error);
     res.status(500).json({ message: error.message });
   }
 };
