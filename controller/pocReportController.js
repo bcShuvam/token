@@ -141,7 +141,7 @@ const pocReportCSV = async (req, res) => {
        "Username": poc.createdByName || poc.createdById?.username || "",
       "POC Name": poc.pocName,
       "Gender": poc.gender,
-      "Number": poc.number,
+      "Number": `${poc.number}`,
       "Category": poc.category,
       "Specialization": poc.specialization,
       "Ambulance Number": poc.ambNumber || "",
