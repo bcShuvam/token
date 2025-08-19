@@ -41,8 +41,6 @@ const getAttendanceById = async (req, res) => {
   }
 };
 
-// const { getDateRange } = require("../utils/getDateRange");
-
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
     const id = req.query.userId;
@@ -70,6 +68,10 @@ const getAttendanceByIdAndDate = async (req, res) => {
       to,
     });
 
+    if (!fromAD || !toAD) {
+      return res.status(400).json({ message: "Invalid date range parameters" });
+    }
+
     // --- Step 2: Find user attendance ---
     const foundAttendance = await Attendance.findById(id);
     if (!foundAttendance) {
@@ -89,22 +91,23 @@ const getAttendanceByIdAndDate = async (req, res) => {
     // --- Step 4: Format logs + accumulate hours ---
     let totalHours = 0;
     const formattedLogs = attendanceLogs.map((entry) => {
-      totalHours += entry.totalHours || 0;
+      const entryHours = entry.totalHours || 0;
+      totalHours += entryHours;
 
       return {
         checkIn: entry.checkIn?.inTime
           ? convertToLocal(new Date(entry.checkIn.inTime), dateType, timezone)
           : null,
-        checkInLatitude: entry.checkIn?.latitude || 0.0,
-        checkInLongitude: entry.checkIn?.longitude || 0.0,
+        checkInLatitude: entry.checkIn?.latitude ?? 0.0,
+        checkInLongitude: entry.checkIn?.longitude ?? 0.0,
 
         checkOut: entry.checkOut?.outTime
           ? convertToLocal(new Date(entry.checkOut.outTime), dateType, timezone)
           : null,
-        checkOutLatitude: entry.checkOut?.latitude || 0.0,
-        checkOutLongitude: entry.checkOut?.longitude || 0.0,
+        checkOutLatitude: entry.checkOut?.latitude ?? 0.0,
+        checkOutLongitude: entry.checkOut?.longitude ?? 0.0,
 
-        totalHours: entry.totalHours || 0,
+        totalHours: entryHours,
       };
     });
 
@@ -139,7 +142,6 @@ const getAttendanceByIdAndDate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 const exportAttendanceToCSV = async (req, res) => {
   try {
