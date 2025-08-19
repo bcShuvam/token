@@ -3,13 +3,11 @@ const POC = require('../model/poc');
 const pocReport = async (req, res) => {
   try {
     const { 
-      filterType = "Area", // Area, User, POC
+      filterType = "POC", // default is POC
       createdById,
       country,
       region,
       city,
-      number,
-      pocName, 
       keyword = "", 
       page = 1, 
       limit = 20 
@@ -20,15 +18,25 @@ const pocReport = async (req, res) => {
     let filter = {};
 
     if (filterType === "Area") {
-      filter = {
-        ...(country && { country }),
-        ...(region && { region }),
-        ...(city && { city }),
-        $or: [
-          { pocName: { $regex: new RegExp(keyword, "i") } },
-          { number: { $regex: new RegExp(keyword, "i") } }
-        ]
-      };
+      if (country && region && city) {
+        // Case 1: match all 3
+        filter = { country, region, city };
+      } else if (country && region && !city) {
+        // Case 2: match country + region
+        filter = { country, region };
+      } else if (country && !region && !city) {
+        // Case 3: match only country
+        filter = { country };
+      } else {
+        // If no area params provided, fallback to keyword search
+        filter = {};
+      }
+
+      // Add keyword search
+      filter.$or = [
+        { pocName: { $regex: new RegExp(keyword, "i") } },
+        { number: { $regex: new RegExp(keyword, "i") } }
+      ];
     } 
     else if (filterType === "User") {
       filter = {
