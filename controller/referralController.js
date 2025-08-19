@@ -592,6 +592,16 @@ const createPatientReferral = async (req, res) => {
       approvalStatus: createPatient.approvalStatus
     };
 
+    if(foundPOCId){
+      foundPOCId.referralCounter = foundPOCId.referralCounter + 1;
+      await foundPOCId.save();
+    }
+
+    if(foundAmbId){
+      foundAmbId.referralCounter = foundAmbId.referralCounter + 1;
+      await foundAmbId.save();
+    }
+
     res.status(201).json({
       message: "success",
       referralLogDetail
