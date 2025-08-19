@@ -19,20 +19,12 @@ const pocReport = async (req, res) => {
 
     if (filterType === "Area") {
       if (country && region && city) {
-        // Case 1: match all 3
         filter = { country, region, city };
       } else if (country && region && !city) {
-        // Case 2: match country + region
         filter = { country, region };
       } else if (country && !region && !city) {
-        // Case 3: match only country
         filter = { country };
-      } else {
-        // If no area params provided, fallback to keyword search
-        filter = {};
       }
-
-      // Add keyword search
       filter.$or = [
         { pocName: { $regex: new RegExp(keyword, "i") } },
         { number: { $regex: new RegExp(keyword, "i") } }
@@ -56,19 +48,36 @@ const pocReport = async (req, res) => {
       };
     }
 
-    // Fetch with pagination
+    // Fetch with pagination and populate createdById
     const foundPOC = await POC.find(filter)
+      .populate('createdById', 'username') // populate username only
       .skip(skip)
       .limit(parseInt(limit));
 
-    // Total count for frontend pagination
     const totalCount = await POC.countDocuments(filter);
+
+    // Remap the data
+    const remappedData = foundPOC.map(poc => ({
+      _id: poc._id,
+      pocName: poc.pocName,
+      age: poc.age,
+      gender: poc.gender,
+      number: poc.number,
+      category: poc.category,
+      specialization: poc.specialization,
+      ambNumber: poc.ambNumber || "",
+      address: `${poc.country}, ${poc.region}, ${poc.city}, ${poc.address || ""}`,
+      visitCounter: poc.visitCounter || 0,
+      referralCounter: poc.referralCounter || 0,
+      username: poc.createdByName || poc.createdById?.username || "",
+      userId: poc.createdById?._id || ""
+    }));
 
     return res.status(200).json({
       totalCount,
       currentPage: parseInt(page),
       totalPages: Math.ceil(totalCount / parseInt(limit)),
-      data: foundPOC
+      data: remappedData
     });
 
   } catch (err) {
