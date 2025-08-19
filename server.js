@@ -56,6 +56,7 @@ app.use("/api/users", require("./routes/users"));
 app.use("/api/visitLogs", require("./routes/visitLog"));
 app.use("/api/attendance", require("./routes/attendance"));
 app.use("/api/poc", require("./routes/poc"));
+app.use("/api/poc-report", require("./routes/pocReport"));
 app.use("/api/plan", require("./routes/plan"));
 app.use("/api/patient-referral", require("./routes/referral"));
 
