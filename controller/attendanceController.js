@@ -55,10 +55,10 @@ const getAttendanceByIdAndDate = async (req, res) => {
     } = req.query;
 
     if (!id) {
-      return res.status(400).json({ message: "userId is required" });
+      return res.status(400).json({ message: "id is required" });
     }
 
-    // --- Step 1: Build from/to in AD ---
+    // 1) Build range in AD (dates only)
     const { fromAD, toAD } = getDateRange({
       dateType,
       range,
@@ -68,70 +68,69 @@ const getAttendanceByIdAndDate = async (req, res) => {
       to,
     });
 
-    if (!fromAD || !toAD) {
-      return res.status(400).json({ message: "Invalid date range parameters" });
-    }
+    // 2) Create the inclusive UTC clamp like your old controller
+    const startTime = new Date(fromAD);
+    startTime.setUTCHours(0, 0, 0, 0);
 
-    // --- Step 2: Find user attendance ---
+    const endTime = new Date(toAD);
+    endTime.setUTCHours(23, 59, 59, 999);
+
+    // 3) Fetch user
     const foundAttendance = await Attendance.findById(id);
     if (!foundAttendance) {
       return res.status(404).json({ message: `No user with id ${id} found` });
     }
 
-    // --- Step 3: Filter logs ---
-    const startTime = new Date(fromAD);
-    const endTime = new Date(toAD);
-
-    const attendanceLogs = foundAttendance.attendance.filter((entry) => {
-      if (!entry?.checkIn?.inTime) return false;
-      const inDate = new Date(entry.checkIn.inTime);
-      return inDate >= startTime && inDate <= endTime;
-    });
-
-    // --- Step 4: Format logs + accumulate hours ---
+    // 4) Filter with the same logic as your old 'filteredAttendance'
+    const attendanceLogs = [];
     let totalHours = 0;
-    const formattedLogs = attendanceLogs.map((entry) => {
-      const entryHours = entry.totalHours || 0;
-      totalHours += entryHours;
 
-      return {
-        checkIn: entry.checkIn?.inTime
-          ? convertToLocal(new Date(entry.checkIn.inTime), dateType, timezone)
-          : null,
-        checkInLatitude: entry.checkIn?.latitude ?? 0.0,
-        checkInLongitude: entry.checkIn?.longitude ?? 0.0,
+    foundAttendance.attendance.forEach((entry) => {
+      if (!entry?.checkIn?.inTime) return;
 
-        checkOut: entry.checkOut?.outTime
-          ? convertToLocal(new Date(entry.checkOut.outTime), dateType, timezone)
-          : null,
-        checkOutLatitude: entry.checkOut?.latitude ?? 0.0,
-        checkOutLongitude: entry.checkOut?.longitude ?? 0.0,
+      const currentDate = new Date(entry.checkIn.inTime);
+      const matchedDate = currentDate >= startTime && currentDate <= endTime;
 
-        totalHours: entryHours,
-      };
+      if (matchedDate) {
+        const hours = entry.totalHours || 0;
+        totalHours += hours;
+
+        attendanceLogs.push({
+          checkIn: entry.checkIn?.inTime
+            ? convertToLocal(new Date(entry.checkIn.inTime), dateType, timezone)
+            : null,
+          checkInLatitude: entry.checkIn?.latitude ?? 0.0,
+          checkInLongitude: entry.checkIn?.longitude ?? 0.0,
+
+          checkOut: entry.checkOut?.outTime
+            ? convertToLocal(new Date(entry.checkOut.outTime), dateType, timezone)
+            : null,
+          checkOutLatitude: entry.checkOut?.latitude ?? 0.0,
+          checkOutLongitude: entry.checkOut?.longitude ?? 0.0,
+
+          totalHours: hours,
+        });
+      }
     });
+
+    // 5) Prepare response payload (format totalHours -> hh:mm:ss)
+    const hours = Math.floor(totalHours);
+    const minutes = Math.floor((totalHours - hours) * 60);
+    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+    const totalTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
 
     const attendance = {
       _id: foundAttendance._id,
       username: foundAttendance.username,
-      attendanceLogs: formattedLogs,
+      attendanceLogs,
     };
 
-    // --- Step 5: Format totalHours to hh:mm:ss ---
-    let totalTime = "00:00:00";
-    if (totalHours > 0) {
-      const hours = Math.floor(totalHours);
-      const minutes = Math.floor((totalHours - hours) * 60);
-      const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
-      totalTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-        2,
-        "0"
-      )}:${String(seconds).padStart(2, "0")}`;
-    }
-
-    // --- Step 6: Return response ---
+    // 6) Send response (keep start/end in message like before)
     res.status(200).json({
-      message: `Successful, Attendance from ${fromAD.toISOString()} to ${toAD.toISOString()}`,
+      message: `successful, Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
       dateType,
       totalHours,
       totalTime,
