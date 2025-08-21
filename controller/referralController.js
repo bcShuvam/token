@@ -829,7 +829,16 @@ const getPatientReferralsByPOCOrAmb = async (req, res) => {
       return res.status(400).json({ message: "type (poc/amb) and id are required" });
     }
 
-    let filter = { [type === 'poc' ? 'pocId' : 'ambId']: id };
+    let type;
+
+    const foundPOC = await POC.findById(id);
+    if (!foundPOC) {
+      return res.status(404).json({ message: "POC/Ambulance not found" });
+    }
+
+     // Decide filter key based on category
+    const isAmbulance = foundPOC.category === "Ambulance";
+    const filter = { [isAmbulance ? "ambId" : "pocId"]: new mongoose.Types.ObjectId(id) };
 
     // Apply date filter only if both from and to are provided
     if (from && to) {
