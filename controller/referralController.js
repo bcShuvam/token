@@ -822,10 +822,10 @@ const getPatientReferralsByUserId = async (req, res) => {
 const getPatientReferralsByPOCOrAmb = async (req, res) => {
   try {
     const id = req.params.id;
-    const { type, from, to, page = 1, limit = 20 } = req.query;
+    const { from, to, page = 1, limit = 20 } = req.query;
     const skip = (page - 1) * limit;
 
-    if (!id || !type) {
+    if (!id) {
       return res.status(400).json({ message: "type (poc/amb) and id are required" });
     }
 
