@@ -825,14 +825,16 @@ const getPatientReferralsByPOCOrAmb = async (req, res) => {
     const { type, from, to, page = 1, limit = 20 } = req.query;
     const skip = (page - 1) * limit;
 
-    if (!id || !type || !from || !to) {
-      return res.status(400).json({ message: "type (poc/amb), id, from, and to are required" });
+    if (!id || !type) {
+      return res.status(400).json({ message: "type (poc/amb) and id are required" });
     }
 
-    const filter = {
-      [type === 'poc' ? 'pocId' : 'ambId']: id,
-      createdAt: { $gte: new Date(from), $lte: new Date(to) }
-    };
+    let filter = { [type === 'poc' ? 'pocId' : 'ambId']: id };
+
+    // Apply date filter only if both from and to are provided
+    if (from && to) {
+      filter.createdAt = { $gte: new Date(from), $lte: new Date(to) };
+    }
 
     const total = await PatientReferral.countDocuments(filter);
 
@@ -853,6 +855,7 @@ const getPatientReferralsByPOCOrAmb = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 const updatePatientReferral = async (req, res) => {
   try {
@@ -951,10 +954,12 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
 
     // Decide filter key based on category
     const isAmbulance = foundPOC.category === "Ambulance";
-    const filter = {
-      [isAmbulance ? "ambId" : "pocId"]: new mongoose.Types.ObjectId(id),
-      createdAt: { $gte: new Date(from), $lte: new Date(to) },
-    };
+    const filter = { [isAmbulance ? "ambId" : "pocId"]: new mongoose.Types.ObjectId(id) };
+
+    // Apply date filter only if from and to are provided
+    if (from && to) {
+      filter.createdAt = { $gte: new Date(from), $lte: new Date(to) };
+    }
 
     const referrals = await PatientReferral.find(filter)
       .populate("userId", "username")
@@ -995,8 +1000,10 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
     const parser = new Parser();
     const csv = parser.parse(formatted);
 
+    const fromStr = from ? from : "All";
+    const toStr = to ? to : "Records";
     res.header("Content-Type", "text/csv");
-    res.attachment(`Referrals_By_${foundPOC.pocName}_${from}_${to}.csv`);
+    res.attachment(`Referrals_By_${foundPOC.pocName}_${fromStr}_${toStr}.csv`);
     return res.send(csv);
   } catch (err) {
     res.status(500).json({ message: err.message });
