@@ -982,26 +982,34 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
     const formatted = referrals.map((r) => {
       if (isAmbulance) {
         return {
-          Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
+          Date: r.mobileTime,
           "Patient Name": r.fullName,
+          "Age/Gender": `${r.age} / ${r.gender}`,
+          "Diagnosis": r.provisionalDiagnosis,
+          "Contact": `'${r.number}'`,
+          "Address": `${r.country}, ${r.region}, ${r.city}, ${r.address}`,
           "Driver Name": r.ambId?.pocName || "",
           "Driver Number": r.ambId?.number ? `'${r.ambId.number}'` : "",
           "Ambulance Number": r.ambId?.ambNumber || "",
           Username: r.userId?.username || "",
-          "Approval Status": r.approvalStatus || "",
           "Remarks": r.remarks || "",
+          "Approval Status": r.approvalStatus || "",
         };
       } else {
         return {
-          Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
+          Date: moment(r.createdAt).tz("Asia/Kathmandu").format("MMMM-DD, yyyy"),
           "Patient Name": r.fullName,
-          Username: r.userId?.username || "",
+          "Age/Gender": `${r.age} / ${r.gender}`,
+          "Diagnosis": r.provisionalDiagnosis,
+          "Contact": `'${r.number}'`,
+          "Address": `${r.country}, ${r.region}, ${r.city}, ${r.address}`,
           "POC Name": r.pocId?.pocName || "",
           "POC Number": r.pocId?.number ? `'${r.pocId.number}'` : "",
           Category: r.pocId?.category || "",
           Specialization: r.pocId?.specialization || "",
-          "Approval Status": r.approvalStatus || "",
+          Username: r.userId?.username || "",
           "Remarks": r.remarks || "",
+          "Approval Status": r.approvalStatus || "",
         };
       }
     });
