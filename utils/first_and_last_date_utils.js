@@ -1,5 +1,4 @@
-import NepaliDate from 'nepali-date-converter';
-const nepaliDate = NepaliDate.default;
+const NepaliDate = require('nepali-date-converter').default;
 
 /**
  * Convert Nepali date to AD range
@@ -8,12 +7,13 @@ const nepaliDate = NepaliDate.default;
  * @param {number|null} date - Nepali date (1-based). If null, full month range
  * @returns {{from: string, to: string}} ISO date strings in UTC
  */
-export function getNepaliDateRange(year, monthIndex, date = null) {
+function getNepaliDateRange(year, monthIndex, date = null) {
   let fromNepali, toNepali;
+  console.log(`year = ${year}, monthIndex = ${monthIndex}, date = ${date}`);
 
   if (!date) {
     // Full month range
-    fromNepali = new nepaliDate(year, monthIndex, 1);
+    fromNepali = new NepaliDate(year, monthIndex, 1);
 
     // To = last day of month → create next month's first day, then subtract 1
     let nextMonth = monthIndex + 1;
@@ -22,12 +22,12 @@ export function getNepaliDateRange(year, monthIndex, date = null) {
       nextMonth = 0;
       nextYear += 1;
     }
-    toNepali = new nepaliDate(nextYear, nextMonth, 1);
-    toNepali = new nepaliDate(toNepali.getYear(), toNepali.getMonth(), toNepali.getDate() - 1);
+    toNepali = new NepaliDate(nextYear, nextMonth, 1);
+    toNepali = new NepaliDate(toNepali.getYear(), toNepali.getMonth(), toNepali.getDate() - 1);
   } else {
     // Specific date
-    fromNepali = new nepaliDate(year, monthIndex, date);
-    toNepali = new nepaliDate(year, monthIndex, date);
+    fromNepali = new NepaliDate(year, monthIndex, date);
+    toNepali = new NepaliDate(year, monthIndex, date);
   }
 
   // Convert to AD (UTC 00:00 for from, 23:59:59.999 for to)
@@ -40,3 +40,5 @@ export function getNepaliDateRange(year, monthIndex, date = null) {
   // Return ISO strings instead of Date objects
   return { from: fromDateUTC.toISOString(), to: toDateUTC.toISOString() };
 }
+
+module.exports = {getNepaliDateRange};
