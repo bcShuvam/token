@@ -6,8 +6,6 @@ const connectDB = require("./config/dbConnect");
 const PORT = process.env.PORT || 3001;
 const cors = require("cors");
 const { verifyJWT, verifyRefreshToken } = require("./middleware/verifyJWT");
-const getDateRange = require("./utils/getDateRange");
-const convertToLocal = require("./utils/convertToLocal");
 // connect the mongodb
 connectDB();
 
@@ -35,12 +33,6 @@ app.use(express.json());
 
 // // middleware for cookie-parser
 // app.use(cookieParser());
-
-const today = new Date();
-
-console.log(`${today.getMonth() - 1}`);
-
-
 
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));
