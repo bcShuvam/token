@@ -376,39 +376,21 @@ const downloadAttendanceReport = async (req, res) => {
 const downloadAttendanceReportById = async (req, res) => {
   try {
     const id = req.query.userId;
-    let { from, to, year, monthIndex, dateType, type } = req.query;
+    
+    const year = parseInt(req.query.year, 10);
+    const monthIndex = parseInt(req.query.monthIndex, 10);
+
+    console.log(`year = ${year}, month = ${monthIndex}`);
+    
+    const {from, to} = getNepaliDateRange(year, monthIndex);
+    console.log(`from = ${from}, to = ${to}`);
 
     if (!id) {
       return res.status(400).json({ message: "userId is required" });
     }
 
-    // --- Handle type and dateType like getAttendanceByIdAndDate ---
-    if (type === "monthly") {
-      if (dateType === "BS") {
-        let { fromBS, toBS } = getMonthRange(`${year}-${monthIndex}`, `${year}-${monthIndex}`);
-        from = fromBS.format("YYYY-MM-DD");
-        to = toBS.format("YYYY-MM-DD");
-
-        const { fromAD, toAD } = convertBsRangeToAd(from, to);
-        from = fromAD;
-        to = toAD;
-      } else if (dateType === "AD") {
-        const start = new Date(year, monthIndex - 1, 1, 0, 0, 0);
-        const end = new Date(year, monthIndex, 0, 23, 59, 59); // last day of month
-        from = start.toISOString();
-        to = end.toISOString();
-      }
-    } else if (type === "custom") {
-      if (dateType === "BS") {
-        const { fromAD, toAD } = convertBsRangeToAd(from, to);
-        from = fromAD;
-        to = toAD;
-      } else if (dateType === "AD") {
-        // assume from and to are valid AD ISO strings
-      }
-    }
-
     const foundAttendance = await Attendance.findOne({ _id: id });
+
     if (!foundAttendance) {
       return res.status(404).json({ message: `No user with id ${id} found` });
     }
@@ -420,7 +402,8 @@ const downloadAttendanceReportById = async (req, res) => {
 
     const attendanceLogs = [];
     let totalHours = 0;
-    const userName = foundAttendance.username;
+
+    const userName = foundAttendance.username; // <-- Corrected here
 
     foundAttendance.attendance.forEach((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
@@ -431,12 +414,12 @@ const downloadAttendanceReportById = async (req, res) => {
 
         const data = {
           'Name': userName,
-          'Check-In': dateType === "BS"
-            ? entry.checkIn.deviceInTime
-            : entry.checkIn.deviceInTime,
-          'Check-Out': dateType === "BS"
-            ? entry.checkOut.deviceOutTime
-            : entry.checkOut.deviceOutTime,
+          'Check-In': AdToBsDatetime(entry.checkIn.inTime).bs,
+          // 'Check-In Latitude': entry.checkIn.latitude,
+          // 'Check-In Longitude': entry.checkIn.longitude,
+          'Check-Out': entry.checkOut?.outTime ? AdToBsDatetime(entry.checkOut.outTime).bs : null,
+          // 'Check-Out Latitude': entry.checkOut.latitude,
+          // 'Check-Out Longitude': entry.checkOut.longitude,
           'Total Hours': entry.totalHours.toFixed(2),
         };
 
@@ -444,7 +427,7 @@ const downloadAttendanceReportById = async (req, res) => {
       }
     });
 
-    // Total time calculation (optional if you want to include in CSV)
+    // Total time calculation (optional if you want to add to CSV later)
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
@@ -454,7 +437,15 @@ const downloadAttendanceReportById = async (req, res) => {
     const formattedSeconds = String(seconds).padStart(2, '0');
 
     // Convert attendanceLogs to CSV
-    const fields = ['Name', 'Check-In', 'Check-Out', 'Total Hours'];
+    const fields = [
+      'Name', 'Check-In', 
+      // 'Check-In Latitude', 
+      // 'Check-In Longitude', 
+      'Check-Out', 
+      // 'Check-Out Latitude', 
+      // 'Check-Out Longitude', 
+      'Total Hours'
+    ];
     const json2csvParser = new Parser({ fields });
     const csv = json2csvParser.parse(attendanceLogs);
 
