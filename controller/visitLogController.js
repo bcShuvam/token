@@ -4,6 +4,7 @@ const XLSX = require('xlsx');
 const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
+const {AdToBsDatetime} = require('../utils/ad_to_bs_utils');
 
 const getTodaysAverageVisitOfAll = async (req, res) => {
   try {
@@ -247,7 +248,7 @@ const visitLogsById = async (req, res) => {
           pocName: log.pocName,
           remarks: log.remarks,
           mobileTime: log.mobileTime,
-          visitDate: log.visitDate,
+          visitDate: AdToBsDatetime(log.visitDate).bs,
           visitType: log.visitType,
           latitude: log.latitude,
           longitude: log.longitude,
