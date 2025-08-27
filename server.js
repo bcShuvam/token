@@ -34,6 +34,16 @@ app.use(express.json());
 // // middleware for cookie-parser
 // app.use(cookieParser());
 
+// const {getNepaliDateRange} = require('./utils/first_and_last_date_utils');
+// const year = 2081
+// const month = 10
+// const {from, to} = getNepaliDateRange(year,month);
+// console.log(`from = ${from}, to = ${to}`);
+
+const {AdToBsDatetime} = require('./utils/ad_to_bs_utils');
+const result = AdToBsDatetime(new Date).bs;
+console.log(`result = ${result}`);
+
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));
 
