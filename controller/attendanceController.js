@@ -4,8 +4,8 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const Attendance = require("../model/attendance");
-const { getDateRange } = require("../utils/getDateRange");
-const { convertToLocal } = require("../utils/convertToLocal");
+const {getNepaliDateRange} = require('../utils/first_and_last_date_utils');
+const { AdToBsDatetime} = require('../utils/ad_to_bs_utils');
 
 const getAttendanceById = async (req, res) => {
   try {
@@ -44,8 +44,8 @@ const getAttendanceById = async (req, res) => {
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
     const id = req.query.userId;
-    const { from, to, dateType, range, year, monthIndex } = req.query;
-    console.log(from, to);
+    const { year, month } = req.query;
+    const { from, to} = getNepaliDateRange(year, month);
     if (!id) return res.status(400).json({ message: "id is required" });
     const foundAttendance = await Attendance.findOne({ _id: id });
     if (!foundAttendance)
@@ -63,10 +63,10 @@ const getAttendanceByIdAndDate = async (req, res) => {
         totalHours += entry.totalHours;
         console.log(totalHours);
         const data = {
-          checkIn: entry.checkIn.deviceInTime,
+          checkIn: AdToBsDatetime(entry.checkIn.inTime).bs ,
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
-          checkOut: entry.checkOut.deviceOutTime,
+          checkOut: AdToBsDatetime(entry.checkIn.outTime).bs,
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
