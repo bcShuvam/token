@@ -376,7 +376,14 @@ const downloadAttendanceReport = async (req, res) => {
 const downloadAttendanceReportById = async (req, res) => {
   try {
     const id = req.query.userId;
-    const { from, to } = req.query;
+    
+    const year = parseInt(req.query.year, 10);
+    const monthIndex = parseInt(req.query.monthIndex, 10);
+
+    console.log(`year = ${year}, month = ${monthIndex}`);
+    
+    const {from, to} = getNepaliDateRange(year, monthIndex);
+    console.log(`from = ${from}, to = ${to}`);
 
     if (!id) {
       return res.status(400).json({ message: "userId is required" });
