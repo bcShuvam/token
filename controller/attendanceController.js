@@ -204,8 +204,8 @@ const getAllAttendanceByDate = async (req, res) => {
           profileImage: user?.profileImage ?? '',
           totalHoursWorked: filteredAttendance.length > 0 ? totalHours : 0,
           totalTime: filteredAttendance.length > 0 ? formattedTime : "00:00:00",
-          checkInTime: filteredAttendance[0]?.checkIn?.deviceInTime ?? '',
-          checkOutTime: filteredAttendance[0]?.checkOut?.deviceOutTime ?? '',
+          checkInTime: AdToBsDatetime(filteredAttendance[0]?.checkIn?.inTime).bs ?? '',
+          checkOutTime: AdToBsDatetime(filteredAttendance[0]?.checkOut?.outTime).bs ?? '',
           totalAttendance: filteredAttendance.length,
         };
       } else {
