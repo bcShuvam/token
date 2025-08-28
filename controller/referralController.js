@@ -934,7 +934,7 @@ const downloadCSVByUserId = async (req, res) => {
 
     const formatted = referrals.map(r => ({
       Username: r.userId?.username || '',
-      Date: AdToBsDatetime(r.createdAt).bs,
+      Date: `'${AdToBsDatetime(r.createdAt).bs}'`,
       "Patient Name": r.fullName,
       "POC Name": r.pocId?.pocName || '',
       "POC Number": r.pocId?.number ? `'${r.pocId.number}'` : '',
@@ -994,7 +994,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
     const formatted = referrals.map((r) => {
       if (isAmbulance) {
         return {
-          Date: AdToBsDatetime(r.createdAt).bs,
+          Date: `'${AdToBsDatetime(r.createdAt).bs}'`,
           "Patient Name": r.fullName,
           "Age/Gender": `${r.age} / ${r.gender}`,
           "Diagnosis": r.provisionalDiagnosis,
@@ -1009,7 +1009,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
         };
       } else {
         return {
-          Date: AdToBsDatetime(r.createdAt).bs,
+          Date: `'${AdToBsDatetime(r.createdAt).bs}'`,
           "Patient Name": r.fullName,
           "Age/Gender": `${r.age} / ${r.gender}`,
           "Diagnosis": r.provisionalDiagnosis,
