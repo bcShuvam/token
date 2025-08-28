@@ -8,6 +8,7 @@ const CsvParser = require("json2csv").Parser;
 const moment = require("moment-timezone");
 const BS = require('bikram-sambat-js');
 const mongoose = require("mongoose");
+const { AdToBsDatetime } = require('../utils/ad_to_bs_utils');
 // const NepaliDate = require('nepali-date-converter');
 let exportData;
 
@@ -808,11 +809,18 @@ const getPatientReferralsByUserId = async (req, res) => {
       .populate('pocId', 'pocName number category specialization')
       .populate('ambId', 'pocName number ambNumber category specialization');
 
+    // 🔹 Format createdAt into BS
+    const formattedReferrals = referrals.map((ref) => {
+      const referralObj = ref.toObject();
+      referralObj.createdAtBS = AdToBsDatetime(referralObj.createdAt).bs;
+      return referralObj;
+    });
+
     res.status(200).json({
       total,
       currentPage: parseInt(page),
       totalPages: Math.ceil(total / limit),
-      data: referrals
+      data: formattedReferrals,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -829,14 +837,12 @@ const getPatientReferralsByPOCOrAmb = async (req, res) => {
       return res.status(400).json({ message: "type (poc/amb) and id are required" });
     }
 
-    let type;
-
     const foundPOC = await POC.findById(id);
     if (!foundPOC) {
       return res.status(404).json({ message: "POC/Ambulance not found" });
     }
 
-     // Decide filter key based on category
+    // Decide filter key based on category
     const isAmbulance = foundPOC.category === "Ambulance";
     const filter = { [isAmbulance ? "ambId" : "pocId"]: new mongoose.Types.ObjectId(id) };
 
@@ -854,17 +860,23 @@ const getPatientReferralsByPOCOrAmb = async (req, res) => {
       .populate('pocId', 'pocName number category specialization')
       .populate('ambId', 'pocName ambNumber category specialization');
 
+    // 🔹 Format createdAt into BS before sending
+    const formattedReferrals = referrals.map((ref) => {
+      const referralObj = ref.toObject();
+      referralObj.createdAtBS = AdToBsDatetime(referralObj.createdAt).bs;
+      return referralObj;
+    });
+
     res.status(200).json({
       total,
       currentPage: parseInt(page),
       totalPages: Math.ceil(total / limit),
-      data: referrals
+      data: formattedReferrals,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 const updatePatientReferral = async (req, res) => {
   try {
@@ -922,7 +934,7 @@ const downloadCSVByUserId = async (req, res) => {
 
     const formatted = referrals.map(r => ({
       Username: r.userId?.username || '',
-      Date: moment(r.createdAt).tz("Asia/Kathmandu").format("YYYY-MM-DD HH:mm"),
+      Date: AdToBsDatetime(r.createdAt).bs,
       "Patient Name": r.fullName,
       "POC Name": r.pocId?.pocName || '',
       "POC Number": r.pocId?.number ? `'${r.pocId.number}'` : '',
@@ -982,7 +994,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
     const formatted = referrals.map((r) => {
       if (isAmbulance) {
         return {
-          Date: r.mobileTime,
+          Date: AdToBsDatetime(r.createdAt).bs,
           "Patient Name": r.fullName,
           "Age/Gender": `${r.age} / ${r.gender}`,
           "Diagnosis": r.provisionalDiagnosis,
@@ -997,7 +1009,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
         };
       } else {
         return {
-          Date: moment(r.createdAt).tz("Asia/Kathmandu").format("MMMM-DD, yyyy"),
+          Date: AdToBsDatetime(r.createdAt).bs,
           "Patient Name": r.fullName,
           "Age/Gender": `${r.age} / ${r.gender}`,
           "Diagnosis": r.provisionalDiagnosis,
