@@ -715,6 +715,7 @@ const downloadVisitLogsById = async (req, res) => {
           SN: index + 1,
           username: foundVisitLog.username,
           pocName: log.pocName,
+          mobileTime: AdToBsDatetime(log.createdAt).bs,
           pocNumber: `="${pocDetails.number}"`,
           pocCategory: pocDetails.category,
           pocSpecialization: pocDetails.specialization,
@@ -723,7 +724,6 @@ const downloadVisitLogsById = async (req, res) => {
           pocVisitCounter: pocDetails.visitCounter,
           pocReferralCounter: pocDetails.referralCounter,
           ambNumber: pocDetails.ambNumber,
-          mobileTime: log.mobileTime,
           remarks: log.remarks,
           approvalStatus: log.approvalStatus,
         };
@@ -733,6 +733,7 @@ const downloadVisitLogsById = async (req, res) => {
     const fields = [
       { label: 'SN', value: 'SN' },
       { label: 'Name', value: 'username' },
+      { label: 'Visit Time', value: 'mobileTime' },
       { label: 'POC Name', value: 'pocName' },
       { label: 'Number', value: 'pocNumber' },
       { label: 'Category', value: 'pocCategory' },
@@ -742,7 +743,6 @@ const downloadVisitLogsById = async (req, res) => {
       { label: 'Visit Counter', value: 'pocVisitCounter' },
       { label: 'Referral Counter', value: 'pocReferralCounter' },
       { label: 'Ambulance Number', value: 'ambNumber' },
-      { label: 'Visit Time', value: 'mobileTime' },
       { label: 'Remarks', value: 'remarks' },
       { label: 'Status', value: 'approvalStatus' },
     ];
