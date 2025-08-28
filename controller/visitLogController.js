@@ -5,6 +5,7 @@ const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
 const {AdToBsDatetime} = require('../utils/ad_to_bs_utils');
+const AdToBsDate = require('../utils/date_ad_to_bs_utils');
 
 const getTodaysAverageVisitOfAll = async (req, res) => {
   try {
@@ -214,6 +215,7 @@ const visitLogsById = async (req, res) => {
     console.log("From:", from, "To:", to);
 
     const foundVisitLog = await VisitLog.findById(_id);
+    const foundUser = await User.findById(_id);
     if (!foundVisitLog) {
       return res.status(404).json({ message: "VisitLog not found for given id" });
     }
@@ -749,11 +751,13 @@ const downloadVisitLogsById = async (req, res) => {
     const csv = parser.parse(formattedFilteredVisitLogs);
 
     const usernameSafe = foundVisitLog.username.replace(/ /g, '_');
-    const filename = `${usernameSafe}_visitlogs_${req.query.from}_${req.query.to}.csv`;
+    const filename = `${usernameSafe}_visitlogs_${AdToBsDate(req.query.from)}_${AdToBsDate(req.query.to)}.csv`;
 
-    res.header('Content-Type', 'text/csv');
+    // ✅ Use Express helpers
+    res.header("Content-Type", "text/csv");
     res.attachment(filename);
-    return res.send(csv);
+
+    return res.status(200).send(csv);
 
   } catch (err) {
     console.error("Error:", err);

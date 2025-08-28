@@ -41,8 +41,10 @@ app.use(express.json());
 // console.log(`from = ${from}, to = ${to}`);
 
 const {AdToBsDatetime} = require('./utils/ad_to_bs_utils');
+const AdToBsDate = require('./utils/date_ad_to_bs_utils');
+console.log(AdToBsDate('2025-08-28'));
 const result = AdToBsDatetime(new Date).bs;
-console.log(`result = ${result}`);
+console.log(`result = ${result.split(' ')[0]}`);
 
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));
