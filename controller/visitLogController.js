@@ -261,9 +261,12 @@ const visitLogsById = async (req, res) => {
       })
     );
 
+    console.log(foundUser);
+
     const visitLogs = {
       _id: foundVisitLog._id,
       username: foundVisitLog.username,
+      profileImage: foundUser.profileImage,
       visitLogCounter: foundVisitLog.visitLogCounter,
       visitLogs: formattedFilteredVisitLogs,
     };
