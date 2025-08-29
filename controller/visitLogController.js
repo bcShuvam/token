@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const {AdToBsDatetime} = require('../utils/ad_to_bs_utils');
 const AdToBsDate = require('../utils/date_ad_to_bs_utils');
+const User = require('../model/users');
 
 const getTodaysAverageVisitOfAll = async (req, res) => {
   try {
