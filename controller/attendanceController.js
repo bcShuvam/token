@@ -375,24 +375,24 @@ const downloadAttendanceReport = async (req, res) => {
 
 const downloadAttendanceReportById = async (req, res) => {
   try {
-    const id = req.query.userId;
-    
+    const userId = req.query.userId;
     const year = parseInt(req.query.year, 10);
     const monthIndex = parseInt(req.query.monthIndex, 10);
 
     console.log(`year = ${year}, month = ${monthIndex}`);
-    
-    const {from, to} = getNepaliDateRange(year, monthIndex);
+
+    const { from, to } = getNepaliDateRange(year, monthIndex);
     console.log(`from = ${from}, to = ${to}`);
 
-    if (!id) {
+    if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
 
-    const foundAttendance = await Attendance.findOne({ _id: id });
+    // 🔹 Find attendance by userId (not _id)
+    const foundAttendance = await Attendance.findOne({ userId });
 
     if (!foundAttendance) {
-      return res.status(404).json({ message: `No user with id ${id} found` });
+      return res.status(404).json({ message: `No attendance found for user ${userId}` });
     }
 
     const startTime = new Date(from);
@@ -403,7 +403,8 @@ const downloadAttendanceReportById = async (req, res) => {
     const attendanceLogs = [];
     let totalHours = 0;
 
-    const userName = foundAttendance.username; // <-- Corrected here
+    // Use username from document
+    const userName = foundAttendance.username || "Unknown User";
 
     foundAttendance.attendance.forEach((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
@@ -413,46 +414,27 @@ const downloadAttendanceReportById = async (req, res) => {
         totalHours += entry.totalHours;
 
         const data = {
-          'Name': userName,
-          'Check-In': `'${AdToBsDatetime(entry.checkIn.inTime).bs}'`,
-          // 'Check-In Latitude': entry.checkIn.latitude,
-          // 'Check-In Longitude': entry.checkIn.longitude,
-          'Check-Out': entry.checkOut?.outTime ? `'${AdToBsDatetime(entry.checkOut.outTime).bs}'` : null,
-          // 'Check-Out': entry.checkOut?.outTime ? AdToBsDatetime(entry.checkOut.outTime).bs : null,
-          // 'Check-Out Latitude': entry.checkOut.latitude,
-          // 'Check-Out Longitude': entry.checkOut.longitude,
-          'Total Hours': entry.totalHours.toFixed(2),
+          Name: userName,
+          "Check-In": `'${AdToBsDatetime(entry.checkIn.inTime).bs}'`,
+          "Check-Out": entry.checkOut?.outTime
+            ? `'${AdToBsDatetime(entry.checkOut.outTime).bs}'`
+            : null,
+          "Total Hours": entry.totalHours.toFixed(2),
         };
 
         attendanceLogs.push(data);
       }
     });
 
-    // Total time calculation (optional if you want to add to CSV later)
-    const hours = Math.floor(totalHours);
-    const minutes = Math.floor((totalHours - hours) * 60);
-    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
-
-    const formattedHours = String(hours).padStart(2, '0');
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(seconds).padStart(2, '0');
+    console.log("attendanceLogs length:", attendanceLogs.length);
 
     // Convert attendanceLogs to CSV
-    const fields = [
-      'Name', 
-      'Check-In', 
-      // 'Check-In Latitude', 
-      // 'Check-In Longitude', 
-      'Check-Out', 
-      // 'Check-Out Latitude', 
-      // 'Check-Out Longitude', 
-      'Total Hours'
-    ];
+    const fields = ["Name", "Check-In", "Check-Out", "Total Hours"];
     const json2csvParser = new Parser({ fields });
     const csv = json2csvParser.parse(attendanceLogs);
 
     // Send CSV as file download
-    res.header('Content-Type', 'text/csv');
+    res.header("Content-Type", "text/csv");
     res.attachment(`${userName}_Attendance_Report_${from}_${to}.csv`);
     res.send(csv);
 
