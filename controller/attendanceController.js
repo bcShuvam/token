@@ -415,12 +415,12 @@ const downloadAttendanceReportById = async (req, res) => {
         const data = {
           'Name': userName,
           'Check-In': `'${AdToBsDatetime(entry.checkIn.inTime).bs}'`,
-          // 'Check-In Latitude': entry.checkIn.latitude,
-          // 'Check-In Longitude': entry.checkIn.longitude,
+          'Check-In Latitude': entry.checkIn.latitude,
+          'Check-In Longitude': entry.checkIn.longitude,
           'Check-Out': entry.checkOut?.outTime ? `'${AdToBsDatetime(entry.checkOut.outTime).bs}'` : null,
           // 'Check-Out': entry.checkOut?.outTime ? AdToBsDatetime(entry.checkOut.outTime).bs : null,
-          // 'Check-Out Latitude': entry.checkOut.latitude,
-          // 'Check-Out Longitude': entry.checkOut.longitude,
+          'Check-Out Latitude': entry.checkOut.latitude,
+          'Check-Out Longitude': entry.checkOut.longitude,
           'Total Hours': entry.totalHours.toFixed(2),
         };
 
@@ -441,11 +441,11 @@ const downloadAttendanceReportById = async (req, res) => {
     const fields = [
       'Name', 
       'Check-In', 
-      // 'Check-In Latitude', 
-      // 'Check-In Longitude', 
+      'Check-In Latitude', 
+      'Check-In Longitude', 
       'Check-Out', 
-      // 'Check-Out Latitude', 
-      // 'Check-Out Longitude', 
+      'Check-Out Latitude', 
+      'Check-Out Longitude', 
       'Total Hours'
     ];
     const json2csvParser = new Parser({ fields });
