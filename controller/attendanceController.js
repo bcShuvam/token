@@ -54,9 +54,9 @@ const getTodaysAttendanceById = async (req, res) => {
     // Get today's date range (00:00:00 → 23:59:59)
     const today = new Date();
     const startTime = new Date(today);
-    // startTime.setUTCHours(0, 0, 0, 0);
+    startTime.setUTCHours(0, 0, 0, 0);
     const endTime = new Date(today);
-    // endTime.setUTCHours(23, 59, 59, 999);
+    endTime.setUTCHours(23, 59, 59, 999);
 
     const attendanceLogs = [];
     let totalHours = 0;
