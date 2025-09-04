@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getAttendanceById,
   getTodaysAttendanceById,
+  deleteAttendanceById,
   postAttendanceByID,
   getAttendanceByIdAndDate,
   getAllAttendanceByDate,
@@ -12,6 +13,7 @@ const {
 } = require("../controller/attendanceController");
 router.route("/userId").get(getAttendanceById).post(postAttendanceByID);
 router.route("/today/:id").get(getTodaysAttendanceById);
+router.route("/today/:id").delete(deleteAttendanceById);
 router.route("/date").get(getAttendanceByIdAndDate);
 router.route("/download").get(downloadAttendanceReportById);
 router.route("/date/all").get(getAllAttendanceByDate);
