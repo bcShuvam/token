@@ -390,6 +390,7 @@ const deleteAttendanceById = async (req, res) => {
       return res.status(400).json({ message: "Missing id or attendanceId" });
     }
 
+    // Delete specific attendance log
     const updatedAttendance = await Attendance.findByIdAndUpdate(
       id,
       { $pull: { attendance: { _id: attendanceId } } },
@@ -400,14 +401,65 @@ const deleteAttendanceById = async (req, res) => {
       return res.status(404).json({ message: "Attendance record not found" });
     }
 
+    // Get today's date range
+    const today = new Date();
+    const startTime = new Date(today);
+    startTime.setUTCHours(0, 0, 0, 0);
+    const endTime = new Date(today);
+    endTime.setUTCHours(23, 59, 59, 999);
+
+    const attendanceLogs = [];
+    let totalHours = 0;
+
+    updatedAttendance.attendance.forEach((entry) => {
+      const currentDate = new Date(entry.checkIn.inTime);
+      const isToday = currentDate >= startTime && currentDate <= endTime;
+
+      if (isToday) {
+        totalHours += entry.totalHours;
+
+        const data = {
+          checkIn: AdToBsDatetime(entry.checkIn.inTime).bs,
+          checkInLatitude: entry.checkIn.latitude,
+          checkInLongitude: entry.checkIn.longitude,
+          checkOut: entry.checkOut?.outTime
+            ? AdToBsDatetime(entry.checkOut.outTime).bs
+            : null,
+          checkOutLatitude: entry.checkOut.latitude,
+          checkOutLongitude: entry.checkOut.longitude,
+          totalHour: entry.totalHours,
+          _id: entry._id,
+        };
+        attendanceLogs.push(data);
+      }
+    });
+
+    const attendance = {
+      _id: updatedAttendance._id,
+      username: updatedAttendance.username,
+      attendanceLogs,
+    };
+
+    // Convert totalHours into HH:mm:ss
+    const hours = Math.floor(totalHours);
+    const minutes = Math.floor((totalHours - hours) * 60);
+    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+
+    const formattedHours = String(hours).padStart(2, "0");
+    const formattedMinutes = String(minutes).padStart(2, "0");
+    const formattedSeconds = String(seconds).padStart(2, "0");
+
     res.status(200).json({
-      message: "Attendance entry deleted successfully",
-      data: updatedAttendance,
+      message: `Successful, today's Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
+      totalHours,
+      totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`,
+      attendance,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 const downloadAttendanceReport = async (req, res) => {
   try {
