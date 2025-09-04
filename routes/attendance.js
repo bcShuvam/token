@@ -9,15 +9,21 @@ const {
   getAllAttendanceByDate,
   exportAttendanceToCSV,
   downloadAttendanceReport,
-  downloadAttendanceReportById
+  downloadAttendanceReportById,
 } = require("../controller/attendanceController");
-router.route("/userId").get(getAttendanceById).post(postAttendanceByID);
-router.route("/today/:id").get(getTodaysAttendanceById);
-router.route("/today/:id").delete(deleteAttendanceById);
-router.route("/date").get(getAttendanceByIdAndDate);
-router.route("/download").get(downloadAttendanceReportById);
-router.route("/date/all").get(getAllAttendanceByDate);
-router.get('/export', exportAttendanceToCSV);
-router.get('/report', downloadAttendanceReport);
+
+// Attendance routes
+router.get("/userId", getAttendanceById);
+router.post("/userId", postAttendanceByID);
+
+router.get("/today/:id", getTodaysAttendanceById);
+router.delete("/today/delete/:id", deleteAttendanceById);
+
+router.get("/date", getAttendanceByIdAndDate);
+router.get("/date/all", getAllAttendanceByDate);
+
+router.get("/download", downloadAttendanceReportById);
+router.get("/export", exportAttendanceToCSV);
+router.get("/report", downloadAttendanceReport);
 
 module.exports = router;
