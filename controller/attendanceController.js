@@ -401,7 +401,7 @@ const deleteAttendanceById = async (req, res) => {
       return res.status(404).json({ message: "Attendance record not found" });
     }
 
-    // Get today's date range
+    // ---- Calculate today's updated logs ----
     const today = new Date();
     const startTime = new Date(today);
     startTime.setUTCHours(0, 0, 0, 0);
@@ -413,12 +413,10 @@ const deleteAttendanceById = async (req, res) => {
 
     updatedAttendance.attendance.forEach((entry) => {
       const currentDate = new Date(entry.checkIn.inTime);
-      const isToday = currentDate >= startTime && currentDate <= endTime;
-
-      if (isToday) {
+      if (currentDate >= startTime && currentDate <= endTime) {
         totalHours += entry.totalHours;
 
-        const data = {
+        attendanceLogs.push({
           checkIn: AdToBsDatetime(entry.checkIn.inTime).bs,
           checkInLatitude: entry.checkIn.latitude,
           checkInLongitude: entry.checkIn.longitude,
@@ -429,8 +427,7 @@ const deleteAttendanceById = async (req, res) => {
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
           _id: entry._id,
-        };
-        attendanceLogs.push(data);
+        });
       }
     });
 
@@ -440,25 +437,29 @@ const deleteAttendanceById = async (req, res) => {
       attendanceLogs,
     };
 
-    // Convert totalHours into HH:mm:ss
+    // Format totalHours → HH:mm:ss
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
     const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
 
-    const formattedHours = String(hours).padStart(2, "0");
-    const formattedMinutes = String(minutes).padStart(2, "0");
-    const formattedSeconds = String(seconds).padStart(2, "0");
+    const totalTime = [
+      String(hours).padStart(2, "0"),
+      String(minutes).padStart(2, "0"),
+      String(seconds).padStart(2, "0"),
+    ].join(":");
 
+    // ---- Send response ----
     res.status(200).json({
-      message: `Successful, today's Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
+      message: `Successful Deleted, today's Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
       totalHours,
-      totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`,
+      totalTime,
       attendance,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 
 const downloadAttendanceReport = async (req, res) => {
