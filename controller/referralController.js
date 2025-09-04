@@ -797,7 +797,7 @@ const getPatientReferralsByUserId = async (req, res) => {
 
     const filter = {
       userId: id,
-      createdAt: { $gte: new Date(from), $lte: new Date(to) }
+      createdAt: { $gte: new Date(from).setUTCHours(0,0,0,0), $lte: new Date(to).setUTCHours(23, 59, 59, 999) }
     };
 
     const total = await PatientReferral.countDocuments(filter);
@@ -848,7 +848,7 @@ const getPatientReferralsByPOCOrAmb = async (req, res) => {
 
     // Apply date filter only if both from and to are provided
     if (from && to) {
-      filter.createdAt = { $gte: new Date(from), $lte: new Date(to) };
+      filter.createdAt = { $gte: new Date(from).setUTCHours(0, 0, 0, 0), $lte: new Date(to).setUTCHours(23, 59, 59, 999) };
     }
 
     const total = await PatientReferral.countDocuments(filter);
@@ -926,7 +926,7 @@ const downloadCSVByUserId = async (req, res) => {
 
     const referrals = await PatientReferral.find({
       userId: id,
-      createdAt: { $gte: new Date(from), $lte: new Date(to) }
+      createdAt: { $gte: new Date(from).setUTCHours(0, 0, 0, 0), $lte: new Date(to).setUTCHours(23, 59, 59, 999) }
     })
       .populate('userId', 'username')
       .populate('pocId', 'pocName number category specialization')
@@ -979,7 +979,7 @@ const downloadCSVByPOCOrAmb = async (req, res) => {
 
     // Apply date filter only if from and to are provided
     if (from && to) {
-      filter.createdAt = { $gte: new Date(from), $lte: new Date(to) };
+      filter.createdAt = { $gte: new Date(from).setUTCHours(0, 0, 0, 0), $lte: new Date(to).setUTCHours(23, 59, 59, 999) };
     }
 
     const referrals = await PatientReferral.find(filter)
