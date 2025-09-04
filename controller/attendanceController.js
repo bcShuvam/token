@@ -41,6 +41,74 @@ const getAttendanceById = async (req, res) => {
   }
 };
 
+
+const getTodaysAttendanceById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!id) return res.status(400).json({ message: "userId is required" });
+
+    const foundAttendance = await Attendance.findOne({ _id: id });
+    if (!foundAttendance)
+      return res.status(404).json({ message: `No user with id ${id} found` });
+
+    // Get today's date range (00:00:00 → 23:59:59)
+    const today = new Date();
+    const startTime = new Date(today);
+    // startTime.setUTCHours(0, 0, 0, 0);
+    const endTime = new Date(today);
+    // endTime.setUTCHours(23, 59, 59, 999);
+
+    const attendanceLogs = [];
+    let totalHours = 0;
+
+    foundAttendance.attendance.forEach((entry) => {
+      const currentDate = new Date(entry.checkIn.inTime);
+      const isToday = currentDate >= startTime && currentDate <= endTime;
+
+      if (isToday) {
+        totalHours += entry.totalHours;
+
+        const data = {
+          checkIn: AdToBsDatetime(entry.checkIn.inTime).bs,
+          checkInLatitude: entry.checkIn.latitude,
+          checkInLongitude: entry.checkIn.longitude,
+          checkOut: entry.checkOut?.outTime
+            ? AdToBsDatetime(entry.checkOut.outTime).bs
+            : null,
+          checkOutLatitude: entry.checkOut.latitude,
+          checkOutLongitude: entry.checkOut.longitude,
+          totalHour: entry.totalHours,
+        };
+        attendanceLogs.push(data);
+      }
+    });
+
+    const attendance = {
+      _id: foundAttendance._id,
+      username: foundAttendance.username,
+      attendanceLogs,
+    };
+
+    // Convert totalHours into HH:mm:ss
+    const hours = Math.floor(totalHours);
+    const minutes = Math.floor((totalHours - hours) * 60);
+    const seconds = Math.round(((totalHours - hours) * 60 - minutes) * 60);
+
+    const formattedHours = String(hours).padStart(2, "0");
+    const formattedMinutes = String(minutes).padStart(2, "0");
+    const formattedSeconds = String(seconds).padStart(2, "0");
+
+    res.status(200).json({
+      message: `Successful, today's Attendance from ${startTime.toISOString()} to ${endTime.toISOString()}`,
+      totalHours,
+      totalTime: `${formattedHours}:${formattedMinutes}:${formattedSeconds}`,
+      attendance,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
     const id = req.query.userId;
@@ -465,6 +533,7 @@ const downloadAttendanceReportById = async (req, res) => {
 
 module.exports = {
   getAttendanceById,
+  getTodaysAttendanceById,
   postAttendanceByID,
   getAttendanceByIdAndDate,
   getAllAttendanceByDate,
