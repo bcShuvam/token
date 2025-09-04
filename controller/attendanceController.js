@@ -78,6 +78,7 @@ const getTodaysAttendanceById = async (req, res) => {
           checkOutLatitude: entry.checkOut.latitude,
           checkOutLongitude: entry.checkOut.longitude,
           totalHour: entry.totalHours,
+          _id: entry._id,
         };
         attendanceLogs.push(data);
       }
