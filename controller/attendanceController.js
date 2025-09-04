@@ -110,35 +110,6 @@ const getTodaysAttendanceById = async (req, res) => {
   }
 };
 
-const deleteAttendanceById = async (req, res) => {
-  try {
-    const id = req.params.id; // main document _id
-    const attendanceId = req.query.attendanceId; // attendance._id
-
-    if (!id || !attendanceId) {
-      return res.status(400).json({ message: "Missing id or attendanceId" });
-    }
-
-    // Remove attendance object with matching _id from the attendance array
-    const updatedAttendance = await Attendance.findByIdAndUpdate(
-      id,
-      { $pull: { attendance: { _id: attendanceId } } },
-      { new: true } // return the updated document
-    );
-
-    if (!updatedAttendance) {
-      return res.status(404).json({ message: "Attendance record not found" });
-    }
-
-    res.status(200).json({
-      message: "Attendance entry deleted successfully",
-      data: updatedAttendance,
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
 const getAttendanceByIdAndDate = async (req, res) => {
   try {
     const id = req.query.userId;
@@ -410,6 +381,34 @@ const postAttendanceByID = async (req, res) => {
   }
 };
 
+const deleteAttendanceById = async (req, res) => {
+  try {
+    const id = req.params.id; // main document _id
+    const attendanceId = req.query.attendanceId; // attendance._id
+
+    if (!id || !attendanceId) {
+      return res.status(400).json({ message: "Missing id or attendanceId" });
+    }
+
+    const updatedAttendance = await Attendance.findByIdAndUpdate(
+      id,
+      { $pull: { attendance: { _id: attendanceId } } },
+      { new: true }
+    );
+
+    if (!updatedAttendance) {
+      return res.status(404).json({ message: "Attendance record not found" });
+    }
+
+    res.status(200).json({
+      message: "Attendance entry deleted successfully",
+      data: updatedAttendance,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const downloadAttendanceReport = async (req, res) => {
   try {
     const { from, to } = req.query;
@@ -564,6 +563,7 @@ const downloadAttendanceReportById = async (req, res) => {
 module.exports = {
   getAttendanceById,
   getTodaysAttendanceById,
+  deleteAttendanceById,
   postAttendanceByID,
   getAttendanceByIdAndDate,
   getAllAttendanceByDate,
