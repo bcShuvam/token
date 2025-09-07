@@ -77,7 +77,7 @@ const getPocCreatedById = async (req, res) => {
 const getPocCreatedByIdWithPagination = async (req, res) => {
   try {
     const createdById = req.params.id;
-    const { keyword = '', page = 1, limit = 20 } = req.query;
+    const { keyword = '', page = 1, limit = 20, category = '' } = req.query;
 
     if (!createdById) {
       return res.status(400).json({ message: "createdById is required" });
@@ -85,7 +85,7 @@ const getPocCreatedByIdWithPagination = async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Build flexible filter using $or on pocName and number
+    // Base filter with search
     const filter = {
       createdById,
       $or: [
@@ -93,6 +93,15 @@ const getPocCreatedByIdWithPagination = async (req, res) => {
         { number: { $regex: new RegExp(keyword, "i") } }
       ]
     };
+
+    // Apply category filtering if provided
+    if (category && category.trim() !== '') {
+      if (category.toLowerCase() === 'ambulance') {
+        filter.category = 'Ambulance';
+      } else if (category.toLowerCase() === 'poc') {
+        filter.category = { $ne: 'Ambulance' };
+      }
+    }
 
     const foundPOC = await POC.find(filter)
       .skip(skip)
