@@ -122,6 +122,7 @@ const getPocCreatedByIdWithPagination = async (req, res) => {
       ambNumber: poc.ambNumber,
       number: poc.number,
       address: `${poc.country}, ${poc.region}, ${poc.city}, ${poc.address}`,
+      ambNumber: poc.ambNumber ?? 'N/A'
     }));
 
     res.status(200).json({
