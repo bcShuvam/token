@@ -25,7 +25,7 @@ const getPOCById = async (req, res) => {
       return res.status(404).json({ message: "POC not found" });
     }
 
-    res.status(200).json({ message: "Success", poc: foundPOC });
+    res.status(200).json(foundPOC);
   } catch (error) {
     res.status(500).json({ message: "Error fetching POC" });
   }
