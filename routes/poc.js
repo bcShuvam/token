@@ -13,7 +13,7 @@ const {
 } = require("../controller/pocController");
 
 router.route("/").get(getPOCs);
-router.route("/:id").get(getPOCs);
+router.route("/:id").get(getPOCById);
 router.route("/category").get(getPOCByCreatedByIdAndCategory);
 router.route("/createdBy").get(getPocCreatedById);
 router.route("/createdUserId/:id").get(getPocCreatedByIdWithPagination);
