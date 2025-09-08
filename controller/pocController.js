@@ -14,15 +14,20 @@ const getPOCs = async (req, res) => {
 
 const getPOCById = async (req, res) => {
   try {
-    const createdById = req.query.createdById;
-    console.log(createdById);
-    if (!createdById)
-      return res.status(400).json({ message: "createdById is required" });
-    const foundPOC = await POC.find({ createdById });
-    const foundPOCs = await POC.find();
-    res.status(200).json({ message: "Success", poc: foundPOCs });
+    const id = req.params.id;
+    const createdById = req.query.createdById; // or req.params for id
+    if (!createdById || !id) {
+      return res.status(400).json({ message: "createdById and id are required" });
+    }
+
+    const foundPOC = await POC.findOne({ _id: id, createdById });
+    if (!foundPOC) {
+      return res.status(404).json({ message: "POC not found" });
+    }
+
+    res.status(200).json({ message: "Success", poc: foundPOC });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching POCs" });
+    res.status(500).json({ message: "Error fetching POC" });
   }
 };
 
@@ -122,7 +127,6 @@ const getPocCreatedByIdWithPagination = async (req, res) => {
       ambNumber: poc.ambNumber,
       number: poc.number,
       address: `${poc.country}, ${poc.region}, ${poc.city}, ${poc.address}`,
-      ambNumber: poc.ambNumber ?? 'N/A'
     }));
 
     res.status(200).json({
@@ -294,6 +298,36 @@ const pocFollowUp = async (req, res) => {
   }
 };
 
+const updatePOCById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const createdById = req.query.createdById; // or req.params for id
+    if (!createdById || !id) {
+      return res.status(400).json({ message: "createdById and id are required" });
+    }
+
+    const updateData = req.body;
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No update data provided" });
+    }
+
+    const updatedPOC = await POC.findOneAndUpdate(
+      { _id: id, createdById },
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedPOC) {
+      return res.status(404).json({ message: "POC not found" });
+    }
+
+    res.status(200).json({ message: "POC updated successfully", poc: updatedPOC });
+  } catch (error) {
+    console.error("Error updating POC:", error);
+    res.status(500).json({ message: "Error updating POC" });
+  }
+};
+
 const pocByArea = async (req, res) => {
   try {
     const { createdBy, country, region, city } = req.query;
@@ -314,10 +348,12 @@ const pocByArea = async (req, res) => {
 
 module.exports = {
   getPOCs,
+  getPOCById,
   getPOCByCreatedByIdAndCategory,
   getPocCreatedById,
   getPocCreatedByIdWithPagination,
   createPOC,
   pocFollowUp,
+  updatePOCById,
   pocByArea,
 };
