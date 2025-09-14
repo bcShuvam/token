@@ -157,7 +157,7 @@ const createPOC = async (req, res) => {
       organization,
       ambNumber,
       createdById,
-      createdByName,
+      // createdByName,
       remarks,
       mobileTime,
       visitDate,
@@ -174,7 +174,7 @@ const createPOC = async (req, res) => {
       !address ||
       !category ||
       !createdById ||
-      !createdByName ||
+      // !createdByName ||
       !remarks ||
       !mobileTime ||
       !visitDate ||
@@ -209,7 +209,7 @@ const createPOC = async (req, res) => {
       organization,
       ambNumber,
       createdById,
-      createdByName,
+      // createdByName,
     });
     newPOC.save();
     const visitLogDetails = {
