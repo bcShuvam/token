@@ -197,7 +197,7 @@ const createPOC = async (req, res) => {
         .json({ message: `POC with number '${number}' already exists.` });
     const newPOC = await POC.create({
       pocName,
-      age,
+      // age,
       gender,
       number,
       country,
