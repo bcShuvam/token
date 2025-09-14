@@ -209,7 +209,7 @@ const createPOC = async (req, res) => {
       organization,
       ambNumber,
       createdById,
-      createdByName,
+      // createdByName,
     });
     newPOC.save();
     const visitLogDetails = {
