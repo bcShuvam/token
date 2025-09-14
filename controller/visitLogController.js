@@ -20,8 +20,8 @@ const getTodaysAverageVisitOfAll = async (req, res) => {
       return res.status(400).json({ message: "Invalid or missing 'to' date" });
     }
 
-    from.setUTCHours(0, 0, 0, 0);
-    to.setUTCHours(23, 59, 59, 999);
+    // from.setUTCHours(0, 0, 0, 0);
+    // to.setUTCHours(23, 59, 59, 999);
 
     const allVisitLogs = await VisitLog.find();
 
@@ -210,8 +210,8 @@ const visitLogsById = async (req, res) => {
       return res.status(400).json({ message: "Invalid or missing 'to' date" });
     }
 
-    from.setUTCHours(0, 0, 0, 0);
-    to.setUTCHours(23, 59, 59, 999);
+    // from.setUTCHours(0, 0, 0, 0);
+    // to.setUTCHours(23, 59, 59, 999);
 
     console.log("From:", from, "To:", to);
 
@@ -479,9 +479,9 @@ const getVisitByDateAndCountry = async (req, res) => {
       return res.status(400).json({ message: "from, to and country are required" });
 
     const referralDateFrom = new Date(from);
-    referralDateFrom.setUTCHours(0, 0, 0, 0);
+    // referralDateFrom.setUTCHours(0, 0, 0, 0);
     const referralDateTo = new Date(to);
-    referralDateTo.setUTCHours(23, 59, 59, 999);
+    // referralDateTo.setUTCHours(23, 59, 59, 999);
 
     const foundReferral = await Referral.findById(_id);
     if (!foundReferral)
