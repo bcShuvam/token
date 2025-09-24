@@ -1,7 +1,5 @@
 const POC = require("../model/poc");
 const VisitLog = require("../model/visitLog");
-const User = require("../model/users");
-const { response } = require("express");
 
 const getPOCs = async (req, res) => {
   try {
@@ -324,7 +322,7 @@ const updatePOCById = async (req, res) => {
     res.status(200).json({ message: "POC updated successfully", poc: updatedPOC });
   } catch (error) {
     console.error("Error updating POC:", error);
-    res.status(500).json({ message: "Error updating POC" });
+    res.status(500).json({ message: err.message });
   }
 };
 

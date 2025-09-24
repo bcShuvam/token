@@ -7,8 +7,6 @@ const testHello = (req, res) => {
 };
 
 const { Document, Packer, Paragraph, TextRun } = require('docx');
-const fs = require('fs');
-const path = require('path');
 
 const generateRegistrationForm = async (req, res) => {
   const doc = new Document({
