@@ -43,7 +43,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/mail", require("./routes/sendMail"));
 app.use("/api/hello", require("./routes/testHello"));
 app.use("/api/location", require("./routes/location"));
-// app.use(verifyJWT);
+app.use(verifyJWT);
 app.use("/api/users", require("./routes/users"));
 app.use("/api/attendance", require("./routes/attendance"));
 app.use("/api/visitLogs", require("./routes/visitLog"));
