@@ -34,18 +34,6 @@ app.use(express.json());
 // // middleware for cookie-parser
 // app.use(cookieParser());
 
-// const {getNepaliDateRange} = require('./utils/first_and_last_date_utils');
-// const year = 2081
-// const month = 10
-// const {from, to} = getNepaliDateRange(year,month);
-// console.log(`from = ${from}, to = ${to}`);
-
-const {AdToBsDatetime} = require('./utils/ad_to_bs_utils');
-const AdToBsDate = require('./utils/date_ad_to_bs_utils');
-console.log(AdToBsDate('2025-08-28'));
-const result = AdToBsDatetime(new Date).bs;
-console.log(`result = ${result.split(' ')[0]}`);
-
 // routes
 app.use("/api/notification", require("./routes/notificationRoutes"));
 
@@ -55,7 +43,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/mail", require("./routes/sendMail"));
 app.use("/api/hello", require("./routes/testHello"));
 app.use("/api/location", require("./routes/location"));
-app.use(verifyJWT);
+// app.use(verifyJWT);
 app.use("/api/users", require("./routes/users"));
 app.use("/api/attendance", require("./routes/attendance"));
 app.use("/api/visitLogs", require("./routes/visitLog"));
@@ -68,3 +56,9 @@ mongoose.connection.once("open", () => {
   console.log("Connected to MongoDB...");
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });
+
+// 🔹 Memory usage logger (every 5 seconds)
+setInterval(() => {
+  const used = process.memoryUsage();
+  console.log(`Memory: ${(used.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+}, 5000);

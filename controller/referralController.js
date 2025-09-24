@@ -3,13 +3,11 @@ const POC = require("../model/poc");
 const Referral = require("../model/referral");
 const Users = require("../model/users");
 const nodemailer = require("nodemailer");
-// const csv = require("csvtojson");
 const CsvParser = require("json2csv").Parser;
 const moment = require("moment-timezone");
 const BS = require('bikram-sambat-js');
 const mongoose = require("mongoose");
 const { AdToBsDatetime } = require('../utils/ad_to_bs_utils');
-// const NepaliDate = require('nepali-date-converter');
 let exportData;
 
 const exportCSVData = async (req, res) => {

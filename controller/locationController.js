@@ -1,8 +1,5 @@
 const Location = require("../model/location");
-const todayDate = require("../config/todayDate");
 const Users = require("../model/users");
-const express = require('express');
-const { getDistance } = require('geolib');
 
 const postLocation = async (req, res) => {
   try {
@@ -93,26 +90,6 @@ const getLocationByID = async (req, res) => {
     // Fetch all devices with latest location
     const devices = await Location.find();
 
-    // const latestData = devices.map((device) => {
-    //   const latestLocation = device.locations.slice(-1)[0] || {};
-    //   const foundUser = await Users.findById(device._id);
-
-    //   // if (Object.keys(latestLocation).length === 0) {
-    //   //   latestLocation = {};
-    //   // }
-    //   return {
-    //     message: `Location data for employee: ${device.username} fetched successfully`,
-    //     _id: device._id,
-    //     username: device.username,
-    //     latestLocation: latestLocation,
-    //     totalDistanceToday:
-    //       device.distanceByDate.find(
-    //         (date) => new Date(date.date).toDateString() === todayDate
-    //       )?.tDistance || 0,
-    //     totalDistance: device.totalDistance,
-    //   };
-    // });
-
     const latestData = await Promise.all(
       devices.map(async (device) => {
         const latestLocation = device.locations.slice(-1)[0] || {};
@@ -139,32 +116,6 @@ const getLocationByID = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-// // Route to fetch device locations
-// const getAllLocation = async (req, res) => {
-//   try {
-//     // fetch all devices
-//     const devices = await Location.find({});
-
-//     const latestData = devices.map((device) => {
-//       return {
-//         _id: device._id,
-//         employee_name: device.username,
-//         // mobileIdentifier: device.mobileIdentifier,
-//         latestLocation: device.locations,
-//         totalDistanceToday,
-//         totalDistance: device.totalDistance,
-//       };
-//     });
-
-//     return res.status(200).json({
-//       message: "All devices data fetched successfully",
-//       latestData,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching device data:", error);
-//     return res.status(500).json({ message: "Server error" });
-//   }
-// };
 
 const getLocationFromDate = async (req, res) => {
   try {
