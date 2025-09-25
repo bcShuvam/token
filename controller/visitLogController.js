@@ -102,8 +102,8 @@ const exportAverageVisitCSV = async (req, res) => {
 
     const allVisitLogs = await VisitLog.find();
 
-    const formattedFrom = from.toISOString().split('T')[0];
-    const formattedTo = to.toISOString().split('T')[0];
+    const formattedFrom = from.toISOString().split("T")[0];
+    const formattedTo = to.toISOString().split("T")[0];
 
     const numberOfDays = Math.max(
       1,
@@ -113,9 +113,9 @@ const exportAverageVisitCSV = async (req, res) => {
     const userRows = [];
 
     allVisitLogs.forEach((user, index) => {
-      const filteredLogs = user.visitLogs.filter(log => {
+      const filteredLogs = user.visitLogs.filter((log) => {
         if (!log.mobileTime) return false;
-        const [timePart, datePart] = log.mobileTime.split(' ');
+        const [timePart, datePart] = log.mobileTime.split(" ");
         const logDate = new Date(`${datePart}T${timePart}Z`);
         return logDate >= from && logDate <= to;
       });
@@ -123,7 +123,7 @@ const exportAverageVisitCSV = async (req, res) => {
       let userNewVisit = 0;
       let userFollowUpVisit = 0;
 
-      filteredLogs.forEach(log => {
+      filteredLogs.forEach((log) => {
         if (log.visitType === "New") userNewVisit++;
         else if (log.visitType === "Follow Up") userFollowUpVisit++;
       });
@@ -135,33 +135,39 @@ const exportAverageVisitCSV = async (req, res) => {
         Name: user.username,
         From: formattedFrom,
         To: formattedTo,
-        'Total Visits': userTotalVisits,
-        'Average Visits': parseFloat((userTotalVisits / numberOfDays).toFixed(2)),
-        'New Visits': userNewVisit,
-        'Average New Visits': parseFloat((userNewVisit / numberOfDays).toFixed(2)),
-        'FollowUp Visits': userFollowUpVisit,
-        'Average FollowUp Visits': parseFloat((userFollowUpVisit / numberOfDays).toFixed(2))
+        "Total Visits": userTotalVisits,
+        "Average Visits": parseFloat(
+          (userTotalVisits / numberOfDays).toFixed(2)
+        ),
+        "New Visits": userNewVisit,
+        "Average New Visits": parseFloat(
+          (userNewVisit / numberOfDays).toFixed(2)
+        ),
+        "FollowUp Visits": userFollowUpVisit,
+        "Average FollowUp Visits": parseFloat(
+          (userFollowUpVisit / numberOfDays).toFixed(2)
+        ),
       });
     });
 
     const csvFields = [
-      'Sn',
-      'Name',
-      'From',
-      'To',
-      'Total Visits',
-      'Average Visits',
-      'New Visits',
-      'Average New Visits',
-      'FollowUp Visits',
-      'Average FollowUp Visits'
+      "Sn",
+      "Name",
+      "From",
+      "To",
+      "Total Visits",
+      "Average Visits",
+      "New Visits",
+      "Average New Visits",
+      "FollowUp Visits",
+      "Average FollowUp Visits",
     ];
 
     const parser = new Parser({ fields: csvFields });
     const csv = parser.parse(userRows);
 
     const fileName = `Average Visit ${formattedFrom} to ${formattedTo}.csv`;
-    res.header('Content-Type', 'text/csv');
+    res.header("Content-Type", "text/csv");
     res.attachment(fileName);
     return res.send(csv);
   } catch (err) {
@@ -212,8 +218,10 @@ const visitLogsById = async (req, res) => {
 
     console.log("From:", from, "To:", to);
 
-    const foundVisitLog = await VisitLog.findById(_id);
+    // ✅ populate pocId inside visitLogs
+    const foundVisitLog = await VisitLog.findById(_id).populate("visitLogs.pocId");
     const foundUser = await User.findById(_id);
+
     if (!foundVisitLog) {
       return res.status(404).json({ message: "VisitLog not found for given id" });
     }
@@ -230,40 +238,36 @@ const visitLogsById = async (req, res) => {
       });
     }
 
-    // Fetch POC details for each visit log concurrently
-    const formattedFilteredVisitLogs = await Promise.all(
-      filteredVisitLogs.map(async (log) => {
-        const pocDetails = await POC.findById(log.pocId);
-        return {
-          pocAddress: `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`,
-          pocVisitCounter: pocDetails.visitCounter,
-          pocReferralCounter: pocDetails.referralCounter,
-          pocNumber: pocDetails.number,
-          pocCategory: pocDetails.category,
-          pocGender: pocDetails.gender,
-          pocSpecialization: pocDetails.specialization,
-          ambNumber: pocDetails.ambNumber,
-          pocReferral: pocDetails.referralCounter,
-          pocId: log.pocId,
-          pocName: log.pocName,
-          remarks: log.remarks,
-          mobileTime: log.mobileTime,
-          visitDate: AdToBsDatetime(log.visitDate).bs,
-          visitType: log.visitType,
-          latitude: log.latitude,
-          longitude: log.longitude,
-          logId: log._id,
-          approvalStatus: log.approvalStatus,
-        };
-      })
-    );
-
-    console.log(foundUser);
+    // ✅ use populated pocId fields directly
+    const formattedFilteredVisitLogs = filteredVisitLogs.map((log) => {
+      const poc = log.pocId; // populated POC doc
+      return {
+        pocAddress: `${poc.country}, ${poc.region}, ${poc.city}, ${poc.address}`,
+        pocVisitCounter: poc.visitCounter,
+        pocReferralCounter: poc.referralCounter,
+        pocNumber: poc.number,
+        pocCategory: poc.category,
+        pocGender: poc.gender,
+        pocSpecialization: poc.specialization,
+        ambNumber: poc.ambNumber,
+        pocReferral: poc.referralCounter,
+        pocId: poc._id,
+        pocName: log.pocName,
+        remarks: log.remarks,
+        mobileTime: log.mobileTime,
+        visitDate: AdToBsDatetime(log.visitDate).bs,
+        visitType: log.visitType,
+        latitude: log.latitude,
+        longitude: log.longitude,
+        logId: log._id,
+        approvalStatus: log.approvalStatus,
+      };
+    });
 
     const visitLogs = {
       _id: foundVisitLog._id,
       username: foundVisitLog.username,
-      profileImage: foundUser.profileImage,
+      profileImage: foundUser?.profileImage || null,
       visitLogCounter: foundVisitLog.visitLogCounter,
       visitLogs: formattedFilteredVisitLogs,
     };
@@ -272,198 +276,6 @@ const visitLogsById = async (req, res) => {
     res.status(200).json({ message: "success", visitLogs });
   } catch (err) {
     console.error("Error:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
-
-const getVisitByDateCountryRegionAndCity = async (req, res) => {
-  try {
-    const { _id, from, to, country, region, city } = req.query;
-    if (!_id) return res.status(400).json({ message: "_id is required" });
-    if (!from || !to || !country || !region || !city)
-      return res.status(400).json({ message: "from, to and country, region and city are required" });
-
-    const visitDateFrom = new Date(from);
-    visitDateFrom.setUTCHours(0, 0, 0, 0);
-    const visitDateTo = new Date(to);
-    visitDateTo.setUTCHours(23, 59, 59, 999);
-
-    const foundVisitLog = await VisitLog.findById(_id);
-    if (!foundVisitLog)
-      return res.status(404).json({ message: "no referral found", referralLogs: {} });
-
-    let filteredVisitLogs = foundVisitLog.visitLogs.filter((logs) => {
-      const date = new Date(logs.visitDate);
-      return date >= visitDateFrom && date <= visitDateTo;
-    });
-
-    let formattedVisitData = [];
-
-    if (filteredVisitLogs.length !== 0) {
-      for (const logs of filteredVisitLogs) {
-        const foundPoc = logs.pocId ? await POC.findOne({ _id: logs.pocId }) : {};
-        const foundAmb = logs.ambId ? await POC.findOne({ _id: logs.ambId }) : {};
-        const foundPatient = logs.patientId ? await Patient.findOne({ _id: logs.patientId }) : {};
-
-        let data = {};
-
-        if (foundPatient.country == country && foundPatient.region == region && foundPatient.city == city) {
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
-          }
-        }
-
-        if (Object.keys(data).length !== 0) {
-          formattedReferralData.push(data);
-        }
-      }
-    }
-
-    const id = foundReferral._id;
-    const foundUser = await Users.findById(id);
-
-    const formattedReferral = formattedReferralData.map((logs) => ({
-      _id: logs.referral._id,
-      createdById: logs.referral.createdById,
-      createdBy: logs.referral.createdByName,
-      profileImage: foundUser.profileImage,
-      referralDate: logs.referral.referralDate,
-      mobileTime: logs.referral.mobileTime,
-      latitude: logs.referral.latitude,
-      longitude: logs.referral.longitude,
-      patientId: logs.patient._id,
-      patientName: logs.patient.fullName,
-      patientAge: logs.patient.age,
-      provisionalDiagnosis: logs.patient.provisionalDiagnosis,
-      country: logs.patient.country,
-      region: logs.patient.region,
-      city: logs.patient.city,
-      address: logs.patient.address,
-      city: logs.patient.city,
-      pocName: logs.poc.pocName,
-      pocAge: logs.poc.age,
-      pocNumber: logs.poc.number,
-      pocGender: logs.poc.gender,
-      pocCountry: logs.poc.country,
-      pocRegion: logs.poc.region,
-      pocCity: logs.poc.city,
-      pocAddress: logs.poc.address,
-      pocCategory: logs.poc.category,
-      pocSpecialization: logs.poc.specialization,
-      pocOrganization: logs.poc.organization,
-      ambId: logs.amb._id,
-      ambName: logs.amb.pocName,
-      ambAge: logs.amb.age,
-      ambNumber: logs.amb.number,
-      ambCountry: logs.amb.country,
-      ambRegion: logs.amb.region,
-      ambCity: logs.amb.city,
-      ambAddress: logs.amb.address,
-      ambOrganization: logs.amb.organization,
-      ambVehicleNumber: logs.amb.ambNumber,
-    }));
-
-    res.status(200).json({ message: "success", referralLogs: formattedReferral });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-const getVisitByDateCountryAndRegion = async (req, res) => {
-  try {
-    const { _id, from, to, country, region, city } = req.query;
-    if (!_id) return res.status(400).json({ message: "_id is required" });
-    if (!from || !to || !country || !region)
-      return res.status(400).json({ message: "from, to and country and region are required" });
-
-    const referralDateFrom = new Date(from);
-    referralDateFrom.setUTCHours(0, 0, 0, 0);
-    const referralDateTo = new Date(to);
-    referralDateTo.setUTCHours(23, 59, 59, 999);
-
-    const foundReferral = await Referral.findById(_id);
-    if (!foundReferral)
-      return res.status(404).json({ message: "no referral found", referralLogs: {} });
-
-    let filteredReferrals = foundReferral.referralLogs.filter((logs) => {
-      const date = new Date(logs.referralDate);
-      return date >= referralDateFrom && date <= referralDateTo;
-    });
-
-    let formattedReferralData = [];
-
-    if (filteredReferrals.length !== 0) {
-      for (const logs of filteredReferrals) {
-        const foundPoc = logs.pocId ? await POC.findOne({ _id: logs.pocId }) : {};
-        const foundAmb = logs.ambId ? await POC.findOne({ _id: logs.ambId }) : {};
-        const foundPatient = logs.patientId ? await Patient.findOne({ _id: logs.patientId }) : {};
-
-        let data = {};
-
-        if (foundPatient.country == country && foundPatient.region == region) {
-          data = {
-            referral: logs,
-            patient: foundPatient,
-            poc: foundPoc,
-            amb: foundAmb,
-          }
-        }
-
-        if (Object.keys(data).length !== 0) {
-          formattedReferralData.push(data);
-        }
-      }
-    }
-
-    const id = foundReferral._id;
-    const foundUser = await Users.findById(id);
-
-    const formattedReferral = formattedReferralData.map((logs) => ({
-      _id: logs.referral._id,
-      createdById: logs.referral.createdById,
-      createdBy: logs.referral.createdByName,
-      profileImage: foundUser.profileImage,
-      referralDate: logs.referral.referralDate,
-      mobileTime: logs.referral.mobileTime,
-      latitude: logs.referral.latitude,
-      longitude: logs.referral.longitude,
-      patientId: logs.patient._id,
-      patientName: logs.patient.fullName,
-      patientAge: logs.patient.age,
-      provisionalDiagnosis: logs.patient.provisionalDiagnosis,
-      country: logs.patient.country,
-      region: logs.patient.region,
-      city: logs.patient.city,
-      address: logs.patient.address,
-      city: logs.patient.city,
-      pocName: logs.poc.pocName,
-      pocAge: logs.poc.age,
-      pocNumber: logs.poc.number,
-      pocGender: logs.poc.gender,
-      pocCountry: logs.poc.country,
-      pocRegion: logs.poc.region,
-      pocCity: logs.poc.city,
-      pocAddress: logs.poc.address,
-      pocCategory: logs.poc.category,
-      pocSpecialization: logs.poc.specialization,
-      pocOrganization: logs.poc.organization,
-      ambId: logs.amb._id,
-      ambName: logs.amb.pocName,
-      ambAge: logs.amb.age,
-      ambNumber: logs.amb.number,
-      ambCountry: logs.amb.country,
-      ambRegion: logs.amb.region,
-      ambCity: logs.amb.city,
-      ambAddress: logs.amb.address,
-      ambOrganization: logs.amb.organization,
-      ambVehicleNumber: logs.amb.ambNumber,
-    }));
-
-    res.status(200).json({ message: "success", referralLogs: formattedReferral });
-  } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
@@ -496,10 +308,10 @@ const averageVisit = async (req, res) => {
     const { userId, from, to } = req.query;
 
     if (!userId || !from || !to) {
-      return res.status(400).json({ message: 'userId, from, and to are required' });
+      return res.status(400).json({ message: "userId, from, and to are required" });
     }
 
-    const foundVisitLog = await VisitLog.findById(userId);
+    const foundVisitLog = await VisitLog.findById(userId).populate("visitLogs.pocId");
     if (!foundVisitLog) {
       return res.status(404).json({ message: "User not found", logs: [] });
     }
@@ -510,14 +322,37 @@ const averageVisit = async (req, res) => {
       return res.status(400).json({ message: "Invalid date format" });
     }
 
-    const filteredLogs = foundVisitLog.visitLogs.filter(log => {
+    // Filter logs within date range
+    const filteredLogs = foundVisitLog.visitLogs.filter((log) => {
       const visitDate = new Date(log.visitDate);
       return visitDate >= fromDate && visitDate <= toDate;
     });
 
+    // 🔹 Remap logs to flatten pocId into a string & merge fields
+    const remappedLogs = filteredLogs.map((log) => {
+      const poc = log.pocId && typeof log.pocId === "object" ? log.pocId : null;
+
+      return {
+        ...log.toObject(),
+        pocId: poc ? poc._id : log.pocId, // keep as string
+        pocName: poc ? poc.pocName : log.pocName, // override with POC data if available
+        gender: poc ? poc.gender : undefined,
+        number: poc ? poc.number : undefined,
+        country: poc ? poc.country : undefined,
+        region: poc ? poc.region : undefined,
+        city: poc ? poc.city : undefined,
+        address: poc ? poc.address : undefined,
+        category: poc ? poc.category : undefined,
+        specialization: poc ? poc.specialization : undefined,
+        organization: poc ? poc.organization : undefined,
+        ambNumber: poc ? poc.ambNumber : undefined,
+      };
+    });
+
+    // Calculate stats
     const timeDiff = Math.abs(toDate - fromDate);
-    const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // including both dates
-    const totalVisits = filteredLogs.length;
+    const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1; // include both dates
+    const totalVisits = remappedLogs.length;
     const averagePerDay = totalVisits / days;
 
     return res.status(200).json({
@@ -525,7 +360,7 @@ const averageVisit = async (req, res) => {
       totalVisits,
       days,
       averagePerDay: averagePerDay.toFixed(2),
-      logs: filteredLogs,
+      logs: remappedLogs,
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
@@ -539,15 +374,17 @@ const getPocVisitLog = async (req, res) => {
     // Validation
     if (!userId || !pocId || !from || !to) {
       return res.status(400).json({
-        message: 'userId, pocId, from and to are required'
+        message: "userId, pocId, from and to are required",
       });
     }
 
-    const foundVisitLog = await VisitLog.findById(userId);
+    const foundVisitLog = await VisitLog.findById(userId).populate(
+      "visitLogs.pocId"
+    );
     if (!foundVisitLog) {
       return res.status(404).json({
-        message: 'User not found',
-        logs: []
+        message: "User not found",
+        logs: [],
       });
     }
 
@@ -558,20 +395,19 @@ const getPocVisitLog = async (req, res) => {
     const filteredLogs = foundVisitLog.visitLogs.filter((log) => {
       const visitDate = new Date(log.visitDate);
       return (
-        log.pocId === pocId &&
+        log.pocId && String(log.pocId._id) === String(pocId) &&
         visitDate >= fromDate &&
         visitDate <= toDate
       );
     });
 
     return res.status(200).json({
-      message: 'Filtered visit logs retrieved',
-      logs: filteredLogs
+      message: "Filtered visit logs retrieved",
+      logs: filteredLogs, // ✅ unchanged format
     });
-
   } catch (err) {
     return res.status(500).json({
-      message: err.message
+      message: err.message,
     });
   }
 };
@@ -596,7 +432,10 @@ const downloadVisitLogsById = async (req, res) => {
     from.setUTCHours(0, 0, 0, 0);
     to.setUTCHours(23, 59, 59, 999);
 
-    const foundVisitLog = await VisitLog.findById(_id);
+    // ✅ populate pocId
+    const foundVisitLog = await VisitLog.findById(_id).populate(
+      "visitLogs.pocId"
+    );
     if (!foundVisitLog) {
       return res.status(404).json({ message: "VisitLog not found for given id" });
     }
@@ -613,57 +452,59 @@ const downloadVisitLogsById = async (req, res) => {
       });
     }
 
-    const formattedFilteredVisitLogs = await Promise.all(
-      filteredVisitLogs.map(async (log, index) => {
-        const pocDetails = await POC.findById(log.pocId);
-        return {
-          SN: index + 1,
-          username: foundVisitLog.username,
-          pocName: log.pocName,
-          mobileTime: AdToBsDatetime(log.createdAt).bs,
-          pocNumber: `="${pocDetails.number}"`,
-          pocCategory: pocDetails.category,
-          pocSpecialization: pocDetails.specialization,
-          pocAddress: `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`,
-          visitType: log.visitType,
-          pocVisitCounter: pocDetails.visitCounter,
-          pocReferralCounter: pocDetails.referralCounter,
-          ambNumber: pocDetails.ambNumber,
-          remarks: log.remarks,
-          approvalStatus: log.approvalStatus,
-        };
-      })
-    );
+    const formattedFilteredVisitLogs = filteredVisitLogs.map((log, index) => {
+      const pocDetails = log.pocId; // ✅ already populated
+      return {
+        SN: index + 1,
+        username: foundVisitLog.username,
+        pocName: log.pocName,
+        mobileTime: AdToBsDatetime(log.createdAt).bs,
+        pocNumber: pocDetails
+          ? `="${pocDetails.number}"`
+          : "",
+        pocCategory: pocDetails ? pocDetails.category : "",
+        pocSpecialization: pocDetails ? pocDetails.specialization : "",
+        pocAddress: pocDetails
+          ? `${pocDetails.country}, ${pocDetails.region}, ${pocDetails.city}, ${pocDetails.address}`
+          : "",
+        visitType: log.visitType,
+        pocVisitCounter: pocDetails ? pocDetails.visitCounter : 0,
+        pocReferralCounter: pocDetails ? pocDetails.referralCounter : 0,
+        ambNumber: pocDetails ? pocDetails.ambNumber : "",
+        remarks: log.remarks,
+        approvalStatus: log.approvalStatus,
+      };
+    });
 
     const fields = [
-      { label: 'SN', value: 'SN' },
-      { label: 'Name', value: 'username' },
-      { label: 'Visit Time', value: 'mobileTime' },
-      { label: 'POC Name', value: 'pocName' },
-      { label: 'Number', value: 'pocNumber' },
-      { label: 'Category', value: 'pocCategory' },
-      { label: 'Specialization', value: 'pocSpecialization' },
-      { label: 'Address', value: 'pocAddress' },
-      { label: 'Visit Type', value: 'visitType' },
-      { label: 'Visit Counter', value: 'pocVisitCounter' },
-      { label: 'Referral Counter', value: 'pocReferralCounter' },
-      { label: 'Ambulance Number', value: 'ambNumber' },
-      { label: 'Remarks', value: 'remarks' },
-      { label: 'Status', value: 'approvalStatus' },
+      { label: "SN", value: "SN" },
+      { label: "Name", value: "username" },
+      { label: "Visit Time", value: "mobileTime" },
+      { label: "POC Name", value: "pocName" },
+      { label: "Number", value: "pocNumber" },
+      { label: "Category", value: "pocCategory" },
+      { label: "Specialization", value: "pocSpecialization" },
+      { label: "Address", value: "pocAddress" },
+      { label: "Visit Type", value: "visitType" },
+      { label: "Visit Counter", value: "pocVisitCounter" },
+      { label: "Referral Counter", value: "pocReferralCounter" },
+      { label: "Ambulance Number", value: "ambNumber" },
+      { label: "Remarks", value: "remarks" },
+      { label: "Status", value: "approvalStatus" },
     ];
 
     const parser = new Parser({ fields });
     const csv = parser.parse(formattedFilteredVisitLogs);
 
-    const usernameSafe = foundVisitLog.username.replace(/ /g, '_');
-    const filename = `${usernameSafe}_visitlogs_${AdToBsDate(req.query.from)}_${AdToBsDate(req.query.to)}.csv`;
+    const usernameSafe = foundVisitLog.username.replace(/ /g, "_");
+    const filename = `${usernameSafe}_visitlogs_${AdToBsDate(
+      req.query.from
+    )}_${AdToBsDate(req.query.to)}.csv`;
 
-    // ✅ Use Express helpers
     res.header("Content-Type", "text/csv");
     res.attachment(filename);
 
     return res.status(200).send(csv);
-
   } catch (err) {
     console.error("Error:", err);
     res.status(500).json({ message: err.message });
