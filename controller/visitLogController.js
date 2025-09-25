@@ -252,7 +252,7 @@ const visitLogsById = async (req, res) => {
         ambNumber: poc.ambNumber,
         pocReferral: poc.referralCounter,
         pocId: poc._id,
-        pocName: log.pocName,
+        pocName: poc.pocName,
         remarks: log.remarks,
         mobileTime: log.mobileTime,
         visitDate: AdToBsDatetime(log.visitDate).bs,
