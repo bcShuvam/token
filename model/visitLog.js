@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const visitLogModel = new mongoose.Schema(
   {
-    pocId: { type: String, required: true },
+    pocId: { type: mongoose.Schema.Types.ObjectId, ref: "POC", required: [true, "pocId is required"]},
     pocName: { type: String, required: true },
     remarks: { type: String, required: true },
     mobileTime: { type: String, required: true },
